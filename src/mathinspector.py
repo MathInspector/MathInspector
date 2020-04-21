@@ -240,13 +240,13 @@ if __name__ == '__main__':
 	"""
 	@NOTE This code is for the executable and is useful for debugging on production builds when print statements don't print to the command line
 	"""
-	APP_NAME = 'mathinspector'
+	# APP_NAME = 'mathinspector'
 	# Define identifier for Mac Console Logging
-	syslog.openlog(APP_NAME)
+	# syslog.openlog(APP_NAME)
 	# Record a message
 	# working_dir = 'Working dir: %s' % (os.getcwd())
-	working_dir = tk.Tcl().eval("info patchlevel")
-	syslog.syslog(syslog.LOG_ALERT, working_dir)
+	# working_dir = tk.Tcl().eval("info patchlevel")
+	# syslog.syslog(syslog.LOG_ALERT, working_dir)
 
 
 	app = MathInspector()
