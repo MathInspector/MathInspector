@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 from util import argcount, unique_name
-from settings import Color, Widget
+from settings import Color, Widget, ButtonRight
 from widget.canvas import PanZoomDragCanvas, Item
 from widget import ContextMenu, Popup, InfoBox
 
@@ -32,7 +32,7 @@ class WorkSpace(PanZoomDragCanvas):
 		self.log = InfoBox(self)
 		self.contextmenu = ContextMenu(app)
 		self.contextmenu.set_menu(items=[{ "label": "Delete", "command": self._on_delete }])		
-		self.tag_bind("draggable", "<Button-2>", self._on_contextmenu)
+		self.tag_bind("draggable", ButtonRight, self._on_contextmenu)
 		self.tag_bind("input", "<Enter>", self._on_enter_input)
 		self.tag_bind("input", "<Leave>", self._on_leave_input)
 		self.tag_bind("input", "<Button-1>", lambda event: self._on_start_output(event, is_input=True))

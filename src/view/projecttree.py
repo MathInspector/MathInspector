@@ -20,9 +20,10 @@ from util import getnamefrompath, assetpath, unique_name, name_and_extension
 from widget import Treeview, ContextMenu, Popup
 from tkinter import filedialog
 from PIL import ImageTk, Image
-from settings import Color, Excluded
+from settings import Color, Excluded, ButtonRight
 from importlib import reload
 import re, os, inspect, uuid, importlib.util, subprocess, sys, traceback
+
 
 # @REFACTOR move images to its own file for organization
 ICONS = {
@@ -62,7 +63,7 @@ class ProjectTree(Treeview):
 		for i in ICONS:
 			self.icons[i] = ImageTk.PhotoImage(Image.open(assetpath() + ICONS[i]))
 
-		self.bind("<Button-2>", self._on_button_2)
+		self.bind(ButtonRight, self._on_button_2)
 		self.bind('<B1-Motion>', self.b1_motion)
 		self.bind('<ButtonRelease-1>', self._on_button_release_1)
 		self.bind('<<TreeviewSelect>>', self._on_select)		

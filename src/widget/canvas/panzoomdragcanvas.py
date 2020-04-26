@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 from widget.canvas.item import Item
-from settings import Color, Zoom, Widget
+from settings import Color, Zoom, Widget, ButtonRight, ButtonReleaseRight, ButtonRightMotion
 
 class PanZoomDragCanvas(tk.Canvas):
 	def __init__(self, app, draggable=True, *args, **kwargs):
@@ -44,9 +44,9 @@ class PanZoomDragCanvas(tk.Canvas):
 		self.bind("<MouseWheel>", self._on_mouse_wheel)
 		
 		self.pan_position = None
-		self.bind("<Button-2>", self._on_button_2)
-		self.bind("<ButtonRelease-2>", self._on_button_release_2)
-		self.bind("<B2-Motion>", self._on_b2_motion)
+		self.bind(ButtonRight, self._on_button_2)
+		self.bind(ButtonReleaseRight, self._on_button_release_2)
+		self.bind(ButtonRightMotion, self._on_b2_motion)
 
 		if draggable:
 			self.drag = {

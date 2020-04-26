@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import tkinter as tk
 from tkinter import messagebox, filedialog, simpledialog
 from widget import Popup
+from settings import Cmd
 import os
 
 class Menu(tk.Menu):
@@ -31,17 +32,17 @@ class Menu(tk.Menu):
 				{
 					"label": "New File            ",
 					"command": lambda event: app.editor.add(),
-					"hotkey": "Command+n"
+					"hotkey": Cmd + "+n"
 				},
 				{
 					"label": "Open File...         ",
 					"command": lambda event: app.editor.open(event=event),
-					"hotkey": "Command+o"		
+					"hotkey": Cmd + "+o"		
 				},
 				{
 					"label": "Save            ",
 					"command": app.editor.save,
-					"hotkey": "Command+s"
+					"hotkey": Cmd + "+s"
 				},
 				{
 					"label": "Save As         ",
@@ -53,7 +54,7 @@ class Menu(tk.Menu):
 				{
 					"label": "Close File            ",
 					"command": self.close_file,
-					"hotkey": "Command+w"
+					"hotkey": Cmd + "+w"
 				}
 			],
 
@@ -61,12 +62,12 @@ class Menu(tk.Menu):
 				{
 					"label": "Undo            ",
 					"command": lambda event: None,
-					"hotkey": "Command+z"
+					"hotkey": Cmd + "+z"
 				},
 				{
 					"label": "Redo            ",
 					"command": lambda event: None,
-					"hotkey": "Command+Shift+z"
+					"hotkey": Cmd + "+Shift+z"
 				},
 				{
 					"separator": None
@@ -74,17 +75,17 @@ class Menu(tk.Menu):
 				{
 					"label": "Cut            ",
 					"command": lambda event: None,
-					"hotkey": "Command+x"
+					"hotkey": Cmd + "+x"
 				},
 				{
 					"label": "Copy            ",
 					"command": lambda event: None,
-					"hotkey": "Command+c"
+					"hotkey": Cmd + "+c"
 				},
 				{
 					"label": "Paste            ",
 					"command": lambda event: None,
-					"hotkey": "Command+v"
+					"hotkey": Cmd + "+v"
 				},								
 				{
 					"separator": None
@@ -114,22 +115,22 @@ class Menu(tk.Menu):
 				{
 					"label": "New Project            ",
 					"command": self.new,
-					"hotkey": "Command+Shift+n",
+					"hotkey": Cmd + "+Shift+n",
 				},
 				{
 					"label": "Open Project...            ",
 					"command": self.open,
-					"hotkey": "Command+Shift+o"	
+					"hotkey": Cmd + "+Shift+o"	
 				},
 				{
 					"label": "Save Project            ",
 					"command": self.save,
-					"hotkey": "Command+Shift+s"	
+					"hotkey": Cmd + "+Shift+s"	
 				},
 				{
 					"label": "Import Module            ",
 					"command": lambda event=None: Popup(app, "Import Module", app, obj=app.projecttree.import_module, eval_args=False),
-					"hotkey": "Command+i"	
+					"hotkey": Cmd + "+i"	
 				},
 				{
 					"label": "Save As...            ",

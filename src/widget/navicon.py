@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 from util import loadimage, assetpath
-from settings import Color
+from settings import Color, ButtonRight
 from PIL import ImageTk, Image
 
 image = {
@@ -70,7 +70,7 @@ class NavIcon(tk.Label):
 		self.is_selected = False
 		self.style = None
 		self.bind("<Button-1>", self._on_button_1)
-		self.bind("<Button-2>", self._on_button_2)
+		self.bind(ButtonRight, self._on_button_2)
 		self.bind("<Enter>", self._on_enter)
 		self.bind("<Leave>", self._on_leave)
 

@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import tkinter as tk
 from widget import Treeview, ContextMenu, TreeEntry
 from util import Color, unique_name
+from settings import ButtonRight
 import re, inspect
 
 RE_METHOD = re.compile(r"([a-zA-Z0-9_' ]*)<{1,2}([a-zA-Z0-9_' ]*)>{1,2}")
@@ -49,7 +50,7 @@ class ObjectTree(Treeview):
 		
 		self.bind("<<TreeviewSelect>>", self._on_treeview_select)
 		self.bind("<Button-1>", self._on_button_1)
-		self.bind("<Button-2>", self._on_button_2)
+		self.bind(ButtonRight, self._on_button_2)
 		self.bind('<B1-Motion>', self.b1_motion)
 		self.bind('<ButtonRelease-1>', self._on_button_release_1)
 

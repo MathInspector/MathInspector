@@ -24,7 +24,7 @@ from view import Menu, Nav, Editor, Console, DocViewer, Output, WorkSpace, Objec
 from widget import Notebook, NavIcon
 from settings import Color
 import style.theme
-import inspect, traceback, os, sys, syslog
+import inspect, traceback, os, sys
 import numpy as np
 
 class MathInspector(themed_tk.ThemedTk):
@@ -246,7 +246,7 @@ if __name__ == '__main__':
 	# Record a message
 	# working_dir = 'Working dir: %s' % (os.getcwd())
 	# working_dir = tk.Tcl().eval("info patchlevel")
-	# syslog.syslog(syslog.LOG_ALERT, working_dir)
+	# syslog.syslog(syslog.LOG_ALERT, working_dir) (import syslog to use this on MacOS)
 
 
 	app = MathInspector()

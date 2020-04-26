@@ -136,7 +136,7 @@ class SciPlot(PanZoomDragCanvas):
 					if coords:
 						self.create_element("line", coords=coords, smooth=self.smooth, fill=graph["color"] if not self.has_random_color else random_color())
 						coords.clear()
-				elif isinstance(orientation, (int,np.int64, float)):
+				elif isinstance(orientation, (int, np.int64, np.intc, float)):
 					self.create_element(coords=(orientation, 0), fill=graph["color"])
 				elif isinstance(orientation, complex):
 					self.create_element(coords=(orientation.real, -1 * orientation.imag), fill=graph["color"])

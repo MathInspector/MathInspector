@@ -22,7 +22,7 @@ from .argspec import argspec
 from .docscrape import FunctionDoc, ClassDoc
 from pdb import set_trace as breakpoint
 from .savedata import SaveData
-import inspect, sys, os, random
+import inspect, sys, os, random, platform
 from functools import reduce
 from PIL import ImageTk, Image
 from settings import Color
@@ -54,7 +54,7 @@ def get_class_name(obj):
         # return obj.__name__
         return sys.modules[obj.__module__].__name__ + "." + obj.__name__
     elif obj.__class__.__module__:
-    	return obj.__class__.__module__ + "." + obj.__class__.__name__
+        return obj.__class__.__module__ + "." + obj.__class__.__name__
     else:
         return obj.__class__.__name__
 
@@ -73,7 +73,7 @@ def subfolders(path):
 
 def assetpath():
     if hasattr(sys, "_MEIPASS"):
-        return os.path.abspath(os.path.join((sys._MEIPASS), "../Resources/assets/img")) + "/"
+        return os.path.abspath(os.path.join((sys._MEIPASS), "./Resources/assets/img" if platform.system() == "Windows" else "../Resources/assets/img")) + "/"
     else:
         return os.path.abspath("../assets/img") + "/"
 
@@ -87,11 +87,11 @@ def hexstring(num):
     return '#' + str(hex(num))[2:].zfill(6)
 
 def makereadonly(tkWdg):
-	tkWdg.bind('<Key>', readonly)
+    tkWdg.bind('<Key>', readonly)
 
 def readonly(event):
-	if event.keysym is not 'c':
-		return 'break'
+    if event.keysym is not 'c':
+        return 'break'
 
 def getnamefrompath(filepath):
     return os.path.basename(filepath)

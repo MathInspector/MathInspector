@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import json, os, sys
+import json, os, sys, platform
 
 def basepath():
 	if hasattr(sys, "_MEIPASS"):
@@ -42,6 +42,12 @@ class ConfigItem:
 
 # with open(basepath(), "r") as f:
 # 	settings = json.load(f)
+
+ButtonRight = '<Button-3>' if platform.system() == 'Windows' else '<Button-2>'
+ButtonReleaseRight = '<ButtonRelease-3>' if platform.system() == 'Windows' else '<ButtonRelease-2>'
+ButtonRightMotion = '<B3-Motion>' if platform.system() == 'Windows' else '<B2-Motion>'
+
+Cmd = 'Control' if platform.system() == 'Windows' else 'Command'
 
 settings = {
 	"Color": {		
