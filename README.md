@@ -20,11 +20,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Install
 ---
-Clone this repo and make sure you have Python 3.7.6 and Numpy installed on your machine.  
+Clone this repo and make sure you have at least Python 3.7.6 as well as some dependencies like NumPy installed on your machine.  
 
-To start math inspector, goto the src directory and run the following command
+```
+$ git clone "https://github.com/MathInspector/MathInspector"
+$ python --version
+  Python 3.7.6
+$ pip install numpy scipy Pillow PyInstaller
+  ...
+```
 
-`$[PROJECT_ROOT]/src/python mathinspector.py`
+To start Math Inspector, go to the `src` directory and run `mathinspector.py` with python.
+
+```
+$ cd MathInspector/src/
+$ python mathinspector.py
+```
 
 Overview
 ---
