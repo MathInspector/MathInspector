@@ -134,6 +134,23 @@ class PanZoomDragCanvas(tk.Canvas):
 				if j == canvas_id:
 					return self.get_parent(canvas_id) if parent else canvas_id
 	
+	def has_tag(self, canvas_id, tag):
+		tags = self.gettags(canvas_id)
+		return tags and tag in tags
+
+	def add_tag(self, canvas_id, tag):
+		tags = list(self.gettags(canvas_id))
+		tags.append(tag)
+		self.itemconfig(canvas_id, tags=tuple(tags))
+
+	def remove_tag(self, canvas_id, tag):
+		tags = self.gettags(canvas_id)
+		new_tags = []
+		for i in tags:
+			if i != tag:
+				new_tags.append(i)
+		self.itemconfig(canvas_id, tags=tuple(new_tags))
+
 	def _on_enter_item(self, event):
 		if self.event not in ("drag", "connect"):
 			self.hover_item = self.get_parent( self.find_closest(event.x, event.y)[0] )
@@ -183,7 +200,7 @@ class PanZoomDragCanvas(tk.Canvas):
 		if self.event in ("drag", "connect"): return
 		if self.event == "edit" and self.selected:			
 			closest = self.find_closest(event.x,event.y)
-			if not closest or self.selected.canvasentry.window != closest[0]:
+			if not closest or (self.get_parent(closest[0]) != self.selected and self.selected.canvasentry.window != closest[0]):
 				self.event = None
 				self.selected.canvasentry.finish()
 			return

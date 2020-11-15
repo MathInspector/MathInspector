@@ -60,7 +60,7 @@ class Item:
                     "input": canvas.create_oval(0,0,0,0, outline=Color.INACTIVE, fill=Color.EMPTY_NODE, tags='input'),
                     "label": canvas.create_text(0,0, fill=Color.DARK_ORANGE),
                     "value_label": canvas.create_text(0,0, tags=("draggable", "editable"), anchor="w"),
-                    "value": "None",
+                    "value": None,
                     "connection": None
                 }
                 for k in ("input", "label", "value_label"):
@@ -137,7 +137,8 @@ class Item:
                 width =  self.canvas.zoomlevel * (20 + max(60, len(value_text) * 12))
                 height = self.canvas.zoomlevel * Widget.ITEM_SIZE # @TODO: change this to adjust height and pretty print various things like list/dict/long strings
 
-            self.canvas.itemconfig(self.value_label, text=str(value_text), fill=get_font_color(self.value))
+            color = Color.BLUE if self.args["default"]["connection"] else get_font_color(self.value)
+            self.canvas.itemconfig(self.value_label, text=str(value_text), fill=color)
 
         offset = 2 * num_args
         if num_args == 1:
@@ -154,7 +155,9 @@ class Item:
                 self.canvas.coords(self.args[j]["label"], x - width/2 + 20*self.canvas.zoomlevel, y + i*height/offset - 12*self.canvas.zoomlevel)
                 self.canvas.itemconfig(self.args[j]["label"], text=j, font=Font.ALT + " " + str(int(Widget.ARG_LABEL_SIZE * self.canvas.zoomlevel)))            
                 self.canvas.coords(self.args[j]["value_label"], x - width/2 + value_offset*self.canvas.zoomlevel, y + i*height/offset)
-                self.canvas.itemconfig(self.args[j]["value_label"], text=value_text, fill=Color.RED, font=Font.ALT + " " + str(int(Widget.ARG_VALUE_SIZE * self.canvas.zoomlevel)))
+                
+                color = Color.BLUE if self.args[j]["connection"] else get_font_color(self.args[j]["value"])
+                self.canvas.itemconfig(self.args[j]["value_label"], text=str(value_text), fill=color, font=Font.ALT + " " + str(int(Widget.ARG_VALUE_SIZE * self.canvas.zoomlevel)))
 
             i += 2
 
@@ -168,11 +171,10 @@ class Item:
                     self.canvas.coords(self.kwargs[j]["label"], x - width/2 + 20*self.canvas.zoomlevel, y + i*height/offset - 12*self.canvas.zoomlevel)
                     self.canvas.itemconfig(self.kwargs[j]["label"], text=j, font=Font.ALT + " " + str(int(Widget.ARG_LABEL_SIZE * self.canvas.zoomlevel)))            
                     self.canvas.coords(self.kwargs[j]["value_label"], x - width/2 + value_offset*self.canvas.zoomlevel, y + i*height/offset)
-                    self.canvas.itemconfig(self.kwargs[j]["value_label"], text=value_text, fill=Color.RED, font=Font.ALT + " " + str(int(Widget.ARG_VALUE_SIZE * self.canvas.zoomlevel)))
+                    self.canvas.itemconfig(self.kwargs[j]["value_label"], text=value_text, fill=get_font_color(self.kwargs[j]["value"]), font=Font.ALT + " " + str(int(Widget.ARG_VALUE_SIZE * self.canvas.zoomlevel)))
 
                 i += 2
 
-        widget_height = 0 if len(self.args) + len(self.kwargs) == 1 else (len(self.args) + len(self.kwargs)) * height * 3 / 4
         self.canvas.coords(self.canvas_id, x - width/2, y - height/2, x + width/2, y + height/2)
         self_x,self_y = self.get_position()
         self.canvas.coords(self.output, x + width/2 - node_size, self_y - node_size, x + width/2 + node_size, self_y + node_size)
@@ -201,9 +203,16 @@ class Item:
         if self.sticky_graph:
             self.toggle_sticky()
             self.toggle_sticky()
-        # @TODO: way of keeping track of which self.args is assocaited with which self.input_connection
-        # for j in self.input_connection:
-        #     self.args[self.arginputs.index(j)] = self.input_connection[j].get_output()
+
+
+        self.canvas.app.output.update_object(self.name)
+        # if self.output_connection and self.hasargs() and not callable(self.output_connection.value):
+        #     self.canvas.app.objects.__setitem__(self.output_connection.name, self.get_output(), preserve_class=True)
+
+        # @TODO: way of keeping track of which self.args is assocaited with which self.input_connection        
+        # if hasattr(self, "input_connection"):
+        #     for j in self.input_connection:
+        #         self.args[self.arginputs.index(j)] = self.input_connection[j].get_output()
 
     def methods(self):
         return [fn for fn in dir(self.value) if fn[:1] != "_" and callable(getattr(self.value, fn))]
@@ -223,13 +232,30 @@ class Item:
             self.args[name]["value"] = value
             if "value_label"  in self.args[name]:
                 text = str(value) if len(str(value)) <= MAX_LEN else str(value)[:MAX_LEN] + "..."
-                self.canvas.itemconfig(self.args[name]["value_label"], text=text )
+                self.canvas.itemconfig(self.args[name]["value_label"], text=text, fill=get_font_color(value) )
         elif name in self.kwargs:
             self.kwargs[name]["value"] = value
             if "value_label" in self.kwargs[name] and self.show_kwargs:
                 text = str(value) if len(str(value)) <= MAX_LEN else str(value)[:MAX_LEN] + "..."
-                self.canvas.itemconfig(self.kwargs[name]["value_label"], text=text )
+                self.canvas.itemconfig(self.kwargs[name]["value_label"], text=text, fill=get_font_color(value) )
+        
         self.canvas.app.output.update_object(self.name)
+        self.canvas.app.objecttree.update_object(self.name)
+        
+        if self.output_connection and not callable(self.output_connection.value):
+            try:
+                output = self.get_output(raise_err=True)
+            except Exception as err:
+                self.canvas.log.show(err)
+                return
+            
+            self.canvas.app.objects.__setitem__(self.output_connection.name, output, preserve_class=True)
+
+    def hasargs(self):
+        for i in self.args:
+            if "value" in self.args[i] and self.args[i]["value"] is None:
+                return False
+        return True
 
     def toggle_sticky(self):
         self.sticky_graph = not self.sticky_graph
@@ -265,7 +291,7 @@ class Item:
         self.set_value(self.value)
 
     def get_input(self):
-        args = [self.args[j]["value"] for j in self.args if "value" in self.args[j]]
+        args = [self.args[j]["value"] for j in self.args if "value" in self.args[j] and self.args[j]["value"] is not None]
         kwargs = { j : self.kwargs[j]["value"] for j in self.kwargs if "value" in self.kwargs[j] }
         return args, kwargs
 
@@ -321,6 +347,11 @@ class Item:
                 x1, y1, x2, y2 = self.canvas.coords(self.args[j]["input"])
                 self.args[j]["connection"].move_wire(x1 + (x2 - x1)/2, y1 + (y2 - y1)/2)
             
+        for j in self.kwargs:
+            if self.kwargs[j]["connection"]:
+                x1, y1, x2, y2 = self.canvas.coords(self.kwargs[j]["input"])
+                self.kwargs[j]["connection"].move_wire(x1 + (x2 - x1)/2, y1 + (y2 - y1)/2)
+            
         if self.output_connection:
             arg = self.output_connection.getarg("connection", self)
             if arg:
@@ -347,13 +378,20 @@ class Item:
         for c in self.children:
             self.canvas.tag_raise(c)
 
-    def set_output_connection(self, other, input_id=None):
+    def set_output_connection(self, other=None, input_id=None):
         if other and not input_id: return
+        
         if not other and self.output_connection:
             idx = self.output_connection.getarg("connection", self, name=True)
             if idx in self.output_connection.args:
+                if idx == "default":
+                    self.canvas.add_tag(self.output_connection.value_label, "editable")
+                else:
+                    self.canvas.add_tag(self.output_connection.args[idx]["value_label"], "editable")
+
                 self.output_connection.args[idx]["connection"] = None
             if idx in self.output_connection.kwargs:
+                self.canvas.add_tag(self.output_connection.kwargs[idx]["value_label"], "editable")
                 self.output_connection.kwargs[idx]["connection"] = None
             self.output_connection = None
             return    
@@ -364,24 +402,31 @@ class Item:
             for j in other.args:
                 if other.args[j]["input"] == input_id:
                     other.args[j]["connection"] = self
+                    if j == "default":
+                        self.canvas.remove_tag(other.value_label, "editable")
+                    else:
+                        self.canvas.remove_tag(other.args[j]["value_label"], "editable")
             for j in other.kwargs:
                 if other.kwargs[j]["input"] == input_id:
+                    self.canvas.remove_tag(other.kwargs[j]["value_label"], "editable")
                     other.kwargs[j]["connection"] = self
             self.canvas.itemconfig(self.output, fill=Color.ACTIVE_WIRE)
             self.canvas.itemconfig(self.output_wire, fill=Color.ACTIVE_WIRE)
             self.canvas.itemconfig(input_id, fill=Color.ACTIVE_WIRE)
             self.config(border="show")
-            self.output_connection.config(border="show")            
+            self.output_connection.config(border="show", connect="default")            
 
-    def config(self, hover=None, hover_editable=None, hide_wire=None, fill=None, border=None, output=None):
+    def config(self, hover=None, hover_editable=None, hide_wire=None, fill=None, border=None, output=None, hide_input=None, disconnect=None, connect=None):
         if hover:
             self.canvas.itemconfig(self.output, fill=hover)
             self.canvas.itemconfig(self.output_wire, fill=hover)
             if self.output_connection:
                 arg = self.output_connection.getarg("connection", self)
                 self.canvas.itemconfig(arg["input"], fill=hover)          
-        elif hover_editable:
+        
+        if hover_editable:
             state, item = hover_editable
+            arg = None
             if item == self.value_label:
                 canvas_id = self.value_label
             elif item:
@@ -392,15 +437,19 @@ class Item:
                     return
             else:
                 return
-            self.canvas.itemconfig(canvas_id, fill=Color.GREY if state == "enter" else get_font_color(self.value))
-        elif hide_wire:
+            self.canvas.itemconfig(canvas_id, fill=Color.GREY if state == "enter" else get_font_color(arg["value"] if arg else self.value))
+        
+        if hide_wire:
             self.canvas.coords(self.output_wire,0,0,0,0)
             self.canvas.itemconfig(self.output, fill=Color.EMPTY_NODE)        
             if self.output_connection:
+                self.output_connection.config(hide_input=True)
                 self.set_output_connection(None)
-        elif fill:
+        
+        if fill:
             self.canvas.itemconfig(self.canvas_id, fill=fill)
-        elif border:
+        
+        if border:
             if border == "hide":
                 color = Color.ACTIVE if self.output_connection else Color.INACTIVE        
                 self.canvas.itemconfig(self.canvas_id, outline=color)
@@ -416,9 +465,36 @@ class Item:
                             or (isinstance(self.args[j]["value"], np.ndarray) 
                             and self.args[j]["value"].any()) or self.args[j]["value"]):
                         self.canvas.itemconfig(self.args[j]["input"], outline=Color.ACTIVE)
-        elif output:
+        
+        if output:
             self.canvas.itemconfig(self.output, fill=output)
             self.canvas.itemconfig(self.output_wire, fill=output)
+        
+        if hide_input:
+            if "default" in self.args:
+                self.canvas.itemconfig(self.args["default"]["input"], fill=Color.EMPTY_NODE)
+        
+        if disconnect:
+            if "default" in self.args:
+                self.canvas.itemconfig(self.value_label, fill=get_font_color(self.value))
+            else:
+                for i in self.args:
+                    if disconnect == self.args[i]["input"]:
+                        self.canvas.itemconfig(self.args[i]["value_label"], fill=get_font_color(self.args[i]["value"]))
+            
+            if disconnect in self.args:
+                self.canvas.itemconfig(self.args[disconnect]["value_label"], fill=Color.BLUE)
+            elif disconnect in self.kwargs:
+                self.canvas.itemconfig(self.kwargs[disconnect]["value_label"], fill=Color.BLUE)
+
+        if connect:
+            if connect == "default":
+                self.canvas.itemconfig(self.value_label, fill=Color.BLUE)
+            elif connect in self.args:
+                self.canvas.itemconfig(self.args[connect]["value_label"], fill=Color.BLUE)
+            elif connect in self.kwargs:
+                self.canvas.itemconfig(self.kwargs[connect]["value_label"], fill=Color.BLUE)
+
 
 
 

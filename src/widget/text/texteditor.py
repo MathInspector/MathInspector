@@ -41,7 +41,6 @@ class TextEditor(HighlightedText):
 			self.bind("<KeyRelease>", self._on_key_release)
 		
 		self.bind("<<Update>>", self._on_change)
-		# self.bind("<<Selection>>", self._on_text_selection)
 		self.bind("<<Modify>>", self._on_modify)
 		self.on_change_callback = on_change_callback
 
@@ -63,10 +62,6 @@ class TextEditor(HighlightedText):
 			self.see("insert")
 		# self.syntax_highlight()	
 		
-	def _on_text_selection(self, event):
-		# selected = self.tag_ranges("sel")
-		pass
-
 	def _on_configure(self, event):
 		self.linenumbers.redraw()
 

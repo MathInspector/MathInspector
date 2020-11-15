@@ -25,7 +25,6 @@ class Nav(tk.Frame):
 		tk.Frame.__init__(self, app, background=Color.BLACK)		
 		
 		self.icons = {
-			".!editor": NavIcon(self, "editor", app),
 			".!console": NavIcon(self, "console", app),
 			".!workspace": NavIcon(self, "workspace", app),
 			".!docviewer": NavIcon(self, "docviewer", app),

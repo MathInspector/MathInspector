@@ -89,9 +89,7 @@ class NavIcon(tk.Label):
 		else:
 			self.config(image=image[self.name]["selected-alt"][1])
 
-		if self.name == "editor":
-			self.app.editor.focus()
-		elif self.name == "console":
+		if self.name == "console":
 			self.app.console.focus()
 
 

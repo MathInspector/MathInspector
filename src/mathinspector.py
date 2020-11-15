@@ -20,7 +20,7 @@ import tkinter as tk
 from tkinter import ttk
 from ttkthemes import themed_tk
 from util import ObjectContainer, SaveData, hexstring
-from view import Menu, Nav, Editor, Console, DocViewer, Output, WorkSpace, ObjectTree, ProjectTree
+from view import Menu, Nav, Console, DocViewer, Output, WorkSpace, ObjectTree, ProjectTree
 from widget import Notebook, NavIcon
 from settings import Color
 import style.theme
@@ -39,7 +39,6 @@ class MathInspector(themed_tk.ThemedTk):
 		self.treenotebook = Notebook(self, **style.theme.treenotebook)
 		self.projecttree = ProjectTree(self)
 		self.objecttree = ObjectTree(self)
-		self.editor = Editor(self)
 		self.console = Console(self)
 		self.docviewer = DocViewer(self)
 		self.output = Output(self)
@@ -67,6 +66,7 @@ class MathInspector(themed_tk.ThemedTk):
 		to synchronize all the views by updating them with new values.
 		"""
 		item = self.workspace.get_item(key)
+		next_obj = None
 		
 		if item and item.output_connection:
 			obj = self.objects[item.output_connection.name]
@@ -74,11 +74,11 @@ class MathInspector(themed_tk.ThemedTk):
 				argname = item.output_connection.getarg("connection", item, name=True)
 				if argname:
 					item.output_connection.setarg(argname, item.get_output())
-					self.on_set_object(item.output_connection.name)
+					next_obj = item.output_connection.name
 			else:
 				try:
 					if callable(self.objects[key]):
-						result = item.get_output()
+						result = item.get_output(raise_err=True)
 					else:
 						result = obj.__class__(self.objects[key])
 				except Exception as err:
@@ -86,12 +86,13 @@ class MathInspector(themed_tk.ThemedTk):
 					self.workspace.log.show(err);
 					return False
 
-				self.objects[item.output_connection.name] = result
+				self.objects.__setitem__(item.output_connection.name, result, preserve_class=True)
 		
 		self.workspace.update_object(key)
 		self.objecttree.update_object(key)
-		# self.output.select(key)		
 		self.output.update_object(key)		
+		if next_obj:
+			self.on_set_object(next_obj)
 		return True
 
 	def on_delete_object(self, key):
@@ -191,9 +192,9 @@ class MathInspector(themed_tk.ThemedTk):
 
 	def select(self, key=None, filepath=None):
 		self.selected = key
-		if filepath:
-			self.editor.select(filepath=filepath)
-			return
+		# if filepath:
+		# 	self.editor.select(filepath=filepath)
+		# 	return
 
 		self.workspace.select(key)
 		self.docviewer.select(key, filepath=filepath)
@@ -232,9 +233,18 @@ class MathInspector(themed_tk.ThemedTk):
 
 
 if __name__ == '__main__':
-	print ("OS-CWD", os.getcwd())
-	if hasattr(sys, "_MEIPASS"):
-		print ("_MEIPASS", sys._MEIPASS)
+	"""
+	- check if a project is open, if so, open app, store savedata pickle in the proj folder
+	- show project chooser dialog (new, open), show recently opened
+	I can have a seperate class which has its own mainloop and runs instead if there
+	"""
+
+	app = MathInspector()
+	app.mainloop()
+
+	# print ("OS-CWD", os.getcwd())
+	# if hasattr(sys, "_MEIPASS"):
+	# 	print ("_MEIPASS", sys._MEIPASS)
 		# os.chdir(os.path.expanduser('~'))
 
 	"""
@@ -248,6 +258,3 @@ if __name__ == '__main__':
 	# working_dir = tk.Tcl().eval("info patchlevel")
 	# syslog.syslog(syslog.LOG_ALERT, working_dir) (import syslog to use this on MacOS)
 
-
-	app = MathInspector()
-	app.mainloop()

@@ -16,29 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from util import getnamefrompath, assetpath, unique_name, name_and_extension
+from util import getnamefrompath, unique_name, name_and_extension, WatchHandle, geticon
 from widget import Treeview, ContextMenu, Popup
 from tkinter import filedialog
-from PIL import ImageTk, Image
 from settings import Color, Excluded, ButtonRight
 from importlib import reload
-import re, os, inspect, uuid, importlib.util, subprocess, sys, traceback
-
-
-# @REFACTOR move images to its own file for organization
-ICONS = {
-	"python": "pythonlogo-color.png",
-	"markdown": "markdown.png",
-	"folder": "folder.png",
-	"folder-open": "folder-open.png"
-}
-
-ICON_MAP = {
-	".py": "python",
-	".md": "markdown"
-}
-
-DELIMETER = "<-->"
+import re, os, inspect, uuid, importlib.util, subprocess, sys, traceback, platform
+from watchdog.observers import Observer
 
 class ProjectTree(Treeview):
 	def __init__(self, app, *args, **kwargs):
@@ -46,12 +30,8 @@ class ProjectTree(Treeview):
 
 		self.app = app
 		self.contextmenu = ContextMenu(app)
-		self.submodules = []
-		self.folders = []
-		self.files = []
-		self.rootfolders = []
-		self.custom_modules = {}
-		self.modules = {}
+		self.watch_handle = WatchHandle(self)
+		self.observer = None
 		self.drag = {
 			"selected": None,
 			"position": (0,0),
@@ -59,64 +39,30 @@ class ProjectTree(Treeview):
 			"new_object": None
 		}
 
-		self.icons = {}
-		for i in ICONS:
-			self.icons[i] = ImageTk.PhotoImage(Image.open(assetpath() + ICONS[i]))
-
 		self.bind(ButtonRight, self._on_button_2)
+		self.bind("<Double-Button-1>", self._on_double_button_1)
 		self.bind('<B1-Motion>', self.b1_motion)
 		self.bind('<ButtonRelease-1>', self._on_button_release_1)
 		self.bind('<<TreeviewSelect>>', self._on_select)		
 
 	def getstate(self):
-		return [self.selection(), self.custom_modules, self.files, self.rootfolders, self.getexpanded()]
+		return [self.selection(), self.tags("file"), self.tags("rootfolder"), self.getexpanded()]
 
-	# @REFACTOR get rid of selected, it causes a problem with opening editor files on startup
-	def setstate(self, selected, custom_modules, files, rootfolders, openfolders):
-		for i in custom_modules:
-			self.addfile(custom_modules[i])
-
-		for i in files:
-			self.addfile(filepath=i)
-
+	def setstate(self, selected, files, rootfolders, openfolders):
 		for i in rootfolders:
 			self.addfolder(filepath=i)
-		
-		self.setexpanded(openfolders)
-		if len(selected) > 0:
-			self.selection_set(selected)
+
+		for j in files:
+			self.addfile(filepath=j)
+
+		self.setexpanded(openfolders)		
+
 
 	def _on_select(self, event):
-		selection = self.selection()[0]
-		print ("in select", selection)
-		name, ext = name_and_extension(selection)
-
-		# in this case look up the file, read contents from file, and put it into docviewer
-		if selection in self.custom_modules:
-			return self.app.editor.select(None, filepath=self.custom_modules[selection])
-
-		if selection in self.folders: 
-			return self.item(selection, 
-				image=self.icons["folder-open"] if self.item(selection)["open"] else self.icons["folder"])		
-		
-		if selection in self.files:	
-			self.app.docviewer.select(None, filepath=selection)
-			return self.app.editor.select(None, filepath=selection)
-
+		selection = self.selection()[0]		
 		self.app.docviewer.show(selection)
-		# if not ext or ext == '.py':
-		# else:
-		# 	self.app.docviewer.select(None, filepath=selection)
-		
-
-
-		self.app.editor.select(selection)
 
 	def clear(self):
-		self.custom_modules.clear()
-		self.files.clear()
-		self.rootfolders.clear()
-
 		for j in self.get_children():
 			self.delete(j)
 
@@ -124,67 +70,33 @@ class ProjectTree(Treeview):
 		key = key or self.contextmenu.key
 		self.hover_item = None
 
-		# @NOTE - this was for preventing del of modules when have stuff in workspace from that module
-		try:
-			super(ProjectTree, self).delete(key)
-		except Exception as err:
-			if key in self.custom_modules:
-				for j in self.get_children(self.custom_modules[key]):
-					super(ProjectTree, self).delete(j)
+		super(ProjectTree, self).delete(key)
 		
 		if key in self.app.modules:
-			del self.app.modules[key]
-		
-		if key in self.rootfolders:
-			del self.rootfolders[self.rootfolders.index(key)]
-		
-		# make a rule so you cannot remove a module while it has its objects in the workspace, that makes sense!
-		if key in self.custom_modules:
-			del self.custom_modules[key]
-
-		if key in self.files:
-			del self.files[self.files.index(key)]
-
-		# if key in sys.modules:
-		# 	del sys.modules[key]
-
+			del self.app.modules[key]		
 
 	def create_new_object(self, key):
-		# may need to use syntax from X import Y as Z because pickle is failing on custom modules
-		if key.count(DELIMETER) > 0:			
-			path, attr = key.split(DELIMETER, 1)
-			module = self.modules[path]
+		try:
+			path, attr = key.rsplit('.', 1)
+			module = self.app.modules[path]
 			item = getattr(module, attr)
-		else:
-			try:
-				path, attr = key.rsplit('.', 1)
-				module = self.app.modules[path]
-				item = getattr(module, attr)
-			except Exception as err:
-				print ("Could not instantiate object", err)
-				return
+		except Exception as err:
+			print ("Could not instantiate object", err)
+			return
 
 		name = unique_name(self.app, attr)
 		self.app.objects[name] = getattr(module, attr)
 		return name
 
+
 	def addfile(self, filepath, parent=""):
-		name, ext = name_and_extension(filepath)
+		if not filepath: return
 
-		if ext == ".py":		
-			name = name[:-3]
-		else:
-			image = None
-			if ext == ".md":
-				image = self.icons["markdown"]
-
-			if filepath not in self.files and parent == "":
-				self.files.append(filepath)
-				if image:
-					self.insert(parent, 'end', filepath, text="      " + name, open=True, image=image)
-				else:
-					self.insert(parent, 'end', filepath, text="      " + name, open=True)
-			return
+		name, ext = name_and_extension(filepath)		
+		tag = "editable_file" if ext in (".py", ".md") else ()
+		parent = self.insert(parent, "end", filepath, text="      " +  name + ext, image=geticon(ext), tag=tag)
+		
+		if ext != ".py": return
 
 		if name in sys.modules:
 			del sys.modules[name]
@@ -197,66 +109,56 @@ class ProjectTree(Treeview):
 		try:
 			spec.loader.exec_module(module)
 		except Exception as err:
-			return (err, traceback.format_exc())			
-		
-		if name in self.custom_modules:
-			if name in self.files:
-				parent = self.custom_modules[name]
-			self.delete(name)
-
-		self.custom_modules[name] = filepath
-		
+			print ("-- MODULE LOAD ERROR --")
+			print (err, traceback.format_exc())
+			return
+				
 		if parent == "":
 			self.app.modules[name] = module
 		else:
-			self.modules[filepath] = module
-			self.create_folders(parent, module, filepath)
+			self.app.modules.store[name] = module
+			self.addmodule(module, parent, filepath)
 
 		self.setexpanded(expanded)
-	
-	def addfolder(self, parent="", filepath=None, event=None):
-		if not filepath:
+
+	def addfolder(self, parent="", filepath=None, event=None, watch=True):
+		if not filepath: 
 			filepath = filedialog.askdirectory(initialdir=".")
 		
-		if parent == "":
-			self.rootfolders.append(filepath)
+		if not filepath: return
 
 		name = os.path.basename(filepath)
-		self.folders.append(filepath)
-		parent = self.insert(parent, "end", filepath, text="      " + name, open=parent=="", image=self.icons["folder"])		
+		parent = self.insert(parent, "end", filepath, text="      " + name, open=parent=="", image=geticon("folder"), tag="rootfolder" if parent == "" else "")		
 		
 		items = [(i, os.path.isdir(os.path.join(filepath, i))) for i in os.listdir(filepath)]
 		items.sort()
 
 		for name, is_dir in items:
 			if is_dir and name not in Excluded.FOLDERS:
-				self.addfolder(parent, os.path.join(filepath, name))
+				self.addfolder(parent, os.path.join(filepath, name), watch=False)
 		
 		for name, is_dir in items:
 			if not is_dir and name not in Excluded.FILES:
 				fullpath = os.path.join(filepath, name)
-				ext = os.path.splitext(name)[1]				
+				self.addfile(fullpath, parent)
 
-				image = ICON_MAP[ext] if ext in ICON_MAP else None
-				
-				if image:
-					temp = self.insert(parent, "end", fullpath, text="      " +  name, image=self.icons[image])
-				else:
-					temp = self.insert(parent, "end", fullpath, text="      " +  name)
-
-				self.addfile(fullpath, temp)
+		if watch:
+			if self.observer == None:
+				self.observer = Observer()
+				self.observer.start()
+			
+			self.observer.schedule(self.watch_handle, path=filepath, recursive=True)
 
 
-	def addmodule(self, key, parent=None):
-		module = self.app.modules[key]
+	def addmodule(self, module, parent=None, filepath=None):
+		key = ""
+		if isinstance(module, str):
+			key = module
+			module = self.app.modules[module]
+
 		if not parent:
-			parent = self.insert("", 'end', module.__name__, text="      " + key, open=False, image=self.icons["python"])
-		
-		if key not in self.submodules:
-			self.create_folders(parent, module)	
+			parent = self.insert("", 'end', module.__name__, text="      " + key, open=False, image=geticon("python"))
 
-
-	def create_folders(self, parent, module, filepath=None):
 		folders = {}
 		extras = []
 
@@ -269,12 +171,12 @@ class ProjectTree(Treeview):
 					if ('classes' not in folders):
 						folders['classes'] = self.insert(parent, "end", "classes" + str(uuid.uuid4()), text="classes")
 
-					self.insert(folders['classes'], "end", (filepath + DELIMETER + fn) if filepath else module.__name__ + '.' + fn, text=fn)
+					self.insert(folders['classes'], "end", module.__name__ + '.' + fn, text=fn)
 				elif inspect.isfunction( attr ):
 					if ('fns' not in folders):
 						folders['fns'] = self.insert(parent, "end", "fns" + str(uuid.uuid4()), text="functions")
 
-					self.insert(folders['fns'], "end", (filepath + DELIMETER + fn) if filepath else module.__name__ + '.' + fn, text=fn)					
+					self.insert(folders['fns'], "end", module.__name__ + '.' + fn, text=fn)					
 				elif inspect.ismodule( attr ):
 
 					sub_module = False
@@ -285,22 +187,44 @@ class ProjectTree(Treeview):
 						pass
 
 					if (sub_module != False):	
-						temp = self.insert(parent, "end", sub_module.__name__, text=fn)
-						self.create_folders(temp, sub_module)						
-						self.submodules.append(module.__name__ + '.' + fn)
+						temp = self.insert(parent, "end", sub_module.__name__, text="      " + fn, image=geticon("python"))
+						self.addmodule(sub_module, temp)
 						self.app.modules.setitem(self.app.getalias(attr.__name__), sub_module)
 
 				elif attr.__class__.__name__ == 'ufunc':
 					if ('ufunc_item' not in folders):
 						folders['ufunc_item'] = self.insert(parent, "end", "ufunc_item" + str(uuid.uuid4()), text="ufuncs")
 					
-					self.insert(folders['ufunc_item'], "end", (filepath + DELIMETER + fn) if filepath else module.__name__ + '.' + fn, text=fn)
+					self.insert(folders['ufunc_item'], "end", module.__name__ + '.' + fn, text=fn)
 				else:
 					extras.append( (module.__name__ + '.' + fn, fn) )
 			
 
 		for idx, text in extras:
-			self.insert(parent, "end", (filepath + DELIMETER + text) if filepath else idx, text=text)
+			self.insert(parent, "end", idx, text=text)
+
+
+	def update_item(self, path):
+		expanded = self.item(path)["open"]
+		self.delete(path)
+		self.addfile(path, os.path.dirname(path))
+		self.item(path, open=expanded)
+
+		name, ext = name_and_extension(path)
+
+		for j in self.app.workspace.items:
+			item = self.app.workspace.items[j]
+			obj = item.value
+			if inspect.isfunction(obj) and hasattr(obj, "__module__"):
+				if obj.__module__ == name:
+					item.set_value( getattr(self.app.modules[name], obj.__name__) )
+					self.app.objects[item.name] = item.value
+
+	def open_editor(self, filepath):
+		if platform.system() == "Windows":
+			os.system("open " + filepath)
+		elif platform.system() == "Darwin":
+			os.system("open " + filepath)
 
 	def b1_motion(self, event):
 		self.drag["selected"] = self.selection()
@@ -309,8 +233,6 @@ class ProjectTree(Treeview):
 			item = self.app.workspace.get_item(self.drag["new_object"])
 			if item:
 				item.move(event.x - self.drag["position"][0], event.y - self.drag["position"][1])
-			else:
-				print ('no item!')
 		elif self.drag["selected"] and self.app.workspace == self.winfo_containing(event.x_root, event.y_root):
 			self.drag["in_workspace"] = True
 			self.drag["new_object"] = self.create_new_object(self.drag["selected"][0])
@@ -321,22 +243,11 @@ class ProjectTree(Treeview):
 		self.drag["selected"] = None
 		self.drag["in_workspace"] = False				
 
-	def import_module(self, name, alias=""):
-		cmd = "import " + str(name) + ("" if not alias else " as " + alias)
-		self.app.execute(cmd, __SHOW_RESULT__=False)
-
 	def _on_button_2(self, event):
 		key = self.identify_row(event.y)
-		key = key.replace("savedata.", "")
 
 		if not key:
 			self.contextmenu.set_menu(items=[{
-				"label": "New File",
-				"command": lambda: self.app.editor.add()
-			},{
-				"label": "Open File...",
-				"command": self.app.editor.open
-			}, {
 				"label": "Add Folder...",
 				"command": self.addfolder
 			}, {
@@ -344,10 +255,26 @@ class ProjectTree(Treeview):
 				"command": lambda: Popup(self.app, "Import Module", self.app, obj=self.import_module, eval_args=False)
 			}])
 			self.contextmenu.show(event, key)
-		
-		if key in self.rootfolders or key in self.app.modules or key in self.files:
+		elif self.has_tag(key, "rootfolder") or key in self.app.modules:
 			self.contextmenu.set_menu(items=[{
 				"label": "Remove " + os.path.basename(key),
 				"command": self.delete
 			}])
 			self.contextmenu.show(event, key)
+		elif self.has_tag(key, "editable_file"):
+			self.contextmenu.set_menu(items=[{
+				"label": "Open " + os.path.basename(key) + " in editor",
+				"command": lambda filepath=key: self.open_editor(filepath)
+			}])
+			self.contextmenu.show(event, key)
+
+	def _on_double_button_1(self, event):
+		selection = self.selection()
+		if selection:
+			name, ext = name_and_extension(selection[0])
+			if ext == ".py":
+				self.open_editor(selection[0])
+				return "break"
+
+	def import_module(self, module, alias=""):
+		self.app.execute("import " + module + ("" if not alias else " as " + alias), __SHOW_RESULT__=False)

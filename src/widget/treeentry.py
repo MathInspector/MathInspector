@@ -24,28 +24,48 @@ class TreeEntry(tk.Entry):
 	def __init__(self, parent, *args, **kwargs):
 		tk.Entry.__init__(self, parent, *args, **kwargs)
 		self.parent = parent
-		# @REFACTOR: can actually just get rid of is_editing and use edit_key instead
-		self.is_editing = False
 		self.edit_key = None
 		self.bind("<Key>", self._on_key)
 		self.config(
 			borderwidth=0,
 			highlightthickness=0,
-			background=Color.VERY_LIGHT_GREY,
-			font="Nunito 12",
-			foreground=Color.VERY_DARK_GREY
+			background=Color.ALT_BACKGROUND,
+			insertbackground=Color.WHITE,
+			selectbackground=Color.HIGHLIGHT,
+			foreground=Color.WHITE
 		)
 
+
 	def edit(self, key, event):
-		self.is_editing = True
+		name = re.sub(r"(<{1,2}[a-zA-Z0-9_' ]*>{1,2})", "", key)
+		# if name in self.parent.app.objects:
+		# 	obj = self.parent.app.objects[name]
+		# 	item = self.parent.app.workspace.get_item(name)
+		# 	if "default" in item.args and item.args["default"]["connection"]: 
+		# 		return
+		# 	if "<arg>" in key and items.args:
+		# 		argname = re.findall(r"<<([a-zA-Z0-9_' ]*)>>", key)[0]
+		# 		if item.args[argname]["connection"]:
+		# 			return
+
+
 		self.edit_key = key
-		self.parent.selection_remove(key)
-		self.parent.add_tag(key, "no_hover")
+		self.parent.selection_remove(self.parent.selection())
 		self.parent.remove_tag(key, "hover")
 		self.parent.selected = None
 		x,y,width,height = self.parent.bbox(self.parent.identify_row(event.y), self.parent.identify_column(event.x))
 		self.delete(0, "end")
-		self.insert(0, self.parent.item(key)["text"])
+		
+		val = self.parent.item(key)["text"]
+		if "<value>" in key:
+			val = str(self.parent.app.objects[name])
+
+		if "<arg>" in key:
+			item = self.parent.app.workspace.get_item(name)
+			argname = re.findall(r"<<([a-zA-Z0-9_' ]*)>>", key)[0]
+			val = str(item.args[argname]["value"]) if item.args[argname]["value"] is not None else ""
+
+		self.insert(0, val)
 		self.place(x=x + 23, y=y + height/2, anchor="w", relwidth=1)
 		self.focus()
 		return
@@ -60,22 +80,27 @@ class TreeEntry(tk.Entry):
 		self.place_forget()
 		key = re.sub(r"(<{1,2}[a-zA-Z0-9_' ]*>{1,2})", "", self.edit_key)
 		obj = self.parent.app.objects[key]
-		self.parent.remove_tag(self.edit_key, "no_hover")
-		self.parent.selection_set(self.edit_key)
-		self.parent.selected = self.edit_key
-		self.is_editing = False
-		self.edit_key = None
+		item = self.parent.app.workspace.get_item(key)
 
 		if cancel: return
-		if isinstance(obj, str):
-			val = self.get()
-		else:
+		
+		if "<arg>" in self.edit_key or "<kwarg>" in self.edit_key:
+			argname = re.findall(r"<<([a-zA-Z0-9_' ]*)>>", self.edit_key)[0]
+			val = None
 			try:
 				val = self.parent.app.execute(self.get(), __SHOW_RESULT__=False, __EVAL_ONLY__=True)
 			except Exception as err:
-				# TODO - find a better way to display this error in the tree itself (msg window on bottom?)
 				self.parent.app.console.result(err)
-				return
-	
-		self.parent.app.objects.__setitem__(key, val, preserve_class=True)
 
+			item.setarg(argname, val)
+
+		if "<value>" in self.edit_key:
+			try:
+				val = self.parent.app.execute(self.get(), __SHOW_RESULT__=False, __EVAL_ONLY__=True)
+				self.parent.app.objects.__setitem__(key, val, preserve_class=True, raise_error=True)
+			except Exception as err:
+				print ("\a")
+				self.parent.app.console.result(err)
+	
+		self.edit_key = None
+            

@@ -28,123 +28,102 @@ class Menu(tk.Menu):
 		app.config(menu=self)
 
 		OPTIONS = {
-			"File": [
-				{
-					"label": "New File            ",
-					"command": lambda event: app.editor.add(),
-					"hotkey": Cmd + "+n"
-				},
-				{
-					"label": "Open File...         ",
-					"command": lambda event: app.editor.open(event=event),
-					"hotkey": Cmd + "+o"		
-				},
-				{
-					"label": "Save            ",
-					"command": app.editor.save,
-					"hotkey": Cmd + "+s"
-				},
-				{
-					"label": "Save As         ",
-					"command": lambda event: app.editor.save(ask=True),
-				},
-				{
-					"separator": None
-				},				
-				{
-					"label": "Close File            ",
-					"command": self.close_file,
-					"hotkey": Cmd + "+w"
-				}
-			],
 
-			"Edit": [
-				{
-					"label": "Undo            ",
-					"command": lambda event: None,
-					"hotkey": Cmd + "+z"
-				},
-				{
-					"label": "Redo            ",
-					"command": lambda event: None,
-					"hotkey": Cmd + "+Shift+z"
-				},
-				{
-					"separator": None
-				},
-				{
-					"label": "Cut            ",
-					"command": lambda event: None,
-					"hotkey": Cmd + "+x"
-				},
-				{
-					"label": "Copy            ",
-					"command": lambda event: None,
-					"hotkey": Cmd + "+c"
-				},
-				{
-					"label": "Paste            ",
-					"command": lambda event: None,
-					"hotkey": Cmd + "+v"
-				},								
-				{
-					"separator": None
-				},
-				{
-					"label": "Word Wrap            ",
-					"command": app.editor.toggle_wordwrap
-				}
-			],
 
-			"Plot": [
-				{
-					"label": "Show Grid Lines                 ✓",
-					"command": lambda: self.toggle_output("show_grid_lines")
-				},
-				{
-					"label": "Smooth Lines                 ✓",
-					"command": lambda: self.toggle_output("smooth")
-				},
-				{
-					"label": "Random Color Lines            ",
-					"command": lambda: self.toggle_output("random_color")
-				},
-			],
+			"File": [{
+				"label": "New Project            ",
+				"command": self.new,
+				"hotkey": Cmd + "+Shift+n",
+			},
+			{
+				"label": "Open...            ",
+				"command": self.open,
+				"hotkey": Cmd + "+Shift+o"	
+			},
+			{
+				"label": "Save            ",
+				"command": self.save,
+				"hotkey": Cmd + "+Shift+s"	
+			},
+			{
+				"label": "Save As...            ",
+				"command": self.save_as
+			}],
 
-			"Project": [
-				{
-					"label": "New Project            ",
-					"command": self.new,
-					"hotkey": Cmd + "+Shift+n",
-				},
-				{
-					"label": "Open Project...            ",
-					"command": self.open,
-					"hotkey": Cmd + "+Shift+o"	
-				},
-				{
-					"label": "Save Project            ",
-					"command": self.save,
-					"hotkey": Cmd + "+Shift+s"	
-				},
-				{
-					"label": "Import Module            ",
-					"command": lambda event=None: Popup(app, "Import Module", app, obj=app.projecttree.import_module, eval_args=False),
-					"hotkey": Cmd + "+i"	
-				},
-				{
-					"label": "Save As...            ",
-					"command": self.save_as
-				},
-				{
-					"separator": None
-				},
-				{
-					"label": "Add Folder...            ",
-					"command": app.projecttree.addfolder
-				},
-			]
 
+			"Project": [{
+				"label": "Add Folder...            ",
+				"command": app.projecttree.addfolder
+			},
+			{
+				"label": "Import Module...",
+				"command": lambda: Popup(self.app, "Import Module", self.app, obj=self.app.projecttree.import_module, eval_args=False)
+			}],
+
+			"Plot": [{
+				"label": "Show Grid Lines                 ✓",
+				"command": lambda: self.toggle_output("show_grid_lines")
+			},
+			{
+				"label": "Smooth Lines                 ✓",
+				"command": lambda: self.toggle_output("smooth")
+			},
+			{
+				"label": "Random Color Lines            ",
+				"command": lambda: self.toggle_output("random_color")
+			}],
+
+			"Workspace": [{
+				"label": "Add Object",
+				"menu": [{
+					"label": "linspace",
+					"command": lambda: self.app.workspace.create_object("linspace")
+				},{
+					"label": "complex_grid",
+					"command": lambda: self.app.workspace.create_object("complex_grid")
+				}]
+			}],
+
+			"View": [{
+				"label": "Console",
+				"menu": [{
+					"label": "Top Panel",
+					"command": lambda event=None: self.app.setview("console"),
+				}, {
+					"label": "Bottom Panel",
+					"command": lambda event=None: self.app.setview("console", bottom=True),
+				}, {
+					"label": "Maximize",
+					"command": lambda event=None: None,
+				}]
+			},{
+				"label": "Workspace",
+				"menu": [{
+					"label": "Top Panel",
+					"command": lambda event=None: self.app.setview("workspace"),
+				}, {
+					"label": "Bottom Panel",
+					"command": lambda event=None: self.app.setview("workspace", bottom=True),
+				}]
+			},{
+				"label": "Doc Viewer",
+				"menu": [{
+					"label": "Top Panel",
+					"command": lambda event=None: self.app.setview("docviewer"),
+				}, {
+					"label": "Bottom Panel",
+					"command": lambda event=None: self.app.setview("docviewer", bottom=True),
+				}]
+			},{
+				"label": "Output",
+				"menu": [{
+					"label": "Top Panel",
+					"command": lambda event=None: self.app.setview("output"),
+				}, {
+					"label": "Bottom Panel",
+					"command": lambda event=None: self.app.setview("output", bottom=True),
+				}]
+			}]
 		}
 
 		self.app = app
@@ -154,11 +133,24 @@ class Menu(tk.Menu):
 			menu = tk.Menu(self)
 			self.menus.append(menu)
 			self.add_cascade(menu=menu, label=key)
-			for item in OPTIONS[key]:
-				if "separator"  in item:
+			for item in OPTIONS[key]:			
+				if "menu" in item and len(item["menu"]) > 0:
+					temp = tk.Menu(self)
+					self.menus.append(temp)
+					for k in item["menu"]:
+						if "separator" in k:
+							temp.add_separator(k["separator"])
+						if "label" in k and "command" in k:
+							temp.add_command(label=k["label"], command=k["command"], accelerator=None if "hotkey" not in k else k["hotkey"])
+						if "hotkey" in k:
+							# need a better system for assigning hotkeys, this doesn't allow all combinations
+							self.app.bind("<" + k["hotkey"].replace("+", "-") + ">", k["command"])
+					menu.add_cascade(label=item["label"], menu=temp)
+				elif "separator" in item:
 					menu.add_separator(item["separator"])
 				else:
 					menu.add_command(label=item["label"], command=item["command"], accelerator=None if "hotkey" not in item else item["hotkey"])
+				
 				if "hotkey" in item:
 					self.app.bind("<" + item["hotkey"].replace("+", "-") + ">", item["command"])
 
@@ -182,24 +174,11 @@ class Menu(tk.Menu):
 	def save_as(self, event=None):
 		self.app.savedata.save( filedialog.asksaveasfilename(defaultextension=".math") )
 
-	def new_module(self, event=None):
-		module = simpledialog.askstring("Import Module", "Choose a name for your module")
-		file = open("./savedata/" + module + ".py", "w+")
-		file.write("")
-		file.close()
-		self.app.projecttree.addfile("./savedata/" + module + ".py")
-
-
 	# @TODO: create custom dialog that allows import X as Y
 	def import_module(self, event=None):
 		module = simpledialog.askstring("Import Module", "What is the name of the module you want to import?")
 		if module:
 			self.app.execute("import " + module, __SHOW_RESULT__=False)
-
-	def import_module_from_file(self, event=None):
-		filepath = filedialog.askopenfilename()
-		if filepath:
-			self.app.projecttree.addfile(filepath)
 
 	def show_projecttree(self, event=None):
 		self.app.treenotebook.select("modules")

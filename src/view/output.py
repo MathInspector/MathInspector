@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 from settings import Color
-from util import get_class_name
+from util import get_class_name, makereadonly
 from numpy import ndarray
 from PIL import Image,ImageTk
 from widget import SciPlot, InfoBox
@@ -26,6 +26,7 @@ from widget.text import TextEditor
 from pprint import pformat
 import traceback
 
+REPR_TYPES = (str, int, float, complex, dict)
 photos = []
 SCALE = 10
 
@@ -41,7 +42,8 @@ class Output(tk.Frame):
 		self.class_label = tk.Label(infobox, font="Nunito 12 bold", foreground=Color.RED, background=Color.BACKGROUND)
 		divider = tk.Frame(self, background=Color.BLACK, height=8)
 		self.canvas = SciPlot(self)
-		self.text = TextEditor(self, syntax=None, on_change_callback=self._on_text_change)
+		self.text = TextEditor(self, syntax=None) #, on_change_callback=self._on_text_change)
+		makereadonly(self.text)
 		self.log = InfoBox(self, hide_callback=lambda: self.text.lift())
 		
 		infobox.pack(side="top", fill="both")
@@ -77,7 +79,7 @@ class Output(tk.Frame):
 			except Exception as err:
 				show_repr = True
 
-		if show_repr or isinstance(item.value, (str, int, float, complex, dict)):
+		if show_repr or isinstance(item.value, REPR_TYPES):
 			self.canvas.frame.pack_forget()
 			self.text.delete("1.0", "end")
 
@@ -90,10 +92,12 @@ class Output(tk.Frame):
 			self.text.pack(side="top", fill="both", expand=True)
 			return
 
-		self.text.pack_forget()
-		self.canvas.frame.pack(side="top", fill="both", expand=True)
 		args = None
 		output = item.get_output()
+
+		self.text.pack_forget()
+		self.canvas.frame.pack(side="top", fill="both", expand=True)
+
 		if isinstance(output, ndarray):
 			for j in item.args:
 				if "value" in item.args[j] and isinstance(item.args[j]["value"], ndarray):
@@ -105,13 +109,18 @@ class Output(tk.Frame):
 		if isinstance(output, (list, ndarray)):
 			try:
 				self.canvas.plot(output, key, item.line_color)
-				return
 			except Exception as e:
 				print (traceback.format_exc())
-				pass				
+				pass		
+			return
 
+		self.canvas.frame.pack_forget()
+		self.text.delete("1.0", "end")
+		self.text.insert("end", str(output))
+		self.text.pack(side="top", fill="both", expand=True)		
 
 	def _on_text_change(self):
+		print ("text change???")
 		if not self.selected: return
 
 		item = self.app.workspace.get_item(self.selected)

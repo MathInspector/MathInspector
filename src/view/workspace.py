@@ -18,20 +18,30 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 from util import argcount, unique_name
-from settings import Color, Widget, ButtonRight
+from settings import Color, Widget, ButtonRight, ButtonReleaseRight
 from widget.canvas import PanZoomDragCanvas, Item
 from widget import ContextMenu, Popup, InfoBox
+from objects import complex_grid
+from numpy import linspace, sign
 
 class WorkSpace(PanZoomDragCanvas):
 	def __init__(self, app, *args, **kwargs):
 		PanZoomDragCanvas.__init__(self, app, highlightthickness=4, highlightbackground=Color.BLACK, *args, **kwargs)
-		self.connect = { "input": None, "output": None, "input_id": None }
+		self.connect = {
+			"input": None, 
+			"output": None, 
+			"input_id": None,
+			"argname": None
+		}
 		self.hover_input = None
 		self.hover_editable_item = None
 		self.editable_item = None
+		self.dragvalue_item = None
 		self.log = InfoBox(self)
 		self.contextmenu = ContextMenu(app)
 		self.contextmenu.set_menu(items=[{ "label": "Delete", "command": self._on_delete }])		
+		self.bind(ButtonRight, lambda event: None)
+		self.bind(ButtonReleaseRight, self._on_workspace_contextmenu)
 		self.tag_bind("draggable", ButtonRight, self._on_contextmenu)
 		self.tag_bind("input", "<Enter>", self._on_enter_input)
 		self.tag_bind("input", "<Leave>", self._on_leave_input)
@@ -51,6 +61,8 @@ class WorkSpace(PanZoomDragCanvas):
 		self.tag_bind("editable", "<Motion>", self._on_motion_editable)
 		self.tag_bind("editable", "<Leave>", self._on_leave_editable)
 		self.tag_bind("editable", "<Button-1>", self._on_click_editable)
+		self.tag_bind("editable", "<B1-Motion>", self._on_drag_editable)
+		self.tag_bind("editable", "<ButtonRelease-1>", self._on_start_edit)
 
 	def get_state(self):
 		result = { "zoomlevel": self.zoomlevel, "items": [] }
@@ -77,7 +89,8 @@ class WorkSpace(PanZoomDragCanvas):
 					"sticky_graph": item.sticky_graph,
 					"position": item.get_position(),
 					"args": args,
-					"kwargs": kwargs
+					"kwargs": kwargs,
+					"show_kwargs": item.show_kwargs
 				})
 		return result
 
@@ -85,10 +98,12 @@ class WorkSpace(PanZoomDragCanvas):
 		self.zoomlevel = state["zoomlevel"]
 		for i in state["items"]: 
 			x,y = i["position"]
-			item = self.get_item(i["name"])
+			item = self.get_item(i["name"])			
 			item.move(x,y)
+			
+			if i["show_kwargs"]:
+				item.toggle_kwargs()
 
-			# system for working with older save files to not crash everything
 			if "line_color" in i:
 				item.set_color(i["line_color"])
 			if "sticky_graph" in i and i["sticky_graph"]:
@@ -108,10 +123,6 @@ class WorkSpace(PanZoomDragCanvas):
 					output_item.set_output_connection(item, item.kwargs[j]["input"])
 					output_item.move()
 
-		# for i in state["items"]: 
-		# 	item = self.get_item(i["name"])	
-		# 	if i["output_connection"]:
-		# 		item.set_output_connection( self.get_item(i["output_connection"]) )
 
 	def _on_motion_editable(self, event):
 		item = self.get_closest(event.x, event.y)
@@ -119,6 +130,10 @@ class WorkSpace(PanZoomDragCanvas):
 			self.hover_editable_item = item
 			closest = self.find_closest(event.x, event.y)[0]
 			if "editable" in self.gettags(closest):
+				arg = item.getarg("value_label", closest)
+				if "default" in item.args and item.args["default"]["connection"]:
+					return
+
 				self.editable_item = closest
 				self.hover_editable_item.config(hover_editable=("enter", self.editable_item))
 
@@ -129,7 +144,35 @@ class WorkSpace(PanZoomDragCanvas):
 		self.editable_item = None
 
 	def _on_click_editable(self, event):
-		# @TODO: when object is in edit mode, enable b1-motion event
+		self.dragvalue_item = self.get_closest(event.x, event.y)
+		
+	def _on_drag_editable(self, event):
+		if self.event != "drag_value":
+			if "default" in self.dragvalue_item.args and not self.dragvalue_item.args["default"]["connection"]:
+				self.event = "drag_value"
+
+	def _on_drag(self, event):
+		if self.event == "drag_value":
+			delta_x = event.x - self.drag["position"][0]
+			delta_y = event.y - self.drag["position"][1]
+			self.drag["position"] = (event.x, event.y)
+			obj = self.app.objects[self.drag["item"].name]
+			if isinstance(obj, int):
+				self.app.objects[self.drag["item"].name] += int(sign(delta_x) - sign(delta_y))
+			elif isinstance(obj, float):
+				num_decimals = 1 + len(str(obj).split(".")[1])
+				divider = 100
+				self.app.objects[self.drag["item"].name] = round(obj + (delta_x - delta_y) / divider, num_decimals)
+
+		else:
+			super(WorkSpace, self)._on_drag(event)
+		
+	def _on_start_edit(self, event):
+		if self.event == "drag_value":
+			self.event = None
+			self.dragvalue_item = None
+			return
+
 		item = self.get_closest(event.x, event.y)
 		if self.hover_editable_item == self.selected:
 			self.event = "edit"
@@ -143,7 +186,32 @@ class WorkSpace(PanZoomDragCanvas):
 				self.hover_editable_item = item
 				self.hover_editable_item.config(hover_editable=("enter", self.editable_item))
 
+	def _on_workspace_contextmenu(self, event):
+		if not self.pan_position:
+			self.contextmenu.set_menu(items=[{
+				"label": "Add Object",
+				"menu": [{
+					"label": "linspace",
+					"command": lambda: self.create_object("linspace")
+				},{
+					"label": "complex_grid",
+					"command": lambda: self.create_object("complex_grid")
+				}]
+			}])
+			self.contextmenu.show(event, "Workspace")
+
+		self.pan_position = None
+
+	def create_object(self, name):
+		object_name = unique_name(self.app, name)
+		
+		if name == "linspace":
+			self.app.objects[object_name] = linspace
+		elif name == "complex_grid":
+			self.app.objects[object_name] = complex_grid
+
 	def _on_contextmenu(self, event):
+		self.pan_position = True
 		item = self.get_closest(event.x, event.y)
 		if self.multiselect["items"]:
 			self.contextmenu.set_menu([{ 
@@ -180,7 +248,6 @@ class WorkSpace(PanZoomDragCanvas):
 					"command": item.toggle_kwargs
 				})
 
-			# if item.isgraphable ... ?
 			graph.append({
 				"label": "Sticky       ✓" if item.sticky_graph else "Sticky",
 				"command": item.toggle_sticky
@@ -202,13 +269,10 @@ class WorkSpace(PanZoomDragCanvas):
 			}, {
 				"separator": None
 			}] + extras + [{ 
-				"label": "Rename...", 
-				"command": lambda: None
-			}, { 
 				"label": "Delete", 
 				"command": self._on_delete 
 			}])
-			self.app.select(item.name)
+
 		self.contextmenu.show(event, item.name)
 
 	def _on_item_method(self, item, attr):
@@ -354,6 +418,14 @@ class WorkSpace(PanZoomDragCanvas):
 					self.connect["output"] = item.kwargs[j]["connection"]
 		else:
 			self.connect["output"] = self.get_closest(event.x, event.y, self.output_nodes)
+			if self.connect["output"].output_connection:
+				item = self.connect["output"].output_connection
+				for i in item.args:
+					if item.args[i]["connection"] and self.connect["output"].canvas_id == item.args[i]["connection"].canvas_id:
+						self.connect["input_id"] = item.args[i]["input"]
+				for j in item.kwargs:
+					if item.kwargs[j]["connection"] and self.connect["output"].canvas_id == item.kwargs[j]["connection"].canvas_id:
+						self.connect["input_id"] = item.kwargs[j]["input"]
 		
 		if self.connect["output"]:
 			self.app.select(self.connect["output"].name)
@@ -365,7 +437,7 @@ class WorkSpace(PanZoomDragCanvas):
 
 		if self.connect["output"]:
 			self.connect["output"].config(hover=Color.WIRE_INACTIVE)
-			self.connect["output"].config(border="hide")
+			# self.connect["output"].config(border="hide")
 			if self.connect["output"].output_connection:
 				self.connect["output"].output_connection.config(border="hide")
 			if self.connect["input_id"]:
@@ -386,8 +458,8 @@ class WorkSpace(PanZoomDragCanvas):
 		elif self.connect["output"]:
 			self.connect["output"].move_wire(event.x, event.y)
 			if self.connect["input"]:
-				self.connect["output"].config(border="hide")
-				self.connect["input"].config(border="hide")
+				self.connect["input"].config(border="hide", disconnect=self.connect["input_id"])
+				self.app.objecttree.update_object(self.connect["input"].name)				
 				self.connect["input"] = None
 
 		if input_item:
@@ -400,10 +472,13 @@ class WorkSpace(PanZoomDragCanvas):
 			if self.connect["input"]:
 				self.connect["output"].set_output_connection(self.connect["input"], self.connect["input_id"])
 
+				# should refactor this, its pretty confusing
 				if self.app.on_set_object(self.connect["output"].name):
 					self.app.select(self.connect["input"].name)
 				else:
 					self.connect["output"].config(hover=Color.EMPTY_NODE)
+					self.connect["input"].config(hide_input=True)
+				
 			else:
 				self.connect["output"].config(hide_wire=True)
 
@@ -411,13 +486,12 @@ class WorkSpace(PanZoomDragCanvas):
 			try:
 				val = self.connect["input"].get_output(raise_err=True)
 			except Exception as err:
-				self.log.show(err)
-				self.connect["output"].set_output_connection(None);
-				self.connect["output"].config(hide_wire=True)
-				self.itemconfig(self.connect["input_id"], fill=Color.EMPTY_NODE)
+				if self.connect["input"].hasargs():
+					self.log.show(err)
 
 		self.connect["output"] = None
 		self.connect["input"] = None
+		self.connect["input_id"] = None
 		self.event = None
 				
 	def _on_enter_wire(self, event):

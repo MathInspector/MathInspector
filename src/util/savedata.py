@@ -56,16 +56,13 @@ class SaveData:
 		self.app.console.clear()
 		self.app.docviewer.delete("1.0", "end")
 		self.app.output.select()
-		self.app.editor.clear()
-		self.app.editor.add(is_preview=True)
 		self._set_filepath(None)
 		for i in [j for j in self.app.workspace.items]:
 			del self.app.objects[ self.app.workspace.items[i].name ]
-		self.app.setview("editor", True)
-		self.app.horizontal_panel.bind("<Configure>", lambda event: _on_configure_panel(self.app.horizontal_panel, 0))
-		self.app.vertical_panel.bind("<Configure>", lambda event: _on_configure_panel(self.app.vertical_panel, 0))
-		# self.app.horizontal_panel.sashpos(0,0)
-		# self.app.vertical_panel.sashpos(0,0)
+		self.app.setview("workspace", False)
+		self.app.setview("console", True)
+		self.app.horizontal_panel.bind("<Configure>", lambda event: _on_configure_panel(self.app.horizontal_panel, 220))
+		# self.app.vertical_panel.bind("<Configure>", lambda event: _on_configure_panel(self.app.vertical_panel, 0))
 
 	def getobjects(self):
 		objects = {}
@@ -76,6 +73,7 @@ class SaveData:
 			else:
 				objects[key] = self.app.objects[key]
 
+		# print ("FUNCTIONS", functions)
 		return objects, functions
 
 	def save(self, filepath=AUTOSAVE_PATH):
@@ -97,7 +95,7 @@ class SaveData:
 			pickle.dump(self.app.treenotebook.notebook.select(), output, pickle.HIGHEST_PROTOCOL)
 			pickle.dump(self.filepath, output, pickle.HIGHEST_PROTOCOL)
 			pickle.dump(self.app.projecttree.getstate(), output, pickle.HIGHEST_PROTOCOL)
-			pickle.dump(self.app.editor.getstate(), output, pickle.HIGHEST_PROTOCOL)
+			# pickle.dump(self.app.editor.getstate(), output, pickle.HIGHEST_PROTOCOL)
 			pickle.dump(self.app.console.history, output, pickle.HIGHEST_PROTOCOL)
 			pickle.dump(self.app.objecttree.getexpanded(), output, pickle.HIGHEST_PROTOCOL)
 			pickle.dump(self.app.output.canvas.getstate(), output, pickle.HIGHEST_PROTOCOL)
@@ -127,7 +125,7 @@ class SaveData:
 				treenotebooktab = pickle.load(data)
 				prevfilepath = pickle.load(data)
 				projecttree_state = pickle.load(data)
-				editor_state = pickle.load(data)
+				# editor_state = pickle.load(data)
 				history = pickle.load(data)
 				openobjects = pickle.load(data)
 				output_state = pickle.load(data)
@@ -149,6 +147,7 @@ class SaveData:
 		
 		# NOTE - this is loading the custom modules, which is required for the non-pickleable fn's to load
 		self.app.projecttree.setstate(*projecttree_state)
+		# print (self.app.modules)
 		for key in saved_functions:
 			module, attr = saved_functions[key]
 			if module in self.app.modules:
@@ -169,9 +168,9 @@ class SaveData:
 		self.app.treenotebook.notebook.select(treenotebooktab)
 		self.app.console.history = history[len(history) - HISTORY_SIZE:]
 		self.app.console.history_index = len(self.app.console.history)
-		self.app.editor.setstate(*editor_state)
-		self.app.objecttree.setexpanded(openobjects)
+		# self.app.editor.setstate(*editor_state)
 		self.app.workspace.set_state(state)
+		self.app.objecttree.set_state(openobjects)
 		
 		self.app.setview(top_tab)
 		self.app.setview(bottom_tab, True)		

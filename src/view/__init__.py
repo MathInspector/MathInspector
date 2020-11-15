@@ -20,7 +20,7 @@ from .nav import Nav
 from .menu import Menu
 from .objecttree import ObjectTree
 from .projecttree import ProjectTree
-from .editor import Editor
+# from .editor import Editor
 from .console import Console
 from .docviewer import DocViewer
 from .output import Output

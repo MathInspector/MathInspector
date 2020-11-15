@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+# TODO: have open/close image
+
 from tkinter import ttk
 from settings import Color
 
@@ -41,6 +43,9 @@ class Treeview(ttk.Treeview):
 		
 		self.add_tag(item, "hover")
 		self.hover_item = item
+
+	def tags(self, tag):
+		return [j for j in self.get_children() if self.has_tag(j, tag)]
 
 	def has_tag(self, item, tag):
 		tags = self.item(item)["tags"]

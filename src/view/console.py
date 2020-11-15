@@ -40,6 +40,7 @@ class Console(TextEditor):
 		self.bind("<KeyRelease>", self._on_key_release)
 		self.bind("<Configure>", self._on_configure)
 		self.bind("<<MarkSet>>", self._on_mark_set)
+		self.bind("<<Selection>>", self._on_text_selection)
 		
 	def clear(self):
 		self.delete()
@@ -50,13 +51,18 @@ class Console(TextEditor):
 		start = [int(i) for i in self.index("end-1c linestart").split(".")]
 		end = [int(i) for i in self.index("end").split(".")]
 
-		# @TODO allow copy/paste when ready for that
 		if (end[0] - index[0] > 1
 				or (index[1] - start[1] < 5 and event.keysym != "Right")):
 			self.mark_set("insert", "end")
 
-		if event.keysym in ("Left", "BackSpace") and index[1] - start[1] < 6:
-			return "break"
+		if event.keysym == "BackSpace":
+			col = index[1] - start[1]
+			selected_range = self.tag_ranges("sel")
+			if col == 5 and selected_range:
+				self.delete(*selected_range)
+				return "break"
+			elif col < 6:
+				return "break"
 
 		if event.keysym == "Up":
 			if self.history_index == len(self.history):
@@ -100,12 +106,22 @@ class Console(TextEditor):
 			return "break"
 		return super(Console, self)._on_key_release(event)
 
+	def _on_text_selection(self, event):
+		selected = self.tag_ranges("sel")
+		if len(selected) == 0: return
+		
+		line, col = str(selected[0]).split(".")
+		endline = self.index("end-1c").split(".")[0]
+
+		if line == endline and int(col) < 5:
+			self.tag_remove("sel", selected[0], str(line) + ".5")
+
 	def _on_mark_set(self, event):
 		pass
-		# line, col = self.index("insert").split(".")
-		# endline = self.index("end-1c").split(".")[0]
-		# if line == endline and int(col) < 5:
-		# 	self.after(100, lambda: self.mark_set("index", "end"))
+		line, col = self.index("insert").split(".")
+		endline = self.index("end-1c").split(".")[0]
+		if line == endline and int(col) < 5:
+			self.mark_set("insert", str(endline) + ".5")
 
 	def _on_configure(self, event):
 		self.see("insert")
@@ -148,7 +164,6 @@ class Console(TextEditor):
 		self.insert("end", cmd)
 		return "break"
 
-	# REFACTOR - may actually need to move this into math inspector so it gets all the globals like app
 	def autocomplete(self):
 		cmd = self.getcmd()
 		result = (

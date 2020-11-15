@@ -34,7 +34,7 @@ class SciPlot(PanZoomDragCanvas):
 		self.parent = parent
 		self.key = None
 		self.gridlines = []
-		self.gridsize = 32 
+		self.gridsize = 128 
 		
 		self.prev_val = [None, None]
 		self.current_val = [None, None]
@@ -153,13 +153,16 @@ class SciPlot(PanZoomDragCanvas):
 
 			self.key = key
 			if key not in self.cache:
+				# this sets the initial viewport of the graph
 				self.cache[key] = {
-					"zoomlevel": self.winfo_width() / abs(maximum - minimum),
-					"delta": [self.winfo_width()/2,self.winfo_height()/2]
+					"zoomlevel": 10,
+					"delta": [320, 150],
+					"gridsize": self.gridsize
 				}		
 
 		self.zoom(self.cache[key]["zoomlevel"], (0,0))
 		self.pan(self.cache[key]["delta"])
+		self.axis()
 		self.drawgrid()
 
 	def plot_pixels(self, pixels, bounds, key):
@@ -184,14 +187,14 @@ class SciPlot(PanZoomDragCanvas):
 					self.create_element("rectangle", coords, Color.DARK_BLACK)
 
 	def create_element(self, *args, **kwargs):
-			item = Element(self, *args, **kwargs)
-			self.items[item.id] = item
-			self.canvas_ids.append({
-				"canvas_id": item.id,
-				"parent_id": None	
-			})
+		item = Element(self, *args, **kwargs)
+		self.items[item.id] = item
+		self.canvas_ids.append({
+			"canvas_id": item.id,
+			"parent_id": None	
+		})
 
-			return item
+		return item
 
 	def overlay(self, key, points=None, color=Color.BLUE):
 		if not points:
@@ -206,7 +209,6 @@ class SciPlot(PanZoomDragCanvas):
 	def setstate(self, saved):
 		self.cache = saved["cache"]
 		self.key = saved["key"]
-		# self.axis()
 
 	def getstate(self):
 		return {
@@ -229,34 +231,42 @@ class SciPlot(PanZoomDragCanvas):
 		# xaxis, yaxis = (range(-self.gridsize, self.gridsize), range(-self.gridsize, self.gridsize))
 		
 		x0,y0 = self.cache[self.key]["delta"] if self.key else (0,0)
+		gridsize = self.cache[self.key]["gridsize"] if self.key else self.gridsize
 # push start of range over to same remainder trick as axis so 0 line is always there
 		x_marks = self.winfo_width() / self.zoomlevel + 2
 		x_spacing = int(x_marks / self.gridmarks()) or 1
 		y_marks = self.winfo_height() / self.zoomlevel + 2
 		y_spacing = int(y_marks / self.gridmarks()) or 1
 
+		# print ("x0,y0", x0,y0)
+		# print ("x_marks", x_marks)
+		# print ("x_spacing", x_spacing)
+		# print ("gridsize", gridsize) # looks like gridsize is too big!
+		# print ("----- \n\n\n")
+		# return
+
 		if x_marks < self.gridmarks():
 			# print ("less than 0 transition")
 			pass
 
-		left_endpoint = -self.gridsize
+		left_endpoint = -gridsize
 		while left_endpoint % x_spacing != 0:
 			left_endpoint += 1
 
 		spacing = x_spacing
-		xaxis, yaxis = range(left_endpoint, self.gridsize, spacing), range(left_endpoint, self.gridsize, spacing)
+		xaxis, yaxis = range(left_endpoint, gridsize, spacing), range(left_endpoint, gridsize, spacing)
 
 		for i in xaxis:
 			x = i*self.zoomlevel + x0
 			item = self.create_element("line", 
-				(x, -self.gridsize*self.zoomlevel + y0, x, self.gridsize*self.zoomlevel + y0), fill=Color.BLACK if i != 0 else Color.LIGHT_BLACK)
+				(x, -gridsize*self.zoomlevel + y0, x, gridsize*self.zoomlevel + y0), fill=Color.BLACK if i != 0 else Color.LIGHT_BLACK)
 			self.gridlines.append(item.id)
 			self.tag_lower(item)
 		
 		for j in yaxis:
 			y = j * self.zoomlevel + y0
 			item = self.create_element("line", 
-				(-self.gridsize * self.zoomlevel, y, self.gridsize * self.zoomlevel, y), fill=Color.BLACK if j != 0 else Color.LIGHT_BLACK)
+				(-gridsize * self.zoomlevel, y, gridsize * self.zoomlevel, y), fill=Color.BLACK if j != 0 else Color.LIGHT_BLACK)
 			self.gridlines.append(item.id)
 			self.tag_lower(item)
 
@@ -287,11 +297,13 @@ class SciPlot(PanZoomDragCanvas):
 		x_marks = self.winfo_width() / self.zoomlevel + 2
 		x_spacing = int(x_marks / self.gridmarks()) or 1
 		gridwidth = abs(xaxis[0] - xaxis[-1])
-		if gridwidth < self.gridsize / 4:
-			self.gridsize = int(self.gridsize / 2)
+		gridsize = self.cache[self.key]["gridsize"]
+
+		if gridwidth < gridsize / 4:
+			self.cache[self.key]["gridsize"] = int(gridsize / 2)
 			self.drawgrid()				
-		elif not gridwidth < self.gridsize:
-			self.gridsize *= 2
+		elif not gridwidth < gridsize:
+			self.cache[self.key]["gridsize"] *= 2
 			self.drawgrid()				
 
 	def range(self):
@@ -344,6 +356,7 @@ class SciPlot(PanZoomDragCanvas):
 		super(SciPlot, self)._on_b2_motion(event)
 
 	def center(self, points, key=None, bounds=None):
+		print ("center called dawg")
 		bounds = bounds or self.getbounds(points)
 		width = bounds[1] - bounds[0]
 		height = bounds[3] - bounds[2]
@@ -364,9 +377,10 @@ class SciPlot(PanZoomDragCanvas):
 			self.pan(delta)
 			self.cache[key] = {
 				"zoomlevel": zoomlevel,
-				"delta": delta
+				"delta": delta,
+				"gridsize": self.gridsize
 			}
-		self.axis()
+		# self.axis()
 
 	def getbounds(self, points):
 		result = [0,0,0,0]

@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from .text.highlightedtext import HighlightedText
 from .sciplot import SciPlot
-from .editortab import EditorTab
+# from .editortab import EditorTab
 from .treeview import Treeview
 from .notebook import Notebook
 from .contextmenu import ContextMenu

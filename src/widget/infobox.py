@@ -51,6 +51,7 @@ class InfoBox(tk.Frame):
 		if isinstance(title, Exception):
 			text = title
 			title = "Error"
+			print ("\a")
 			
 		if isinstance(text, Exception):
 			bg = Color.RED
