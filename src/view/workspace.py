@@ -17,11 +17,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import tkinter as tk
-from util import argcount, unique_name
+from util import argspec, argcount, unique_name
 from settings import Color, Widget, ButtonRight, ButtonReleaseRight
 from widget.canvas import PanZoomDragCanvas, Item
 from widget import ContextMenu, Popup, InfoBox
 from objects import complex_grid
+from inspect import getfullargspec
 from numpy import linspace, sign
 
 class WorkSpace(PanZoomDragCanvas):
@@ -111,17 +112,21 @@ class WorkSpace(PanZoomDragCanvas):
 
 			for j in i["args"]:
 				item.setarg(j, i["args"][j]["value"])
-				output_item = self.get_item(i["args"][j]["connection"])
-				if output_item:
-					output_item.set_output_connection(item, item.args[j]["input"])
-					output_item.move()
 
 			for j in i["kwargs"]:
 				item.setarg(j, i["kwargs"][j]["value"])
+
+		for i in state["items"]: 
+			item = self.get_item(i["name"])			
+			for j in i["args"]:
+				output_item = self.get_item(i["args"][j]["connection"])
+				if output_item:
+					output_item.set_output_connection(item, item.args[j]["input"])
+
+			for j in i["kwargs"]:
 				output_item = self.get_item(i["kwargs"][j]["connection"])
 				if output_item:
 					output_item.set_output_connection(item, item.kwargs[j]["input"])
-					output_item.move()
 
 
 	def _on_motion_editable(self, event):
@@ -285,14 +290,17 @@ class WorkSpace(PanZoomDragCanvas):
 			self.app.objects[name] = result
 
 	def animate(self, item):
+		kwargs = {}
+		if item.name in self.app.animation_cache:
+			kwargs = self.app.animation_cache[item.name]
 		Popup(self.app, "Animate", self.app, 
-			obj=self.timer(item.value), 
+			obj=self.timer(item.value, **kwargs), 
 			canvas_item=None, 
 			callback=lambda *args, **kwargs: self.app.timer(item.name, *args, **kwargs)
 		)
 
-	def timer(self, s):		
-		return lambda a, start=s, stop=10, step=1, delay=100, colorchange=False, color=0x000000: None
+	def timer(self, s, start=None, stop=10, step=1, delay=100, colorchange=False, color=0x000000, timer_running=None):
+		return lambda s, start=start or s, stop=stop, step=step, delay=delay, colorchange=colorchange, color=color: None
 
 	def select(self, name):
 		if name is None and self.selected is not None:
@@ -325,18 +333,50 @@ class WorkSpace(PanZoomDragCanvas):
 		return (None, None) if idx else None
 
 	def set_items(self, items):
-		# @TODO: make a system for loading and saving state with positions and connections, I guess into an object to be pickeled I like that system
 		self.items = items
 		for j in self.items:
 			self.update_object(self.items[j])
 
-	def update_object(self, key):
+	def update_object(self, key, prev_item=None):
+		obj = self.app.objects[key]
 		item, idx = self.get_item(key, idx=True)
+		
 		if item:
-			item.set_value(self.app.objects[key])			
+			if prev_item is None:
+				item.set_value(self.app.objects[key])
+				return False			
+			else:
+				if prev_item.output_connection:
+					input_id = prev_item.output_connection.getarg("connection", prev_item)["input"]
+				
+				coord = prev_item.get_position()
+				self.delete_object(key)
+				new_item = self.create_item(obj, key, coord=coord)
+				if prev_item.show_kwargs:
+					new_item.toggle_kwargs()
+				
+				if prev_item.output_connection:
+					new_item.set_output_connection(prev_item.output_connection, input_id)
+					new_item.move()
+
+				for i in prev_item.args:
+					if i in new_item.args:
+						if prev_item.args[i]["connection"]:
+							prev_item.args[i]["connection"].set_output_connection(new_item, new_item.args[i]["input"])
+						elif prev_item.args[i]["value"] is not None:
+							new_item.setarg(i, prev_item.args[i]["value"])
+
+				for i in prev_item.kwargs:
+					if i in new_item.args:
+						if prev_item.kwargs[i]["connection"]:
+							prev_item.kwargs[i]["connection"].set_output_connection(new_item, new_item.kwargs[i]["input"])
+						elif prev_item.kwargs[i]["value"] is not None:
+							new_item.setarg(i, prev_item.kwargs[i]["value"])
+
+				return True			
 		else:
-			obj = self.app.objects[key]
-			item = self.create_item(obj, key)
+			self.create_item(obj, key)
+			return False
 
 	def delete_object(self, key):
 		item, idx = self.get_item(key, idx=True)
@@ -363,6 +403,7 @@ class WorkSpace(PanZoomDragCanvas):
 		if self.multiselect["items"]:
 			for canvas_id in self.multiselect["items"]:
 				del self.app.objects[self.items[canvas_id].name]
+			self.multiselect["items"].clear()
 		else:
 			del self.app.objects[self.contextmenu.key]
 
@@ -470,15 +511,7 @@ class WorkSpace(PanZoomDragCanvas):
 
 		if self.connect["output"]:
 			if self.connect["input"]:
-				self.connect["output"].set_output_connection(self.connect["input"], self.connect["input_id"])
-
-				# should refactor this, its pretty confusing
-				if self.app.on_set_object(self.connect["output"].name):
-					self.app.select(self.connect["input"].name)
-				else:
-					self.connect["output"].config(hover=Color.EMPTY_NODE)
-					self.connect["input"].config(hide_input=True)
-				
+				self.connect["output"].set_output_connection(self.connect["input"], self.connect["input_id"])				
 			else:
 				self.connect["output"].config(hide_wire=True)
 

@@ -26,7 +26,8 @@ import inspect, math
 import numpy as np
 
 MAX_LEN = 10
-TEXTWRAP_WIDTH = 32
+MAX_STR_LEN = 200
+TEXTWRAP_WIDTH = 28
 LABEL_OFFSET = 32
 ARG_VALUE_OFFSET = 2
 ARG_VALUE_MARGIN = 0
@@ -37,23 +38,23 @@ class Item:
         self.name = name
         self.value = value
         self.args = {}     
-        self.kwargs = {}     
+        self.kwargs = {}  
+        self.argspec = None   
         self.canvasentry = Entry(self)
         self.output_connection = None
         self.children = []
         self.show_kwargs = False
         self.sticky_graph = False 
         self.line_color = Color.BLUE
-        
-        inputs = argspec(value, withself=True)
 
-        # move this into argspec fn
-        if inputs and callable(value):            
-            args = inputs["args"]
-            kwargs = inputs["kwargs"]
+        self.argspec = argspec(value)
+        if self.argspec and callable(value):
+            args = self.argspec["args"]
+            kwargs = self.argspec["kwargs"]
 
             height = 700
-            self.canvas_id = canvas.create_rectangle(coord[0] - Widget.ITEM_SIZE/2,coord[1] - height/2,coord[0] + Widget.ITEM_SIZE/2,coord[1] + height/2, outline=Color.INACTIVE, fill=Color.BLACK, tags='draggable')
+            self.canvas_id = canvas.create_rectangle(coord[0] - Widget.ITEM_SIZE/2,coord[1] - height/2,coord[0] + Widget.ITEM_SIZE/2,coord[1] + height/2, 
+                outline=Color.INACTIVE, fill=Color.BLACK, tags='draggable')
 
             for j in args:
                 self.args[j] = {
@@ -79,13 +80,11 @@ class Item:
                     self.children.append(self.kwargs[j][k])
 
         else:
-            #@TODO: system for instantiating classes w/ > 1 arg
             fn = value.__class__ 
             if isinstance(value, (str, list, dict)):
                 self.canvas_id = canvas.create_rectangle(coord[0] - Widget.ITEM_SIZE/2,coord[1] - Widget.ITEM_SIZE/2,coord[0] + Widget.ITEM_SIZE/2,coord[1] + Widget.ITEM_SIZE/2, outline=Color.INACTIVE,fill=Color.BLACK, tags='draggable')
             else:
                 self.canvas_id = canvas.create_oval(coord[0] - Widget.ITEM_SIZE/2,coord[1] - Widget.ITEM_SIZE/2,coord[0] + Widget.ITEM_SIZE/2,coord[1] + Widget.ITEM_SIZE/2, outline=Color.INACTIVE,fill=Color.BLACK, tags='draggable')
-                # self.canvas_id = canvas.create_rectangle(coord[0] - Widget.ITEM_SIZE/2,coord[1] - Widget.ITEM_SIZE/2,coord[0] + Widget.ITEM_SIZE/2,coord[1] + Widget.ITEM_SIZE/2, outline=Color.INACTIVE,fill=Color.BLACK, tags='draggable')
             self.args["default"] = {
                 "input": canvas.create_oval(0,0,0,0, outline=Color.INACTIVE, fill=Color.EMPTY_NODE, tags='input'),
                 "connection": None
@@ -127,17 +126,18 @@ class Item:
                         max_len = length if length > max_len else max_len
                     width =  self.canvas.zoomlevel * min(12 * len(value_text), 16 + max(Widget.ITEM_SIZE, max_len * 8))
                 else:
-                    value_text = fill(str(self.value), TEXTWRAP_WIDTH, replace_whitespace=False)
+                    str_text = str(self.value)
+                    sample_text = str_text if len(str_text) <= MAX_STR_LEN else str_text[:MAX_STR_LEN - 10] + " ... " + str_text[-10:]                    
+                    value_text = fill(sample_text, TEXTWRAP_WIDTH, replace_whitespace=False)
                     width =  self.canvas.zoomlevel * max(Widget.ITEM_SIZE, 16 + 8 * min(len(value_text), TEXTWRAP_WIDTH))
                 
                 height = self.canvas.zoomlevel * max(Widget.ITEM_SIZE, 16 + 20 * (1 + value_text.count("\n"))) # @TODO: change this to adjust height and pretty print various things like list/dict/long strings
-                # TODO get num of lines of text to compute height of widget properly
             else:
                 value_text = str(self.value) if len(str(self.value) or "") <= MAX_LEN else str(self.value)[:MAX_LEN] + "..."
                 width =  self.canvas.zoomlevel * (20 + max(60, len(value_text) * 12))
                 height = self.canvas.zoomlevel * Widget.ITEM_SIZE # @TODO: change this to adjust height and pretty print various things like list/dict/long strings
 
-            color = Color.BLUE if self.args["default"]["connection"] else get_font_color(self.value)
+            color = Color.BLUE if "default" in self.args and self.args["default"]["connection"] else get_font_color(self.value)
             self.canvas.itemconfig(self.value_label, text=str(value_text), fill=color)
 
         offset = 2 * num_args
@@ -204,15 +204,7 @@ class Item:
             self.toggle_sticky()
             self.toggle_sticky()
 
-
         self.canvas.app.output.update_object(self.name)
-        # if self.output_connection and self.hasargs() and not callable(self.output_connection.value):
-        #     self.canvas.app.objects.__setitem__(self.output_connection.name, self.get_output(), preserve_class=True)
-
-        # @TODO: way of keeping track of which self.args is assocaited with which self.input_connection        
-        # if hasattr(self, "input_connection"):
-        #     for j in self.input_connection:
-        #         self.args[self.arginputs.index(j)] = self.input_connection[j].get_output()
 
     def methods(self):
         return [fn for fn in dir(self.value) if fn[:1] != "_" and callable(getattr(self.value, fn))]
@@ -414,7 +406,16 @@ class Item:
             self.canvas.itemconfig(self.output_wire, fill=Color.ACTIVE_WIRE)
             self.canvas.itemconfig(input_id, fill=Color.ACTIVE_WIRE)
             self.config(border="show")
-            self.output_connection.config(border="show", connect="default")            
+            self.output_connection.config(border="show", connect="default")
+
+            # should refactor this, its pretty confusing
+            # better not to put the call in an if statement, and include some logic in this file from mathinspector.py
+            if self.canvas.app.on_set_object(self.name):
+                self.canvas.app.select(other.name)
+            else:
+                self.config(hover=Color.EMPTY_NODE)
+                other.config(hide_input=True)
+
 
     def config(self, hover=None, hover_editable=None, hide_wire=None, fill=None, border=None, output=None, hide_input=None, disconnect=None, connect=None):
         if hover:

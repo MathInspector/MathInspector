@@ -36,7 +36,6 @@ class Popup(tk.Toplevel):
 		self.args = []
 		self.kwargs = {}
 		self.log = InfoBox(self)
-		# TODO: compute actual dimensions needed for window
 
 		self.bind("<Return>", self._on_ok)
 		self.bind("<Escape>", self._on_cancel)
@@ -57,7 +56,6 @@ class Popup(tk.Toplevel):
 			i = 0
 			did_focus = False
 			for i, argname in enumerate(inputs["args"]):
-				# need to add these to something to keep track of values obvs
 				tk.Label(input_area, text=argname, font="Menlo 14", background=Color.BLACK, foreground=Color.WHITE).grid(column=0, row=i)
 				temp = tk.Entry(input_area, font="Monospace 14", highlightbackground=Color.BLACK)
 				temp.grid(column=1, row=i)
@@ -65,9 +63,8 @@ class Popup(tk.Toplevel):
 				if not did_focus:
 					temp.focus_set()
 					did_focus = True	
-			# j = 0
+
 			for j, kwargname in enumerate(inputs["kwargs"]):
-				# need to add these to something to keep track of values obvs
 				tk.Label(input_area, text=kwargname, font="Menlo 14", background=Color.BLACK, foreground=Color.WHITE).grid(column=0, row=i + j + 1)
 				temp = tk.Entry(input_area, font="Monospace 14", highlightbackground=Color.BLACK)
 				temp.insert("end", str(inputs["kwargs"][kwargname]))
@@ -79,19 +76,9 @@ class Popup(tk.Toplevel):
 
 			
 			input_area.pack(fill="x", expand=True)
-			## Instead of showing the doc, I'd rather have a showdoc button which brings up 
-			##		the docviewer in the main window
-			##		I could also do some kind of balance where I only show some basic info from the doc
-			##		like the summary and the params?
-			## 		I don't need DocViewer, I can just take the summary and put it in at the top of the window
-			##		let me forget the docviewer and just get it working
-			# docviewer = DocViewer(app, self)
-			# docviewer.showdoc(obj, sections=["Summary", "Extended Summary"])
-			# docviewer.pack(fill="both")		
 
 			btn_area = tk.Frame(self, background=Color.BLACK)
 			Button(btn_area, text="Help", command=self._on_help, height=2, width=6).pack(side="left", fill="x", expand=True, anchor="center", padx=4, pady=4)
-			# tk.Button(self, text="Reset", command=self._on_reset, height=2, width=6).pack(side="left")
 			Button(btn_area, text="Cancel", command=self._on_cancel, height=2, width=6).pack(side="left", fill="x", expand=True, anchor="center", padx=4, pady=4)
 			Button(btn_area, text="OK", command=self._on_ok, height=2, width=6).pack(side="left", fill="x", expand=True, anchor="center", padx=4, pady=4)
 			btn_area.pack(side="left", fill="both", expand=True)
@@ -114,16 +101,6 @@ class Popup(tk.Toplevel):
 			self.geometry(str(width) + "x" + str(height) + "+" + x + "+" + y)
 
 		root.wait_window(self)
-
-	# def _on_reset(self):
-	# 	inputs = argspec(self.obj)
-
-	# 	for i, entry in enumerate(self.args):
-	# 		entry.delete(0, "end")
-
-	# 	for j in self.kwargs:
-	# 		self.kwargs[j].delete(0, "end")
-	# 		self.kwargs[j].insert("end", inputs["kwargs"][j])
 
 	def _on_help(self):
 		self.app.docviewer.showdoc(self.obj)

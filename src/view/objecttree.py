@@ -91,17 +91,22 @@ class ObjectTree(Treeview):
 		
 		return self.app.objects[obj_key]
 	
-	def update_object(self, key):
+	def update_object(self, key, prev_item=None):
 		if key is None: return
 
 		obj = self.app.objects[key]
 		item = self.app.workspace.get_item(key)
+		is_open = False
+
+		if prev_item is not None:
+			is_open = self.item(key)["open"]
+			self.delete_object(key)
 
 		if key in self.get_children():
 			self.item(key + "<class>", text=get_class_name(obj))						
 			if self.exists(key + "<value>"):
 				self.item(key + "<value>", text=str(obj))
-				if item.args["default"]["connection"]:
+				if "default" in item.args and item.args["default"]["connection"]:
 					self.add_tag(key + "<value>", "connected")
 					self.add_tag(key + "<value>", "no_hover")
 					self.remove_tag(key + "<value>", "editable")
@@ -111,7 +116,7 @@ class ObjectTree(Treeview):
 					self.add_tag(key + "<value>", "editable")
 
 		else:
-			self.insert("", "end", key, text=key, tags=("object", "doc"))			
+			self.insert("", "end", key, text=key, tags=("object", "doc"), open=is_open)			
 			self.insert(key, "end", key + "<class>", text=get_class_name(obj), tags=("class", "no_hover"))
 			if not callable(obj):
 				self.insert(key, "end", key + "<value>", text=str(obj), tags="editable")

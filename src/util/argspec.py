@@ -23,7 +23,7 @@ RE_FN = re.compile(r"[a-zA-Z_0-9]*\((.*)\)")
 RE_ARG = re.compile(r"[a-zA-Z_0-9]*")
 RE_EXTRA = re.compile(r"(\[.*\])")
 
-def argspec(obj, withself=False):
+def argspec(obj, withself=True):
 	"""
 	A way to parse signature of fn's from FunctionDoc to get argspec of builtins and ufuncs
 	"""

@@ -84,8 +84,9 @@ class SaveData:
 			# i think this line is causing the pickle to fail for custom modules, try name/regen trick
 			objects, functions = self.getobjects()
 			pickle.dump(objects, output, pickle.HIGHEST_PROTOCOL)		
-			pickle.dump(functions, output, pickle.HIGHEST_PROTOCOL)		
+			pickle.dump(functions, output, pickle.HIGHEST_PROTOCOL)	
 			pickle.dump([{ "key": j, "modulename": self.app.modules[j].__name__} for j in self.app.modules], output, pickle.HIGHEST_PROTOCOL)
+			pickle.dump(self.app.animation_cache, output, pickle.HIGHEST_PROTOCOL)	
 			pickle.dump(self.app.workspace.get_state(), output, pickle.HIGHEST_PROTOCOL)
 			pickle.dump(self.app.geometry(), output, pickle.HIGHEST_PROTOCOL)
 			pickle.dump(self.app.horizontal_panel.sashpos(0), output, pickle.HIGHEST_PROTOCOL)
@@ -116,6 +117,7 @@ class SaveData:
 				saved_objs = pickle.load(data)
 				saved_functions = pickle.load(data)
 				saved_modules = pickle.load(data)
+				animation_cache = pickle.load(data)
 				state = pickle.load(data)
 				geometry = pickle.load(data)
 				sash_x = pickle.load(data)
@@ -145,6 +147,8 @@ class SaveData:
 		for k in saved_modules:
 			self.app.execute("import " + k["modulename"] + " as " + k["key"], __SHOW_RESULT__=False)
 		
+		self.app.animation_cache = animation_cache
+
 		# NOTE - this is loading the custom modules, which is required for the non-pickleable fn's to load
 		self.app.projecttree.setstate(*projecttree_state)
 		# print (self.app.modules)

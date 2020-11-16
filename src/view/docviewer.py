@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import tkinter as tk
 import inspect, textwrap, re, sys, os, webbrowser, builtins
 from widget import HighlightedText
-from util import makereadonly, FunctionDoc, get_class_name
+from util import makereadonly, FunctionDoc, get_class_name, name_and_extension
 from settings import Color
 import style.tags
 import style.markdown
@@ -89,19 +89,19 @@ class DocViewer(HighlightedText):
         
         self.showdoc(obj)
 
-    def show(self, name): 
-        if name == None: 
+    def show(self, key): 
+        if key == None: 
             # self.delete("1.0", "end")
             return
-        
+
         # @REFACTOR: clean this up, not necc to use try/except I dont think
         try:
-            module, attr = name.rsplit('.', 1)
+            module, attr = key.rsplit('.', 1)
             obj = getattr(self.app.modules[module], attr)
             doc = inspect.getdoc(obj)
         except:
             try:
-                obj = self.app.modules[name]
+                obj = self.app.modules[key]
                 doc = inspect.getdoc(obj)
             except:
                 doc = None
@@ -112,8 +112,8 @@ class DocViewer(HighlightedText):
             self.showdoc(obj)
             return True
         
-        if "." in name:
-            items = name.split(".")
+        if "." in key:
+            items = key.split(".")
             module = items[0]
             attr = ".".join(items[1:])
             if module == "builtins":
@@ -121,11 +121,15 @@ class DocViewer(HighlightedText):
                 self.showdoc(obj)
                 return
 
-        if name in self.app.objects:
-            obj = self.app.objects[name]
+        if key in self.app.objects:
+            obj = self.app.objects[key]
             self.showdoc(obj)
-        else:
-            self.delete("1.0", "end")
+            return
+
+        name, ext = name_and_extension(key)
+        if ext == ".md":
+            content = open(key, "r").read()
+            self.show_markdown(content)
 
     def showdoc(self, obj, sections=None):
         # TODO - make this selected_key!!! causing a save problem ... sigh

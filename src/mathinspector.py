@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import tkinter as tk
 from tkinter import ttk
 from ttkthemes import themed_tk
-from util import ObjectContainer, SaveData, hexstring
+from util import ObjectContainer, SaveData, hexstring, argspec
 from view import Menu, Nav, Console, DocViewer, Output, WorkSpace, ObjectTree, ProjectTree
 from widget import Notebook, NavIcon
 from settings import Color
@@ -46,7 +46,8 @@ class MathInspector(themed_tk.ThemedTk):
 		self.menu = Menu(self)
 		self.modules = ObjectContainer(getitem=self.getmodule, setitem=self.projecttree.addmodule)
 		self.objects = ObjectContainer(setitem=self.on_set_object, delitem=self.on_delete_object)
-		self.selected = None
+		self.selected = None # can self.selected be refactored out?
+		self.animation_cache = {}
 		self.treenotebook.add("Project", self.projecttree, **style.theme.treenotebook_tab)
 		self.treenotebook.add("Objects", self.objecttree, **style.theme.treenotebook_tab)
 		self.horizontal_panel.add(self.treenotebook)
@@ -68,6 +69,11 @@ class MathInspector(themed_tk.ThemedTk):
 		item = self.workspace.get_item(key)
 		next_obj = None
 		
+		#ideally this function just updates everything and is like 4 lines
+
+		# might be best to refactor some of this logic into workspace/item to make code more clear 
+		# this is the first function in the main file, so its pretty confusing right off the bat to see workspace logic in here
+		# (probably should run this after checking if im gonna replace the entire workspace item)
 		if item and item.output_connection:
 			obj = self.objects[item.output_connection.name]
 			if callable(obj):
@@ -88,8 +94,17 @@ class MathInspector(themed_tk.ThemedTk):
 
 				self.objects.__setitem__(item.output_connection.name, result, preserve_class=True)
 		
-		self.workspace.update_object(key)
-		self.objecttree.update_object(key)
+		# can do something like this, so the burden of detecting changes is on workspace
+		#		which is actually consistent with the idea of moving all/some of this fn over to the workspace
+
+		argspec_check = True
+		prev_item = None
+		if item:
+			argspec_check = item.argspec == argspec(self.objects[key])
+			prev_item = None if (argspec_check and self.objects[key].__class__ == item.value.__class__) else item
+		
+		self.workspace.update_object(key, prev_item=prev_item)
+		self.objecttree.update_object(key, prev_item=prev_item) 
 		self.output.update_object(key)		
 		if next_obj:
 			self.on_set_object(next_obj)
@@ -220,25 +235,24 @@ class MathInspector(themed_tk.ThemedTk):
 		self.nav.icons[name].select(style="alt" if bottom else None)
 		notebook.notebook.select(name)
 
-	def timer(self, key=None, start=1, stop=10, step=1, delay=100, colorchange=False, color=0x000000):		
-		if step > 0 and start >= stop or step < 0 and start <= stop: 
+	def timer(self, key, **kwargs):		
+		if "timer_running" not in kwargs:
+			kwargs["timer_running"] = True
+			self.animation_cache[key] = {i:kwargs[i] for i in kwargs}
+
+		if kwargs["step"] > 0 and kwargs["start"] >= kwargs["stop"] or kwargs["step"] < 0 and kwargs["start"] <= kwargs["stop"]: 
 			return
 		
-		if colorchange:
-			color += 1		
-			self.output.canvas.set_line_color( hexstring(color) )
+		if kwargs["colorchange"]:
+			kwargs["color"] += 1		
+			self.output.canvas.set_line_color( hexstring(kwargs["color"]) )
 
-		self.objects[key] = max(start + step, stop) if step < 0 else min(start + step, stop)
-		self.after(delay, lambda: self.timer(key, start + step, stop, step, delay, colorchange=colorchange, color=color))
+		self.objects[key] = max(kwargs["start"] + kwargs["step"], kwargs["stop"]) if kwargs["step"] < 0 else min(kwargs["start"] + kwargs["step"], kwargs["stop"])
+		kwargs["start"] += kwargs["step"]
+		self.after(kwargs["delay"], lambda: self.timer(key, **kwargs))
 
 
 if __name__ == '__main__':
-	"""
-	- check if a project is open, if so, open app, store savedata pickle in the proj folder
-	- show project chooser dialog (new, open), show recently opened
-	I can have a seperate class which has its own mainloop and runs instead if there
-	"""
-
 	app = MathInspector()
 	app.mainloop()
 
