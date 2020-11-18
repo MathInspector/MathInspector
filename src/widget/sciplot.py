@@ -34,7 +34,7 @@ class SciPlot(PanZoomDragCanvas):
 		self.parent = parent
 		self.key = None
 		self.gridlines = []
-		self.gridsize = 128 
+		self.gridsize = 128
 		
 		self.prev_val = [None, None]
 		self.current_val = [None, None]
@@ -53,7 +53,6 @@ class SciPlot(PanZoomDragCanvas):
 		self.y_axis.pack(side="left", fill="both")
 		self.x_axis.pack(side="bottom", fill="both")
 		self.pack(fill="both", expand=True)
-		self.bind("<Configure>", self._on_configure)
 
 	def set_line_color(self, color):
 		self.line_color = color
@@ -197,23 +196,13 @@ class SciPlot(PanZoomDragCanvas):
 		return item
 
 	def overlay(self, key, points=None, color=Color.BLUE):
-		if not points:
+		if points is None:
 			del self.overlay_items[key]
 			return
-
+		
 		self.overlay_items[key] = {
 			"points": points,
 			"color": color
-		}
-
-	def setstate(self, saved):
-		self.cache = saved["cache"]
-		self.key = saved["key"]
-
-	def getstate(self):
-		return {
-			"cache": self.cache,
-			"key": self.key
 		}
 
 	def cleargrid(self):
@@ -396,9 +385,3 @@ class SciPlot(PanZoomDragCanvas):
 				result[3] = i[1]
 
 		return result
-
-	def _on_configure(self, event):
-		print ("on configure")
-		if self.key:
-			# self.drawgrid()
-			self.axis()

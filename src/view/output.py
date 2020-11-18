@@ -22,7 +22,7 @@ from util import get_class_name, makereadonly
 from numpy import ndarray
 from PIL import Image,ImageTk
 from widget import SciPlot, InfoBox
-from widget.text import TextEditor
+from widget import Text
 from pprint import pformat
 import traceback
 
@@ -42,7 +42,7 @@ class Output(tk.Frame):
 		self.class_label = tk.Label(infobox, font="Nunito 12 bold", foreground=Color.RED, background=Color.BACKGROUND)
 		divider = tk.Frame(self, background=Color.BLACK, height=8)
 		self.canvas = SciPlot(self)
-		self.text = TextEditor(self, syntax=None) #, on_change_callback=self._on_text_change)
+		self.text = Text(self, syntax=None)
 		makereadonly(self.text)
 		self.log = InfoBox(self, hide_callback=lambda: self.text.lift())
 		
@@ -51,6 +51,24 @@ class Output(tk.Frame):
 		self.class_label.pack(side="top", anchor="nw")
 		divider.pack(side="top", fill="both")
 		self.canvas.frame.pack(side="top", fill="both", expand=True)		
+
+	def update(self, key):
+		if key == self.selected:
+			self.select(key)
+
+	def save(self):
+		return self.canvas.key, self.canvas.cache, self.canvas.overlay_items
+
+	def load(self, key, cache, overlay_items):
+		self.canvas.key = key
+		self.canvas.cache = cache
+		self.canvas.overlay_items = overlay_items
+
+	def clear(self):
+		self.select(None)
+		self.canvas.key = None
+		self.canvas.cache = {}
+		self.canvas.overlay_items = {}		
 
 	def select(self, key=None):
 		item = self.app.workspace.get_item(key)
@@ -119,25 +137,6 @@ class Output(tk.Frame):
 		self.text.insert("end", str(output))
 		self.text.pack(side="top", fill="both", expand=True)		
 
-	def _on_text_change(self):
-		print ("text change???")
-		if not self.selected: return
-
-		item = self.app.workspace.get_item(self.selected)
-		val = self.text.get().lstrip("\n").rstrip("\n")
-		self.log.hide()
-		if val != str(item.value):
-			if isinstance(item.value, dict):
-				try:
-					val = self.app.execute("{" + val + "}", __SHOW_RESULT__=False, __EVAL_ONLY__=True)
-				except:
-					return
-			try:
-				self.app.objects.__setitem__(self.selected, val, preserve_class=True, raise_error=True)
-			except Exception as err:
-				self.log.show(err)
-				return
-
 	def overlay(self, item, remove=False):
 		if remove:
 			self.canvas.overlay(item.name)
@@ -167,10 +166,6 @@ class Output(tk.Frame):
 		# else:
 		# 	print ("HITHERE", self.canvas.overlay_items)
 
-
-	def update_object(self, key):
-		if key == self.selected:
-			self.select(key)
 
 	def delete_object(self, key):
 		if key == self.selected:

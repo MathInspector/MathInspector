@@ -16,14 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .text.highlightedtext import HighlightedText
 from .sciplot import SciPlot
-# from .editortab import EditorTab
 from .treeview import Treeview
 from .notebook import Notebook
 from .contextmenu import ContextMenu
 from .treeentry import TreeEntry
-from .navicon import NavIcon
 from .popup import Popup
 from .infobox import InfoBox
 from .button import Button
+from .text import Text

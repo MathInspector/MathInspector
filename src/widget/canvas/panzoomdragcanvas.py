@@ -51,7 +51,8 @@ class PanZoomDragCanvas(tk.Canvas):
 		if draggable:
 			self.drag = {
 				"item": None,
-				"position": (0,0)
+				"position": (0,0),
+				"start_position": (0,0)
 			}		
 			self.tag_bind("draggable", "<Enter>", self._on_enter_item)
 			self.tag_bind("draggable", "<Leave>", self._on_leave_item)
@@ -284,18 +285,22 @@ class PanZoomDragCanvas(tk.Canvas):
 	def _on_drag_start(self, event):
 		if self.event in ("connect", "edit"): return
 		self.event = "drag"
+		self.drag["start_position"] = (event.x, event.y)
 		self.drag["item"] = self.get_parent( self.find_closest(event.x, event.y)[0] )
 		self.drag["position"] = (event.x, event.y)
 		self.drag["item"].tag_raise()
 		self.drag["item"].config(hover_editable=("leave", None))
-		if self.drag["item"].canvas_id not in self.multiselect["items"]:
-			self.app.select(self.drag["item"].name)
 
 	def _on_drag_stop(self, event):
 		if self.event == "edit": return
+
+		if self.drag["position"] == self.drag["start_position"] and self.drag["item"].canvas_id not in self.multiselect["items"]:
+			self.app.select(self.drag["item"].name)
+
 		self.event = None
 		self.drag["item"] = None
 		self.drag["position"] = (0,0)
+		self.drag["start_position"] = (0,0)
 
 	def _on_drag(self, event): 
 		if self.event in ("connect", "edit"): return   

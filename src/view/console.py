@@ -21,31 +21,110 @@ import builtins
 from tkinter import ttk
 from settings import Color
 from util import makereadonly, findcommonstart
-from widget.text import TextEditor
-from widget import HighlightedText
+from widget import Text
 
-class Console(TextEditor):
-	def __init__(self, app, *args, **kwargs):	
-		TextEditor.__init__(self, app, *args, **kwargs, background=Color.DARK_BLACK)
+class Console(Text):
+	def __init__(self, app):	
+		Text.__init__(self, app, background=Color.DARK_BLACK, font="Menlo 16")
 		self.app = app
-		self.history = []
-		self.history_index = 0
-		self.current_entry = None
-		self.tabcount = 0
-		self.newprompt()
-		self.tag_configure("console_prompt", foreground=Color.PROMPT, font="Menlo 15 bold")
+		self.history = { "items": [], "index": 1, "current": None }
+		
+		self.tag_configure("console_prompt", foreground=Color.PROMPT, font="Menlo 16 bold")
 		self.tag_configure("result", foreground=Color.BLUE)
 		self.tag_configure("error", foreground=Color.RED)
+		
 		self.bind("<Key>", self._on_key)
-		self.bind("<KeyRelease>", self._on_key_release)
-		self.bind("<Configure>", self._on_configure)
-		self.bind("<<MarkSet>>", self._on_mark_set)
 		self.bind("<<Selection>>", self._on_text_selection)
+		self.bind("<<Modify>>", lambda event: self.syntax_highlight("end-1c linestart+5c", "end-1c"))
+
+		self.prompt()
 		
+	def prompt(self, text=None):
+		self.insert("end", ">>>  ", "console_prompt")
+		if text:
+			self.insert("end", text)
+		self.see("end")
+		self.edit_reset()
+			
+	def command(self, command=None, history=None):
+		if command == None and history == None:
+			return self.get("end-1c linestart+5c", "end-1c")
+
+		if command == "clear":
+			self.delete("1.0", "end")
+			self.prompt()
+			return
+
+		if history == "up" and len(self.history["items"]) > 0:
+			if self.history["index"] == len(self.history["items"]):
+				self.history["current"] = self.command()
+			if self.history["index"] > 0:
+				self.history["index"] -= 1
+			command = self.history["items"][self.history["index"]]
+		elif history == "down":
+			if self.history["index"] < len(self.history["items"]) - 1:
+				self.history["index"] += 1
+				command = self.history["items"][self.history["index"]]
+			elif self.history["index"] >= len(self.history["items"]) - 1:
+				self.history["index"] = len(self.history["items"])
+				command = self.history["current"]
+
+		self.delete("end-1c linestart+5c", "end")
+		self.insert("end", command)
+
+		if not history:
+			self.history["items"].append(command)
+			self.history["index"] = len(self.history["items"])
+			result = self.app.execute(command)
+			self.insert("end", "\n" + str(result) + "\n\n", "error" if isinstance(result, Exception) else None)			
+			self.prompt()
+
+	def autocomplete(self):
+		command = self.command()
+		if command.count("."):
+			choices = self.app.eval("dir(" + command.rsplit(".", 1)[0] + ")")
+		else:
+			local_objects = [i for i in self.app.eval("locals()") if i[:2] != "__"]
+			global_objects = [i for i in self.app.eval("globals()") if i[:2] != "__"]
+			choices = local_objects + global_objects
+
+		result = []
+		query = command.rsplit(".", 1)
+		for j in choices:
+			if len(query) == 1:
+				if j[:len(query[0])] == query[0]:
+					result.append(j)
+			else:
+				if j[:len(query[1])] == query[1]:
+					result.append(j)
+
+		if len(result) == 0:
+			print ("\a")
+			return
+	
+		keyword = query[0] if len(query) == 1 else query[1]
+		common = findcommonstart(result)
+	
+		if len(result) == 1:
+			self.insert("end", result[0][len(keyword):])
+		elif keyword[:len(common)] != common:
+			self.insert("end", common[len(keyword):])
+		else:
+			self.insert("end", "\n" + "        ".join(result) + "\n\n")
+			self.prompt(command)
+
+	def state(self, history=None):
+		if not history:
+			return self.history
+
+		self.history = history
+		self.history["index"] = len(self.history["items"])
+
 	def clear(self):
-		self.delete()
-		self.newprompt()
-		
+		self.history = { "items": [], "index": 1, "current": None }
+		self.delete("1.0", "end")
+		self.prompt()
+
 	def _on_key(self, event):
 		index = [int(i) for i in self.index("insert").split(".")]
 		start = [int(i) for i in self.index("end-1c linestart").split(".")]
@@ -53,58 +132,33 @@ class Console(TextEditor):
 
 		if (end[0] - index[0] > 1
 				or (index[1] - start[1] < 5 and event.keysym != "Right")):
-			self.mark_set("insert", "end")
+			self.mark_set("insert", "end-1c linestart+5c")
 
-		if event.keysym == "BackSpace":
+		if event.keysym in ("BackSpace", "Left"):
 			col = index[1] - start[1]
 			selected_range = self.tag_ranges("sel")
 			if col == 5 and selected_range:
 				self.delete(*selected_range)
 				return "break"
 			elif col < 6:
+				print ("\a")
 				return "break"
 
 		if event.keysym == "Up":
-			if self.history_index == len(self.history):
-				self.current_entry = self.getcmd()
-			if self.history_index > 0:
-				self.history_index -= 1
-				self.replace(self.history[self.history_index])	
+			self.command(history="up")	
 			return "break"
 		
 		if event.keysym == "Down":
-			if self.history_index < len(self.history) - 1:
-				self.history_index += 1
-				self.replace(self.history[self.history_index])
-			elif self.history_index == len(self.history) - 1:
-				self.history_index += 1
-				self.replace(self.current_entry or "")			
+			self.command(history="down")	
 			return "break"		
 
-		if event.keysym == "Tab" and self.autocomplete():
+		if event.keysym == "Tab":
+			self.autocomplete()
 			return "break"
 
 		if event.keysym == "Return":
-			cmd = self.getcmd()
-
-			if cmd == "clear":
-				self.delete("1.0", "end")
-				self.newprompt()
-			else:
-				self.app.execute(cmd)
-				self.tabcount = 0
-				if cmd:
-					self.history.append(cmd)
-					self.history_index = len(self.history)
+			self.command(self.command())
 			return "break"
-
-		self.tabcount = 0
-		return super(Console, self)._on_key(event)
-	
-	def _on_key_release(self, event):
-		if event.keysym == "Return":
-			return "break"
-		return super(Console, self)._on_key_release(event)
 
 	def _on_text_selection(self, event):
 		selected = self.tag_ranges("sel")
@@ -115,79 +169,4 @@ class Console(TextEditor):
 
 		if line == endline and int(col) < 5:
 			self.tag_remove("sel", selected[0], str(line) + ".5")
-
-	def _on_mark_set(self, event):
-		pass
-		line, col = self.index("insert").split(".")
-		endline = self.index("end-1c").split(".")[0]
-		if line == endline and int(col) < 5:
-			self.mark_set("insert", str(endline) + ".5")
-
-	def _on_configure(self, event):
-		self.see("insert")
-		super(Console, self)._on_configure(event)
-
-
-	def getcmd(self):
-		return str(self.get("end-1c linestart", "end")[5:]).strip()
-
-	def run(self, cmd):
-		self.history.append(cmd)	
-		self.insert("end", cmd)
-		self.app.execute(cmd)
-		self.app.setview("console")
-		
-	def newprompt(self):
-		self.insert("end", ">>>  ")
-		self.highlight(">>>", "console_prompt")
-		self.see("end")
-		self.focus()
-		self.mark_set("insert", "end")
-		self.syntax_highlight()
-		self.edit_reset()
-
-	def result(self, res):
-		self.insert("end", "\n")
-		if res is None:
-			self.newprompt()
-			return
-
-		self.insert("end", "\n" + str(res) + "\n\n", "error" if isinstance(res, Exception) else None)
-		self.newprompt()
-
-	def replace(self, cmd):
-		# @TODO find better way to do these index manipulations
-		index = self.index("end")
-		row = str( int(index.rsplit('.')[0]) - 1 )
-
-		self.delete(row + ".5", "end")
-		self.insert("end", cmd)
-		return "break"
-
-	def autocomplete(self):
-		cmd = self.getcmd()
-		result = (
-			[i for i in self.app.objects if cmd == i[:len(cmd)] and i != cmd] + 
-			[i for i in self.app.modules if cmd == i[:len(cmd)] and i != cmd] + 
-			[i for i in dir(builtins) if cmd == i[:len(cmd)] and i != cmd] + 
-			[i for i in locals() if cmd == i[:len(cmd)] and i != cmd]
-		)
-
-		if len(result) == 0:
-			return False
-		
-		if len(result) == 1:
-			self.replace(result[0])
-		elif self.tabcount < 1:
-			common = findcommonstart(result)
-			if common == cmd:
-				print ("\a")
-				self.tabcount += 1
-			else:
-				self.replace(common)
-				self.tabcount = 0
-		else:
-			self.result("        ".join(result))
-			self.replace(cmd)
-
-		return True
+			self.mark_set("insert", str(line) + ".5")

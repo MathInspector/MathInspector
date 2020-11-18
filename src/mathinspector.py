@@ -19,24 +19,29 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import tkinter as tk
 from tkinter import ttk
 from ttkthemes import themed_tk
-from util import ObjectContainer, SaveData, hexstring, argspec
+from util import ObjectContainer, Animate, SaveData, argspec, on_configure_panel
 from view import Menu, Nav, Console, DocViewer, Output, WorkSpace, ObjectTree, ProjectTree
-from widget import Notebook, NavIcon
+from widget import Notebook
 from settings import Color
+from inspect import ismodule
+from importlib import import_module
 import style.theme
-import inspect, traceback, os, sys
 import numpy as np
+import scipy
 
 class MathInspector(themed_tk.ThemedTk):
 	def __init__(self):
 		themed_tk.ThemedTk.__init__(self)
 		style.theme.apply(self)
+		
+		self.title("Math Inspector")
 		self.nav = Nav(self)
 		self.horizontal_panel = ttk.PanedWindow(self, orient="horizontal")
 		self.vertical_panel = ttk.PanedWindow(self, orient="vertical")		
-		self.top_view = Notebook(self, labels=False)
-		self.bottom_view = Notebook(self, labels=False)
-		self.treenotebook = Notebook(self, **style.theme.treenotebook)
+		self.top_view = Notebook(self)
+		self.bottom_view = Notebook(self)
+		self.side_view = Notebook(self, has_labels=True)
+		
 		self.projecttree = ProjectTree(self)
 		self.objecttree = ObjectTree(self)
 		self.console = Console(self)
@@ -44,82 +49,51 @@ class MathInspector(themed_tk.ThemedTk):
 		self.output = Output(self)
 		self.workspace = WorkSpace(self)
 		self.menu = Menu(self)
-		self.modules = ObjectContainer(getitem=self.getmodule, setitem=self.projecttree.addmodule)
-		self.objects = ObjectContainer(setitem=self.on_set_object, delitem=self.on_delete_object)
-		self.selected = None # can self.selected be refactored out?
-		self.animation_cache = {}
-		self.treenotebook.add("Project", self.projecttree, **style.theme.treenotebook_tab)
-		self.treenotebook.add("Objects", self.objecttree, **style.theme.treenotebook_tab)
-		self.horizontal_panel.add(self.treenotebook)
+
+		self.modules = ObjectContainer(
+			getitem=self.getmodule, 
+			setitem=self.projecttree.addmodule)
+		
+		self.objects = ObjectContainer(
+			setitem=self.update, 
+			delitem=self.delete)
+
+		self.side_view.add("Project", self.projecttree)
+		self.side_view.add("Objects", self.objecttree)
+		self.horizontal_panel.add(self.side_view)
 		self.horizontal_panel.add(self.vertical_panel)
 		self.vertical_panel.add(self.top_view)
 		self.vertical_panel.add(self.bottom_view)
-		self.savedata = SaveData(self)
-		self.savedata.load(firstload=True)
+		self.animate = Animate(self)
+		self.selected = None
+
+		self.savedata = SaveData(self)		
 		self.nav.pack(side="left", fill="both")
 		self.horizontal_panel.pack(side="left", fill="both", expand=True)
-
-	def on_set_object(self, key):
-		"""
-		The callback for self.objects, an instance of ObjectContainer, which stores all 
-		of the objects which the user can interact with from any view.  on_set_object is 
-		called every time that an object is modified from any view. It's main purpose is 
-		to synchronize all the views by updating them with new values.
-		"""
-		item = self.workspace.get_item(key)
-		next_obj = None
 		
-		#ideally this function just updates everything and is like 4 lines
 
-		# might be best to refactor some of this logic into workspace/item to make code more clear 
-		# this is the first function in the main file, so its pretty confusing right off the bat to see workspace logic in here
-		# (probably should run this after checking if im gonna replace the entire workspace item)
-		if item and item.output_connection:
-			obj = self.objects[item.output_connection.name]
-			if callable(obj):
-				argname = item.output_connection.getarg("connection", item, name=True)
-				if argname:
-					item.output_connection.setarg(argname, item.get_output())
-					next_obj = item.output_connection.name
-			else:
-				try:
-					if callable(self.objects[key]):
-						result = item.get_output(raise_err=True)
-					else:
-						result = obj.__class__(self.objects[key])
-				except Exception as err:
-					item.config(hide_wire=True);
-					self.workspace.log.show(err);
-					return False
-
-				self.objects.__setitem__(item.output_connection.name, result, preserve_class=True)
+	def update(self, key):
+		self.workspace.update(key)
+		self.objecttree.update(key) 
+		self.output.update(key)		
 		
-		# can do something like this, so the burden of detecting changes is on workspace
-		#		which is actually consistent with the idea of moving all/some of this fn over to the workspace
-
-		argspec_check = True
-		prev_item = None
-		if item:
-			argspec_check = item.argspec == argspec(self.objects[key])
-			prev_item = None if (argspec_check and self.objects[key].__class__ == item.value.__class__) else item
-		
-		self.workspace.update_object(key, prev_item=prev_item)
-		self.objecttree.update_object(key, prev_item=prev_item) 
-		self.output.update_object(key)		
-		if next_obj:
-			self.on_set_object(next_obj)
-		return True
-
-	def on_delete_object(self, key):
+	def delete(self, key):
 		self.objecttree.delete_object(key)
 		self.workspace.delete_object(key)
-		self.docviewer.delete_object(key)
 		self.output.delete_object(key)
+		self.docviewer.delete_object(key)
 
-	def execute(__SELF__, __CMD__, __SHOW_RESULT__=True, __EVAL_ONLY__=False):	
+	def select(self, key=None):
+		self.selected = key
+		self.workspace.select(key)
+		self.objecttree.select(key)
+		self.output.select(key)
+		self.docviewer.select(key)
+
+	def execute(__SELF__, __CMD__, __EVAL_ONLY__=False):	
 		"""
 		execute is called whenever a command is entered from the console view. 
-		The idea is to leverage locals() and globals() and to inject the objects 
+		It uses locals() and globals() and to inject the existing objects 
 		into the local scope and the modules into the global scope before 
 		calling eval/exec.  Then after the command is executed, the current values of 
 		locals() is checked and any objects or modules which have been added or 
@@ -168,7 +142,7 @@ class MathInspector(themed_tk.ThemedTk):
 				del_list.append(__NAME__)
 
 		for j in set_list + update_list:
-			if inspect.ismodule(local_objects[j]):
+			if ismodule(local_objects[j]):
 				__SELF__.modules[j] = local_objects[j]
 			else:
 				__SELF__.objects[j] = local_objects[j]
@@ -176,10 +150,10 @@ class MathInspector(themed_tk.ThemedTk):
 		for j in del_list:
 			del __SELF__.objects[j]
 				
-		if __SHOW_RESULT__:
-			__SELF__.console.result(__RESULT__)
-
 		return __RESULT__
+
+	def eval(self, cmd):
+		return self.execute(cmd, __EVAL_ONLY__=True)
 
 	def getmodule(self, key):
 		if key not in self.modules.store:
@@ -190,85 +164,54 @@ class MathInspector(themed_tk.ThemedTk):
 
 		return self.modules.store[key]
 
-	# REFACTOR - would be nice to get rid of this if possible
-	#		would it be possible to make getmodule automatically fall back to getalias if it cant find it?
-	def getalias(self, name):
-		toplevel = name.split(".")
-		if name in self.modules:
-			key = name
-		else:
-			for i in self.modules:
-				if self.modules[i].__name__ == name:					
-					key = i
-					break
-			key = toplevel[0]
+	def state(self, *args):
+		if not args:
+			objects = {}
+			functions = {}
+			modules = [{ "alias": j, "name": self.modules[j].__name__} for j in self.modules]
+			config = {
+				"geometry": self.geometry() if self.geometry()[:3] != "1x1" else "720x480",
+				"h_panel_sash": self.horizontal_panel.sashpos(0), 
+				"v_panel_sash": self.vertical_panel.sashpos(0),
+				"top_select": self.top_view.notebook.select()[2:],
+				"bottom_select": self.bottom_view.notebook.select()[2:],
+				"side_select": self.side_view.notebook.select()	
+			}
+			
+			for key in self.objects:
+				if callable(self.objects[key]) and hasattr(self.objects[key], "__module__"):
+					functions[key] = self.objects[key].__module__, self.objects[key].__name__
+				else:
+					objects[key] = self.objects[key]
 
-		return key if len(toplevel) == 1 else key + "." + ".".join(toplevel[1:])
+			return objects, functions, modules, self.animate.cache, config
 
-	def select(self, key=None, filepath=None):
-		self.selected = key
-		# if filepath:
-		# 	self.editor.select(filepath=filepath)
-		# 	return
+		objects, functions, modules, animation_cache, config = args
 
-		self.workspace.select(key)
-		self.docviewer.select(key, filepath=filepath)
-		self.objecttree.select(key)
-		self.output.select(key)
-		# NOTE - commented out to prevent source from showing on select
-		# self.editor.select(key)
-
-	def setview(self, name, bottom=False):
-		if not name: return
-
-		name = name if name[:2] == ".!" else ".!" + name
-		notebook = self.bottom_view if bottom else self.top_view
-
-		if name in notebook.tabs and name in notebook.notebook.tabs():
-			notebook.tabs[name].select()
-			selected = notebook.notebook.select()
-			if selected and selected != name:
-				notebook.tabs[selected].unselect()
-		elif hasattr(self, name[2:]):
-			notebook.add(name,  getattr(self, name[2:]))
-
-		self.nav.icons[name].select(style="alt" if bottom else None)
-		notebook.notebook.select(name)
-
-	def timer(self, key, **kwargs):		
-		if "timer_running" not in kwargs:
-			kwargs["timer_running"] = True
-			self.animation_cache[key] = {i:kwargs[i] for i in kwargs}
-
-		if kwargs["step"] > 0 and kwargs["start"] >= kwargs["stop"] or kwargs["step"] < 0 and kwargs["start"] <= kwargs["stop"]: 
-			return
+		self.geometry(config["geometry"])
+		self.horizontal_panel.bind("<Configure>", lambda event: on_configure_panel(self.horizontal_panel, config["h_panel_sash"]))
+		self.vertical_panel.bind("<Configure>", lambda event: on_configure_panel(self.vertical_panel, config["v_panel_sash"]))
+		self.nav.select("top", config["top_select"])
+		self.nav.select("bottom", config["bottom_select"])
+		self.side_view.notebook.select(config["side_select"])
+		self.animate.cache = animation_cache
 		
-		if kwargs["colorchange"]:
-			kwargs["color"] += 1		
-			self.output.canvas.set_line_color( hexstring(kwargs["color"]) )
+		for i in objects:
+			self.objects[i] = objects[i]
 
-		self.objects[key] = max(kwargs["start"] + kwargs["step"], kwargs["stop"]) if kwargs["step"] < 0 else min(kwargs["start"] + kwargs["step"], kwargs["stop"])
-		kwargs["start"] += kwargs["step"]
-		self.after(kwargs["delay"], lambda: self.timer(key, **kwargs))
+		for j in modules:
+			self.execute("import " + j["name"] + " as " + j["alias"])
+
+		for key in functions:
+			module, attr = functions[key]
+			if module in self.modules:
+				temp = self.modules[module]
+			else:
+				temp = import_module(module)
+
+			self.objects[key] = getattr(temp, attr)
 
 
 if __name__ == '__main__':
 	app = MathInspector()
 	app.mainloop()
-
-	# print ("OS-CWD", os.getcwd())
-	# if hasattr(sys, "_MEIPASS"):
-	# 	print ("_MEIPASS", sys._MEIPASS)
-		# os.chdir(os.path.expanduser('~'))
-
-	"""
-	@NOTE This code is for the executable and is useful for debugging on production builds when print statements don't print to the command line
-	"""
-	# APP_NAME = 'mathinspector'
-	# Define identifier for Mac Console Logging
-	# syslog.openlog(APP_NAME)
-	# Record a message
-	# working_dir = 'Working dir: %s' % (os.getcwd())
-	# working_dir = tk.Tcl().eval("info patchlevel")
-	# syslog.syslog(syslog.LOG_ALERT, working_dir) (import syslog to use this on MacOS)
-

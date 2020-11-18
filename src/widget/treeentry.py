@@ -88,19 +88,19 @@ class TreeEntry(tk.Entry):
 			argname = re.findall(r"<<([a-zA-Z0-9_' ]*)>>", self.edit_key)[0]
 			val = None
 			try:
-				val = self.parent.app.execute(self.get(), __SHOW_RESULT__=False, __EVAL_ONLY__=True)
+				val = self.parent.app.eval(self.get("1.0", "end"))
 			except Exception as err:
-				self.parent.app.console.result(err)
+				print (err)
 
 			item.setarg(argname, val)
 
 		if "<value>" in self.edit_key:
 			try:
-				val = self.parent.app.execute(self.get(), __SHOW_RESULT__=False, __EVAL_ONLY__=True)
+				val = self.parent.app.eval(self.get("1.0", "end"))
 				self.parent.app.objects.__setitem__(key, val, preserve_class=True, raise_error=True)
 			except Exception as err:
 				print ("\a")
-				self.parent.app.console.result(err)
+				print (err)
 	
 		self.edit_key = None
             

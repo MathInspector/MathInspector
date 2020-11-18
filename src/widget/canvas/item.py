@@ -49,8 +49,7 @@ class Item:
 
         self.argspec = argspec(value)
         if self.argspec and callable(value):
-            args = self.argspec["args"]
-            kwargs = self.argspec["kwargs"]
+            args, kwargs = self.argspec
 
             height = 700
             self.canvas_id = canvas.create_rectangle(coord[0] - Widget.ITEM_SIZE/2,coord[1] - height/2,coord[0] + Widget.ITEM_SIZE/2,coord[1] + height/2, 
@@ -137,8 +136,7 @@ class Item:
                 width =  self.canvas.zoomlevel * (20 + max(60, len(value_text) * 12))
                 height = self.canvas.zoomlevel * Widget.ITEM_SIZE # @TODO: change this to adjust height and pretty print various things like list/dict/long strings
 
-            color = Color.BLUE if "default" in self.args and self.args["default"]["connection"] else get_font_color(self.value)
-            self.canvas.itemconfig(self.value_label, text=str(value_text), fill=color)
+            self.canvas.itemconfig(self.value_label, text=str(value_text), fill=get_font_color(self.value))
 
         offset = 2 * num_args
         if num_args == 1:
@@ -204,7 +202,7 @@ class Item:
             self.toggle_sticky()
             self.toggle_sticky()
 
-        self.canvas.app.output.update_object(self.name)
+        self.canvas.app.output.update(self.name)
 
     def methods(self):
         return [fn for fn in dir(self.value) if fn[:1] != "_" and callable(getattr(self.value, fn))]
@@ -231,17 +229,20 @@ class Item:
                 text = str(value) if len(str(value)) <= MAX_LEN else str(value)[:MAX_LEN] + "..."
                 self.canvas.itemconfig(self.kwargs[name]["value_label"], text=text, fill=get_font_color(value) )
         
-        self.canvas.app.output.update_object(self.name)
-        self.canvas.app.objecttree.update_object(self.name)
+        self.canvas.app.objecttree.update(self.name)
+        self.canvas.app.output.update(self.name)
         
-        if self.output_connection and not callable(self.output_connection.value):
-            try:
-                output = self.get_output(raise_err=True)
-            except Exception as err:
-                self.canvas.log.show(err)
-                return
-            
-            self.canvas.app.objects.__setitem__(self.output_connection.name, output, preserve_class=True)
+        if self.output_connection:
+            if callable(self.output_connection.value):
+                self.canvas.app.update(self.name)
+            else:
+                try:
+                    output = self.get_output(raise_err=True)
+                except Exception as err:
+                    self.canvas.log.show(err)
+                    return
+                
+                self.canvas.app.objects.__setitem__(self.output_connection.name, output, preserve_class=True)
 
     def hasargs(self):
         for i in self.args:
@@ -291,6 +292,7 @@ class Item:
         if callable(self.value):
             try:
                 args, kwargs = self.get_input()
+                # print (self.value, len(args), kwargs)
                 return self.value(*args, **kwargs)
             except Exception as err:
                 if raise_err:
@@ -372,7 +374,7 @@ class Item:
 
     def set_output_connection(self, other=None, input_id=None):
         if other and not input_id: return
-        
+
         if not other and self.output_connection:
             idx = self.output_connection.getarg("connection", self, name=True)
             if idx in self.output_connection.args:
@@ -385,6 +387,8 @@ class Item:
             if idx in self.output_connection.kwargs:
                 self.canvas.add_tag(self.output_connection.kwargs[idx]["value_label"], "editable")
                 self.output_connection.kwargs[idx]["connection"] = None
+            self.config(hide_wire=True)
+            self.output_connection.config(border="hide")
             self.output_connection = None
             return    
 
@@ -408,13 +412,11 @@ class Item:
             self.config(border="show")
             self.output_connection.config(border="show", connect="default")
 
-            # should refactor this, its pretty confusing
-            # better not to put the call in an if statement, and include some logic in this file from mathinspector.py
-            if self.canvas.app.on_set_object(self.name):
-                self.canvas.app.select(other.name)
-            else:
-                self.config(hover=Color.EMPTY_NODE)
-                other.config(hide_input=True)
+            self.canvas.app.update(self.name)
+            if self.output_connection:
+                self.canvas.app.output.select(self.output_connection.name)
+
+        self.move()
 
 
     def config(self, hover=None, hover_editable=None, hide_wire=None, fill=None, border=None, output=None, hide_input=None, disconnect=None, connect=None):
@@ -445,7 +447,7 @@ class Item:
             self.canvas.itemconfig(self.output, fill=Color.EMPTY_NODE)        
             if self.output_connection:
                 self.output_connection.config(hide_input=True)
-                self.set_output_connection(None)
+                # self.set_output_connection(None)
         
         if fill:
             self.canvas.itemconfig(self.canvas_id, fill=fill)
@@ -487,15 +489,3 @@ class Item:
                 self.canvas.itemconfig(self.args[disconnect]["value_label"], fill=Color.BLUE)
             elif disconnect in self.kwargs:
                 self.canvas.itemconfig(self.kwargs[disconnect]["value_label"], fill=Color.BLUE)
-
-        if connect:
-            if connect == "default":
-                self.canvas.itemconfig(self.value_label, fill=Color.BLUE)
-            elif connect in self.args:
-                self.canvas.itemconfig(self.args[connect]["value_label"], fill=Color.BLUE)
-            elif connect in self.kwargs:
-                self.canvas.itemconfig(self.kwargs[connect]["value_label"], fill=Color.BLUE)
-
-
-
-

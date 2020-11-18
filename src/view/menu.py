@@ -20,7 +20,8 @@ import tkinter as tk
 from tkinter import messagebox, filedialog, simpledialog
 from widget import Popup
 from settings import Cmd
-import os
+from util import name_and_extension
+from os import path
 
 class Menu(tk.Menu):
 	def __init__(self, app, *args, **kwargs):
@@ -28,26 +29,25 @@ class Menu(tk.Menu):
 		app.config(menu=self)
 
 		OPTIONS = {
-
-
 			"File": [{
-				"label": "New Project            ",
+				"label": "New                    ",
 				"command": self.new,
-				"hotkey": Cmd + "+Shift+n",
+				"hotkey": Cmd + "+n",
 			},
 			{
 				"label": "Open...            ",
 				"command": self.open,
-				"hotkey": Cmd + "+Shift+o"	
+				"hotkey": Cmd + "+o"	
 			},
 			{
 				"label": "Save            ",
-				"command": self.save,
-				"hotkey": Cmd + "+Shift+s"	
+				"command": lambda event=None: self.save(self.app.projecttree.rootfolder),
+				"hotkey": Cmd + "+s"	
 			},
 			{
 				"label": "Save As...            ",
-				"command": self.save_as
+				"command": lambda event=None: self.save(),
+				"hotkey": Cmd + "+Shift+s"	
 			}],
 
 
@@ -85,45 +85,52 @@ class Menu(tk.Menu):
 			}],
 
 			"View": [{
-				"label": "Console",
+				"label": "Top Panel",
 				"menu": [{
-					"label": "Top Panel",
-					"command": lambda event=None: self.app.setview("console"),
+					"label": "Console",
+					"command": lambda event=None: self.app.nav.select("top", "console"),
 				}, {
-					"label": "Bottom Panel",
-					"command": lambda event=None: self.app.setview("console", bottom=True),
+					"label": "Workspace",
+					"command": lambda event=None: self.app.nav.select("top", "workspace"),
+				}, {
+					"label": "Doc Viewer",
+					"command": lambda event=None: self.app.nav.select("top", "docviewer"),
+				}, {
+					"label": "Output",
+					"command": lambda event=None: self.app.nav.select("top", "output"),
+				}, {
+					"separator": None
 				}, {
 					"label": "Maximize",
-					"command": lambda event=None: None,
-				}]
-			},{
-				"label": "Workspace",
-				"menu": [{
-					"label": "Top Panel",
-					"command": lambda event=None: self.app.setview("workspace"),
+					"command": lambda: self.maximize("top")
 				}, {
-					"label": "Bottom Panel",
-					"command": lambda event=None: self.app.setview("workspace", bottom=True),
+					"label": "Hide",
+					"command": lambda: self.hide("top")
 				}]
-			},{
-				"label": "Doc Viewer",
+			}, {
+				"label": "Bottom Panel",
 				"menu": [{
-					"label": "Top Panel",
-					"command": lambda event=None: self.app.setview("docviewer"),
+					"label": "Console",
+					"command": lambda: self.app.nav.select("bottom", "console"),
 				}, {
-					"label": "Bottom Panel",
-					"command": lambda event=None: self.app.setview("docviewer", bottom=True),
-				}]
-			},{
-				"label": "Output",
-				"menu": [{
-					"label": "Top Panel",
-					"command": lambda event=None: self.app.setview("output"),
+					"label": "Workspace",
+					"command": lambda: self.app.nav.select("bottom", "workspace"),
 				}, {
-					"label": "Bottom Panel",
-					"command": lambda event=None: self.app.setview("output", bottom=True),
+					"label": "Doc Viewer",
+					"command": lambda: self.app.nav.select("bottom", "docviewer"),
+				}, {
+					"label": "Output",
+					"command": lambda: self.app.nav.select("bottom", "output"),
+				}, {
+					"separator": None
+				}, {
+					"label": "Maximize",
+					"command": lambda: self.maximize("bottom")
+				}, {
+					"label": "Hide",
+					"command": lambda: self.hide("bottom")
 				}]
-			}]
+			}, ]
 		}
 
 		self.app = app
@@ -152,7 +159,11 @@ class Menu(tk.Menu):
 					menu.add_command(label=item["label"], command=item["command"], accelerator=None if "hotkey" not in item else item["hotkey"])
 				
 				if "hotkey" in item:
-					self.app.bind("<" + item["hotkey"].replace("+", "-") + ">", item["command"])
+					self.app.bind("<" + item["hotkey"].replace("+", "-") + ">", lambda event, command=item["command"]: self.hotkey(command))
+
+	def hotkey(self, command):
+		command()
+		self.app.focus_force()
 
 	def new(self, event=None):
 		self.filename = None
@@ -160,37 +171,21 @@ class Menu(tk.Menu):
 			self.app.savedata.new()
 
 	def open(self, event=None):
-		filepath = filedialog.askopenfilename()
+		filepath = filedialog.askopenfilename(filetypes=[('Math Inspector Files','*.math'), ('All Files','*.*')])
 		if filepath:
-			if messagebox.askokcancel("MathInspector", "Are you sure you want to open " + os.path.basename(filepath) + "?  Any unsaved data will be lost."):
-				self.app.savedata.load( filepath )
+			self.app.savedata.load(filepath)
 
-	def save(self, event=None):
-		if self.app.savedata.filepath is None:
-			self.save_as()
-		else:			
-			self.app.savedata.save(self.app.savedata.filepath)
+	def save(self, filepath=None):
+		if not filepath:
+			filepath = filedialog.asksaveasfilename(defaultextension="")
+			if not filepath: return
+		
+		self.app.savedata.save(path.join(filepath, path.basename(filepath) + ".math"))
 
-	def save_as(self, event=None):
-		self.app.savedata.save( filedialog.asksaveasfilename(defaultextension=".math") )
-
-	# @TODO: create custom dialog that allows import X as Y
 	def import_module(self, event=None):
 		module = simpledialog.askstring("Import Module", "What is the name of the module you want to import?")
 		if module:
-			self.app.execute("import " + module, __SHOW_RESULT__=False)
-
-	def show_projecttree(self, event=None):
-		self.app.treenotebook.select("modules")
-
-	def show_objecttree(self, event=None):
-		self.app.treenotebook.select("objects")
-
-	def open_file(self, event=None):
-		pass
-
-	def close_file(self, event=None):
-		self.app.editor.close()
+			self.app.execute("import " + module)
 
 	def toggle_output(self, option):
 		state = self.app.output.toggle(option)		
@@ -204,3 +199,17 @@ class Menu(tk.Menu):
 			idx = 2
 			label = "Random Color Lines           " + ("✓" if state else " ")
 		self.menus[2].entryconfig(idx, label=label)
+
+	def maximize(self, key):
+		if key == "top":
+			self.app.horizontal_panel.sashpos(0,0)
+			self.app.vertical_panel.sashpos(0,self.app.winfo_height())
+		elif key == "bottom":
+			self.app.horizontal_panel.sashpos(0,0)
+			self.app.vertical_panel.sashpos(0,0)
+
+	def hide(self, key):
+		if key == "top":
+			self.app.vertical_panel.sashpos(0,0)
+		if key == "bottom":
+			self.app.vertical_panel.sashpos(0,self.app.winfo_height())

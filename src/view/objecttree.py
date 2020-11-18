@@ -45,14 +45,99 @@ class ObjectTree(Treeview):
 		
 		self.bind("<<TreeviewSelect>>", self._on_treeview_select)
 		self.bind("<Button-1>", self._on_button_1)
-		self.bind('<B1-Motion>', self.b1_motion)
+		self.bind('<B1-Motion>', self._on_b1_motion)
 		self.bind('<ButtonRelease-1>', self._on_button_release_1)
 
-	def set_state(self, openobjects):
-		self.setexpanded(openobjects)
+	def update(self, key):
+		obj = self.app.objects[key]
+		item = self.app.workspace.get_item(key)
+		order = self.order()
+		expanded = self.expanded()
+
+		if self.exists(key + "<canvas_id>"):
+			if item.canvas_id != self.item(key + "<canvas_id>")["values"][0]:
+				self.delete_object(key)
+
+		if key not in self.get_children():
+			self.insert("", "end", key, text=key, tags=("object", "doc"))			
+			self.insert(key, "end", key + "<class>", text=get_class_name(obj), tags=("class", "no_hover"))
+			if not callable(obj):
+				self.insert(key, "end", key + "<value>", text=str(obj), tags="editable")
+		else:
+			self.item(key + "<class>", text=get_class_name(obj))						
+			if self.exists(key + "<value>"):
+				self.item(key + "<value>", text=str(obj))
+				if "default" in item.args and item.args["default"]["connection"]:
+					self.add_tag(key + "<value>", ("connected", "no_hover"))
+					self.remove_tag(key + "<value>", "editable")
+				elif self.has_tag(key + "<value>", "connected"):
+					self.remove_tag(key + "<value>", ("connected", "no_hover"))
+					self.add_tag(key + "<value>", "editable")
+
+		if "default" not in item.args:
+			for name in item.args:
+				if self.exists(key + "<argname><<" + name + ">>"):
+					self.item(key + "<arg><<" + name + ">>", text=str(item.args[name]["value"]))
+					if item.args[name]["connection"]:
+						self.add_tag(key + "<arg><<" + name + ">>", ("connected", "no_hover"))
+						self.remove_tag(key + "<arg><<" + name + ">>", "editable")
+					elif self.has_tag(key + "<arg><<" + name + ">>", "connected"):
+						self.remove_tag(key + "<arg><<" + name + ">>", ("connected", "no_hover"))
+						self.add_tag(key + "<arg><<" + name + ">>", "editable")
+				else:
+					self.insert(key, "end", key + "<argname><<" + name + ">>", text=name, 
+						tags=("argname", "no_hover"))
+					self.insert(key, "end", key + "<arg><<" + name + ">>", 
+						text=str(item.args[name]["value"]), 
+						tags="editable")
+			
+			if len(item.kwargs) > 0:
+				if not self.exists(key + "<kwargs>"):
+					kwargs = self.insert(key, "end", key + "<kwargs>", text="kwargs")
+				for name in item.kwargs:
+					if self.exists(key + "<kwargname><<" + name + ">>"):
+						self.item(key + "<kwarg><<" + name + ">>", text=str(item.kwargs[name]["value"]))
+					else:
+						self.insert(kwargs, "end", key + "<kwargname><<" + name + ">>", text=name, 
+							tags=("kwargname", "no_hover"))
+						self.insert(kwargs, "end", key + "<kwarg><<" + name + ">>", 
+							text=str(item.kwargs[name]["value"]), 
+							tags="editable")
+
+
+		for j in dir(obj):
+			if j[:1] != "_":
+				attr = getattr(obj, j)
+				if callable(attr):
+					if not self.exists(key + "<methods>"):
+						self.insert(key, "end", key + "<methods>", text="methods")
+					
+					if not self.exists(key + "<" + j + ">"):
+						self.insert(key + "<methods>", "end", key + "<" + j + ">", text=j, tags="doc")
+				else:
+					if not self.exists(key + "<constants>"):
+						self.insert(key, "end", key + "<constants>", text="constants")
+					if not self.exists(key + "<" + j + ">"):
+						self.insert(key + "<constants>", "end", key + "<" + j + ">", text=j + ": " + str(attr))
+
+		if self.exists(key + "<canvas_id>"):
+			self.item(key + "<canvas_id>", values=item.canvas_id)
+		else:
+			self.insert(key, "end", key + "<canvas_id>", values=item.canvas_id, tags="no_hover")
+			self.detach(key + "<canvas_id>")
+
+		self.order(order)
+		self.expanded(expanded)
+
+	def state(self, *args):
+		if not args: return self.order(), self.expanded()
+
+		order, expanded = args
+		self.order(order)
+		self.expanded(expanded)
 
 		for i in self.get_children():
-			self.update_object(i)
+			self.update(i)
 
 	def select(self, key):
 		selection = self.selection()
@@ -82,94 +167,10 @@ class ObjectTree(Treeview):
 		if self.has_tag(key, "editable"):			
 			self.entry.edit(key, event)
 			return "break"
-
-	def get_selected_obj(self, key=False):
-		if not self.selection(): return
-		
-		obj_key = re.sub(r"(<{1,2}[a-zA-Z0-9_' ]*>{1,2})", "", self.selection()[0])
-		if key: return obj_key
-		
-		return self.app.objects[obj_key]
-	
-	def update_object(self, key, prev_item=None):
-		if key is None: return
-
-		obj = self.app.objects[key]
-		item = self.app.workspace.get_item(key)
-		is_open = False
-
-		if prev_item is not None:
-			is_open = self.item(key)["open"]
-			self.delete_object(key)
-
-		if key in self.get_children():
-			self.item(key + "<class>", text=get_class_name(obj))						
-			if self.exists(key + "<value>"):
-				self.item(key + "<value>", text=str(obj))
-				if "default" in item.args and item.args["default"]["connection"]:
-					self.add_tag(key + "<value>", "connected")
-					self.add_tag(key + "<value>", "no_hover")
-					self.remove_tag(key + "<value>", "editable")
-				elif self.has_tag(key + "<value>", "connected"):
-					self.remove_tag(key + "<value>", "connected")
-					self.remove_tag(key + "<value>", "no_hover")
-					self.add_tag(key + "<value>", "editable")
-
-		else:
-			self.insert("", "end", key, text=key, tags=("object", "doc"), open=is_open)			
-			self.insert(key, "end", key + "<class>", text=get_class_name(obj), tags=("class", "no_hover"))
-			if not callable(obj):
-				self.insert(key, "end", key + "<value>", text=str(obj), tags="editable")
-
-		if "default" not in item.args:
-			for name in item.args:
-				if self.exists(key + "<argname><<" + name + ">>"):
-					self.item(key + "<arg><<" + name + ">>", text=str(item.args[name]["value"]))
-					if item.args[name]["connection"]:
-						self.add_tag(key + "<arg><<" + name + ">>", "connected")
-						self.add_tag(key + "<arg><<" + name + ">>", "no_hover")
-						self.remove_tag(key + "<arg><<" + name + ">>", "editable")
-					elif self.has_tag(key + "<arg><<" + name + ">>", "connected"):
-						self.remove_tag(key + "<arg><<" + name + ">>", "connected")
-						self.remove_tag(key + "<arg><<" + name + ">>", "no_hover")
-						self.add_tag(key + "<arg><<" + name + ">>", "editable")
-				else:
-					self.insert(key, "end", key + "<argname><<" + name + ">>", text=name, 
-						tags=("argname", "no_hover"))
-					self.insert(key, "end", key + "<arg><<" + name + ">>", 
-						text=str(item.args[name]["value"]), 
-						tags="editable")
 			
-			if len(item.kwargs) > 0:
-				if not self.exists(key + "<kwargs>"):
-					kwargs = self.insert(key, "end", key + "<kwargs>", text="kwargs")
-				for name in item.kwargs:
-					if self.exists(key + "<kwargname><<" + name + ">>"):
-						self.item(key + "<kwarg><<" + name + ">>", text=str(item.kwargs[name]["value"]))
-					else:
-						self.insert(kwargs, "end", key + "<kwargname><<" + name + ">>", text=name, 
-							tags=("kwargname", "no_hover"))
-						self.insert(kwargs, "end", key + "<kwarg><<" + name + ">>", 
-							text=str(item.kwargs[name]["value"]), 
-							tags="editable")
-
-
-		if not self.exists(key + "<methods>"):
-			methods = constants = None
-			for j in dir(obj):
-				if j[:1] != "_":
-					attr = getattr(obj, j)
-					if callable(attr):
-						if not methods:
-							methods = self.insert(key, "end", key + "<methods>", text="methods")
-						self.insert(methods, "end", key + "<" + j + ">", text=j, tags="doc")
-					else:
-						if not constants:
-							constants = self.insert(key, "end", key + "<constants>", text="constants")
-						self.insert(constants, "end", key + "<" + j + ">", text=j + ": " + str(attr))
-		
+	# can this be refactored out and just use .delete?
 	def delete_object(self, key):
-		if key is None: return
+		if key is None or not self.exists(key): return
 		self.delete(key)
 
 	def create_new_object(self, key):
@@ -188,7 +189,7 @@ class ObjectTree(Treeview):
 			return name	
 
 
-	def b1_motion(self, event):
+	def _on_b1_motion(self, event):
 		self.drag["selected"] = self.selection()
 		
 		if self.drag["in_workspace"] and self.drag["new_object"]:
@@ -200,6 +201,7 @@ class ObjectTree(Treeview):
 			self.drag["new_object"] = self.create_new_object(self.drag["selected"][0])
 			
 		self.drag["position"] = (event.x, event.y)
+		super(ObjectTree, self)._on_b1_motion(event)
 
 	def _on_button_release_1(self, event):
 		self.drag["selected"] = None

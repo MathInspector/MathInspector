@@ -1,7 +1,10 @@
-import inspect, sys, os, random, platform
+import inspect, sys, os, random, platform, builtins
 from functools import reduce
 from PIL import ImageTk, Image
 from settings import Color
+
+BUILTIN_CLASS = [i for i in dir(builtins) if inspect.isclass( getattr(builtins, i) )]
+BUILTIN_FUNCTION = [i for i in dir(builtins) if not inspect.isclass( getattr(builtins, i) )]
 
 def get_font_color(value):
     if isinstance(value, str):
@@ -24,6 +27,11 @@ def unique_name(app, name):
         temp = name + "_" + str(i)
         i += 1
 
+def basepath():
+    if hasattr(sys, "_MEIPASS"):
+        return sys._MEIPASS
+    else:
+        return os.path.abspath("../")
 
 def get_class_name(obj):
     if inspect.isfunction(obj) and obj.__module__: # in sys.modules:
@@ -34,6 +42,24 @@ def get_class_name(obj):
         return obj.__class__.__module__ + "." + obj.__class__.__name__
     else:
         return obj.__class__.__name__
+
+def getalias(modules, name):
+    toplevel = name.split(".")
+    if name in modules:
+        key = name
+    else:
+        for i in modules:
+            if modules[i].__name__ == name:                    
+                key = i
+                break
+        key = toplevel[0]
+
+    return key if len(toplevel) == 1 else key + "." + ".".join(toplevel[1:])
+
+
+def on_configure_panel(widget, sashpos):
+    widget.sashpos(0, sashpos)
+    widget.unbind("<Configure>")
 
 def readfile(filepath):
     file = open(filepath, "r")
@@ -75,10 +101,7 @@ def getnamefrompath(filepath):
 
 def name_and_extension(filepath):
     return os.path.splitext(os.path.basename(filepath))
-    # name = os.path.basename(filepath)
-    # ext = os.path.splitext(name)[1]
-    # return name, ext
-
+ 
 def getcommonletters(strlist):
     return ''.join([x[0] for x in zip(*strlist) if reduce(lambda a,b:(a == b) and a or None,x)])
 

@@ -50,7 +50,7 @@ class Popup(tk.Toplevel):
 				padx=8
 			).pack(fill="x", expand=True, padx=8)	
 
-			inputs = argspec(obj)
+			inputs = argspec(obj, withself=False)
 			input_area = tk.Frame(self, background=Color.BLACK)
 
 			i = 0
@@ -104,7 +104,7 @@ class Popup(tk.Toplevel):
 
 	def _on_help(self):
 		self.app.docviewer.showdoc(self.obj)
-		self.app.setview(".!docviewer")
+		self.app.nav.select("top", "docviewer")
 
 	def _on_ok(self, event=None):
 		args = []
@@ -112,23 +112,23 @@ class Popup(tk.Toplevel):
 		if self.eval_args:
 			for i in self.args:
 				try:
-					value = self.app.execute(i.get(), __SHOW_RESULT__=False, __EVAL_ONLY__=True)
+					value = self.app.eval(i.get("1.0", "end"))
 				except:
-					value = str(i.get()) or None
-					print ("uhhh", i.get())
+					value = str(i.get("1.0", "end")) or None
+					print ("uhhh", i.get("1.0", "end"))
 				args.append(value)
 
 			for j in self.kwargs:
 				try:
-					value = self.app.execute(self.kwargs[j].get(), __SHOW_RESULT__=False, __EVAL_ONLY__=True)
+					value = self.app.eval(self.kwargs[j].get("1.0", "end"))
 				except:
 					print ("uhhh", value)
-					value = str(self.kwargs[j].get())			
+					value = str(self.kwargs[j].get("1.0", "end"))			
 
 				kwargs[j] = value
 		else:
-			args = [i.get() for i in self.args]
-			kwargs = { j:self.kwargs[j].get() for j in self.kwargs}
+			args = [i.get("1.0", "end") for i in self.args]
+			kwargs = { j:self.kwargs[j].get("1.0", "end") for j in self.kwargs}
 
 		if not self.callback:
 			self.obj(*args, **kwargs)

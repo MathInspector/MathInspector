@@ -17,21 +17,94 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import tkinter as tk
-from widget import NavIcon
-from settings import Color
+from util import loadimage
+from settings import Color, ButtonRight
+from PIL import ImageTk, Image
+
+image = {
+	"console": {
+		"default": ["console"],
+		"selected": ["console-selected"],
+		"selected-alt": ["console-selected-alt"],
+		"hover": ["console-hover"]
+	},
+	"workspace": {
+		"default": ["workspace"],
+		"selected": ["workspace-selected"],
+		"selected-alt": ["workspace-selected-alt"],
+		"hover": ["workspace-hover"]
+	},
+	"docviewer": {
+		"default": ["docviewer"],
+		"selected": ["docviewer-selected"],
+		"selected-alt": ["docviewer-selected-alt"],
+		"hover": ["docviewer-hover"]
+	},
+	"output": {
+		"default": ["output"],
+		"selected": ["output-selected"],
+		"selected-alt": ["output-selected-alt"],
+		"hover": ["output-hover"]
+	},
+}
 
 class Nav(tk.Frame):
 	def __init__(self, app):
-		tk.Frame.__init__(self, app, background=Color.BLACK)		
-		
+		tk.Frame.__init__(self, app, background=Color.BLACK, pady=12)		
+		self.app = app
+		self.selected = { "top": None, "bottom": None }
+
+		for i in image:
+			for j in image[i]:
+				image[i][j].append(loadimage(image[i][j][0]))
+
 		self.icons = {
-			".!console": NavIcon(self, "console", app),
-			".!workspace": NavIcon(self, "workspace", app),
-			".!docviewer": NavIcon(self, "docviewer", app),
-			".!output": NavIcon(self, "output", app),
+			i: tk.Label(self, image=image[i]["default"][1], background=Color.BLACK) for i in image
 		}
 		
-		tk.Frame(self, background=Color.BLACK, height=12).pack(side="top", fill="both")
-		
+		self.pack(side="top", fill="both")
 		for j in self.icons:
-			self.icons[j].pack()		
+			self.icons[j].bind("<Enter>", lambda event, key=j: self._on_enter(key))
+			self.icons[j].bind("<Leave>", lambda event, key=j: self._on_leave(key))
+			self.icons[j].bind("<Button-1>", lambda event, key=j: self.select("bottom", key))
+			self.icons[j].bind(ButtonRight, lambda event, key=j: self.select("top", key))
+			self.icons[j].pack()
+
+
+	def select(self, panel, key, flip_panels=True):
+		if self.selected[panel] == key: return
+
+		if self.selected[panel]:
+			self.icons[self.selected[panel]].config(image=image[self.selected[panel]]["default"][1])
+
+		if panel == "top":
+			if flip_panels and self.selected["top"] and self.selected["bottom"] == key:
+				self.select("bottom", self.selected["top"], False)
+			widget = self.app.top_view
+			self.icons[key].config(image=image[key]["selected"][1])
+		elif panel == "bottom":
+			if flip_panels and self.selected["bottom"] and self.selected["top"] == key:
+				self.select("top", self.selected["bottom"], False)
+			widget = self.app.bottom_view
+			self.icons[key].config(image=image[key]["selected-alt"][1])	
+		else:
+			return
+
+		iid = ".!" + key
+		if iid in widget.tabs and iid in widget.notebook.tabs():
+			widget.tabs[iid].select()
+		else:
+			widget.add(key, getattr(self.app, key))
+
+		widget.notebook.select(iid)
+		self.selected[panel] = key
+		if key == "console":
+			self.app.console.focus()
+		
+
+	def _on_enter(self, key):
+		self.icons[key].config(image=image[key]["hover"][1])
+
+	def _on_leave(self, key):	
+		self.icons[key].config(image=image[key]["selected-alt" if key == self.selected["bottom"] else "selected" if key == self.selected["top"] else "default"][1])
+

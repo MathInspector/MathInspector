@@ -37,23 +37,6 @@ configure = {
 	}
 }
 
-treenotebook = {
-	"expandtabs": True, 
-	"tabbackground": Color.BLACK, 
-	"background": Color.BLACK, 
-	"highlightthickness": 4, 
-	"highlightbackground": Color.BLACK
-}
-
-treenotebook_tab = {
-	"font": "SourceSansPro 12 bold", 
-	"background": Color.BLACK, 
-	"foreground": Color.WHITE,
-	"selected_bg": Color.BLACK,
-	"selected_fg": Color.ORANGE,
-	"hover": Color.VERY_DARK_GREY
-}
-
 # _map = {
 	
 # }

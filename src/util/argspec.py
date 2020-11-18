@@ -47,10 +47,7 @@ def argspec(obj, withself=True):
 			for name in fullargspec[5]:
 				kwargs[name] = fullargspec[5][name]
 
-		return {
-			"args": args,
-			"kwargs": kwargs
-		}
+		return args, kwargs
 
 	doc = FunctionDoc(obj)
 	signature = doc["Signature"].replace(", /", "").replace(", \*", "").replace(", *", "")
@@ -60,7 +57,4 @@ def argspec(obj, withself=True):
 		return False
 	items = [i.lstrip() for i in params[0].split(",")]	
 
-	return {
-		"args": [i for i in items if "=" not in i], 
-		"kwargs": { i.split("=")[0] : eval(i.split("=")[1]) for i in items if "=" in i}
-	}
+	return [i for i in items if "=" not in i], { i.split("=")[0] : eval(i.split("=")[1]) for i in items if "=" in i}

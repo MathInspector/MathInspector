@@ -17,11 +17,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from .objectcontainer import ObjectContainer
-from .argcount import argcount
 from .argspec import argspec
 from .watchhandle import WatchHandle
 from .docscrape import FunctionDoc, ClassDoc
 from pdb import set_trace as breakpoint
 from .savedata import SaveData
 from .icons import geticon
+from .animate import Animate
 from .misc import *

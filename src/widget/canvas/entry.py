@@ -21,21 +21,18 @@ import textwrap
 from pprint import pformat
 from util import get_font_color
 from settings import Color, Font, Widget
-from widget.text import TextEditor
+from widget.text import Text
 
 # TODO - add this to settings.json
 TEXTWRAP_WIDTH = 32
 LABEL_OFFSET = 32
 
-class Entry(TextEditor):
+class Entry(Text):
 	def __init__(self, item, *args, **kwargs):
-		TextEditor.__init__(self, item.canvas, 
-			syntax=None, 
-			auto_indent=False,
+		Text.__init__(self, item.canvas, 
 			background=Color.DARK_BLACK,
 			padx=0,
 			pady=0,
-			on_change_callback=self._on_edit_change, 
 			*args, **kwargs)
 
 		self.item = item		
@@ -43,6 +40,7 @@ class Entry(TextEditor):
 		self.window = None
 		self.edit_id = None
 		self.bind("<Key>", self._on_key)	
+		self.bind("<<Modify>>", self._on_edit_change)	
 
 	def hide(self):
 		self.item.canvas.delete(self.window)
@@ -121,14 +119,14 @@ class Entry(TextEditor):
 			return
 
 		if self.edit_id == self.item.value_label and isinstance(self.item.value, str):
-			value = self.get()
+			value = self.get("1.0", "end")
 		else:
-			cmd = self.get()
+			cmd = self.get("1.0", "end")
 			try:
 				if isinstance(self.item.value, dict):
-					value = None if not cmd else self.app.execute("{" + cmd + "}", __SHOW_RESULT__=False, __EVAL_ONLY__=True)
+					value = None if not cmd else self.app.eval("{" + cmd + "}")
 				else:
-					value = None if not cmd else self.app.execute(cmd, __SHOW_RESULT__=False, __EVAL_ONLY__=True)
+					value = None if not cmd else self.app.eval(cmd)
 			except Exception as err:
 				if self.edit_id == self.item.value_label:
 					self.item.canvas.itemconfig(self.item.value_label, text=str(self.item.value))
@@ -156,11 +154,11 @@ class Entry(TextEditor):
 		elif event.keysym == 'Return':
 			self.finish()
 	
-	def _on_edit_change(self):
+	def _on_edit_change(self, event=None):
 		if self.edit_id != self.item.value_label: return
 
 		x,y = self.item.get_position()
-		content = self.get().strip()
+		content = self.get("1.0", "end").strip()
 
 		if isinstance(self.item.value, str):
 			# @TODO - fix up style of typing strings into widget, there are a few quirks

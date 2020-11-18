@@ -9,13 +9,18 @@ class WatchHandle(FileSystemEventHandler):
 		self.projecttree = projecttree
 
 	def on_created(self, event):
-		for rootfolder in self.projecttree.tags("rootfolder"):
-			if rootfolder in event.src_path:
+		folders = self.projecttree.tags("folder")
+		if self.projecttree.rootfolder:
+			folders.append(self.projecttree.rootfolder)
+		
+		for folder in folders:
+			if folder in event.src_path:
 				name, ext = name_and_extension(event.src_path)
 				
 				parent = os.path.dirname(event.src_path)
 				if event.is_directory:
-					self.projecttree.addfolder(parent, event.src_path)
+					if os.basename(event.src_path) not in Excluded.FOLDERS:
+						self.projecttree.addfolder(event.src_path, parent)
 				elif ext != ".pyc": # make this from excluded files with regex
 					self.projecttree.addfile(event.src_path, parent)
 
@@ -24,13 +29,16 @@ class WatchHandle(FileSystemEventHandler):
 
 		if ext == ".pyc" or name in Excluded.FOLDERS: return
 
-		for j in self.projecttree.tags("rootfolder"):
+		for j in self.projecttree.tags("folder") + self.projecttree.tags("file"):
 			if j in event.src_path:
 				self.projecttree.delete(event.src_path)
 
 	def on_modified(self, event):
+		name, ext = name_and_extension(event.src_path)
+		if ext == ".pyc" or name in Excluded.FOLDERS: return
 		if event.is_directory: return
-		self.projecttree.update_item(event.src_path)
+		
+		self.projecttree.update_file(event.src_path)
 
 
 	def on_moved(self, event):

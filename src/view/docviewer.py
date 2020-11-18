@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 import inspect, textwrap, re, sys, os, webbrowser, builtins
-from widget import HighlightedText
+from widget.text import Text
 from util import makereadonly, FunctionDoc, get_class_name, name_and_extension
 from settings import Color
 import style.tags
@@ -33,18 +33,18 @@ pattern = {
     "console_prompt": r"(>>>)"
 }
 
-class DocViewer(HighlightedText):
-    def __init__(self, app, parent=None):
-        HighlightedText.__init__(self, parent or app, 
+class DocViewer(Text):
+    def __init__(self, app):
+        Text.__init__(self, app, 
             font="Nunito-ExtraLight 16", 
             cursor="arrow", 
-            bg=Color.BACKGROUND,
             insertbackground=Color.BACKGROUND
         )
 
         self.app = app
         self.hover_range = None
         self.selected_key = None
+        self.selected_filepath = None
         self.selected_obj = None
         self.hover = None
 
@@ -73,6 +73,9 @@ class DocViewer(HighlightedText):
         if key == self.selected_key:
             self.select(None)
 
+    def clear(self):
+        self.delete("1.0", "end")
+
     def select(self, key, filepath=None):
         self.selected_key = key
         obj = self.app.objects[key] if key in self.app.objects else self.app.modules[key] if key in self.app.modules else None
@@ -81,6 +84,7 @@ class DocViewer(HighlightedText):
             if ext == ".md":
                 content = open(filepath, "r").read()
                 self.show_markdown(content)
+                self.selected_filepath = filepath
             return
         elif obj is None:
             # self.delete('1.0', 'end')
@@ -88,6 +92,12 @@ class DocViewer(HighlightedText):
             return
         
         self.showdoc(obj)
+
+    def save(self):
+        return self.selected_key, self.selected_filepath
+
+    def load(self, key, filepath):
+        self.select(key, filepath=filepath)
 
     def show(self, key): 
         if key == None: 
@@ -217,20 +227,20 @@ class DocViewer(HighlightedText):
             self.highlight(pattern[tag], tag)
 
     def show_markdown(self, content):
-        self.delete()
+        self.delete("1.0", "end")
         self.insert("1.0", content)
         for tag in style.markdown:
             if isinstance(style.markdown[tag], tuple):
                 for regex in style.markdown[tag]:
-                    self.replace(regex, tag)
+                    self.highlight(regex, tag)
             else:
-                self.replace(style.markdown[tag], tag)
+                self.highlight(style.markdown[tag], tag)
 
         for tag in pattern:
             self.highlight(pattern[tag], tag)     
 
-        self.replace(r"^[-\*+]", "unordered-list", "•")
-        self.replace(r"^\t[-\*+]", "unordered-list", "\t◦")
+        self.highlight(r"^[-\*+]", "unordered-list", newtext="•")
+        self.highlight(r"^\t[-\*+]", "unordered-list", newtext="\t◦")
 
     def join_items(self, str_list):
         result = ""
@@ -304,6 +314,7 @@ class DocViewer(HighlightedText):
         tag_range = self.tag_prevrange('code_sample', xy)
         code = self.get(*tag_range)
         for cmd in re.findall(r">>> {0,}(.*)", code):
-            self.app.console.run( cmd )
+            self.app.console.command(cmd)
+            self.app.nav.select("bottom", "console")
 
 

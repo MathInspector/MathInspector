@@ -1,7 +1,7 @@
 
 sdd="ssd"
 
-oo = 1
+oo = 17
 
 def fn():
 	return 11
@@ -9,5 +9,5 @@ def fn():
 a = 3
 b = 2
 
-def addition(a,b,c):
-	return a + b + c
+def addition(a,b):
+	return a + b
