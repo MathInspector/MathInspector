@@ -27,19 +27,24 @@ def unique_name(app, name):
         temp = name + "_" + str(i)
         i += 1
 
+def strjoin(items):
+    return "".join([i + " " if len(i) > 0 else "\n" for i in items])
+
 def basepath():
     if hasattr(sys, "_MEIPASS"):
         return sys._MEIPASS
     else:
         return os.path.abspath("../")
 
-def get_class_name(obj):
+def classname(obj):
     if inspect.isfunction(obj) and obj.__module__: # in sys.modules:
         # return obj.__name__
         return obj.__module__ + "." + obj.__name__
         # return sys.modules[obj.__module__].__name__ + "." + obj.__name__
-    elif obj.__class__.__module__:
-        return obj.__class__.__module__ + "." + obj.__class__.__name__
+    elif obj.__class__.__module__ and hasattr(obj, "__name__"):
+        return obj.__class__.__module__ + "." + obj.__name__
+    elif obj.__class__.__name__ in BUILTIN_CLASS:
+        return "builtins." + obj.__class__.__name__
     else:
         return obj.__class__.__name__
 

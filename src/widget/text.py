@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import tkinter as tk
 from settings import Color
 from util import BUILTIN_CLASS, BUILTIN_FUNCTION
-import style.syntax
+from style import TAGS, RE_PY
 import io, re, tokenize, keyword
 
 class Text(tk.Text):
@@ -40,52 +40,42 @@ class Text(tk.Text):
 			wrap="word",
 			**kwargs)
 		
-		for tag in style.syntax:
-			self.tag_configure(tag, **style.syntax[tag])		
+		for i in TAGS:
+			self.tag_configure(i, **TAGS[i])		
 
 		self._orig = self._w + "_orig"
 		self.tk.call("rename", self._w, self._orig)
 		self.tk.createcommand(self._w, self._proxy)						
 
 	def highlight(self, pattern, tag=None, start="1.0", end="end", newtext=None):
-		current_index = self.index(start)
-		newlines = 0
-		iters = 0
-		while True:
-			content = self.get(start, end)
-			match = re.compile(pattern, re.MULTILINE).search(content)
-			if not match:
-				break
-			start=match.start()
-			end=match.end()	
-			ind1 = current_index + "+" + str(start) + "c"
-			ind2 = current_index + "+" + str(start + len(match.group(1))) + "c"
+		for match in re.compile(pattern, re.MULTILINE).finditer(self.get(start, end)):
+			ind1 = self.index(start) + "+" + str(match.start()) + "c"
+			ind2 = self.index(start) + "+" + str(match.start() + len(match.group(1))) + "c"
 			if newtext:
+				# deleting and inserting with different lengths is breaking the find_iter indicies
 				self.delete(ind1, ind2)
-				if pattern[-1] == "$":
-					newtext += "\n"
-					newlines_count = pattern.count(r"\n")
-					newlines += 1 - newlines_count
-				self.insert(ind1, newtext, tag)
-			else:
-				self.tag_add(tag, ind1, ind2)
-			current_index = self.index(ind1 + "+" + str(start + len(newtext or match.group(1))) + "c")
-			break
+				self.insert(ind1, newtext)
+				ind2 = 	self.index(start) + "+" + str(match.start() + len(newtext)) + "c"
+				ccc = self.get(ind1,ind2)
+				print (ind1,ind2, "content", ccc)			
+			self.tag_add(tag, ind1, ind2)
 		
-	def syntax_highlight(self, start, end):
-		for tag in style.syntax:
-			self.tag_remove(tag, start, end)
+	def syntax_highlight(self, start="1.0", end="end"):
+		for i in TAGS:
+			self.tag_remove(i, start, end)
 
 		content = self.get(start, end)
 		if not content: return
 		
 		try:
-			self.highlight(r"([a-zA-Z0-0_]*)\(", "blue", start, end)
+			for i in RE_PY:
+				self.highlight(RE_PY[i], i, start, end)
+			
 			for typ, string, start_index, end_index, line in tokenize.generate_tokens(io.StringIO(content).readline):
 				token = tokenize.tok_name[typ]
 
-				ind1 = self.index(start) + "+" + str(start_index[1]) + "c"
-				ind2 = self.index(start) + "+" + str(end_index[1]) + "c"
+				ind1 = self.index(start) + "+" + str(start_index[0] - 1) + "l" + "+" + str(start_index[1]) + "c"
+				ind2 = self.index(start) + "+" + str(end_index[0] - 1) + "l" + "+" + str(end_index[1]) + "c"
 
 				if token == "NAME":
 					if string in keyword.kwlist:
@@ -104,7 +94,6 @@ class Text(tk.Text):
 				elif token == "COMMENT":
 					self.tag_add("comment", ind1, ind2)
 		except Exception as err:
-			print (err)
 			pass
 
 

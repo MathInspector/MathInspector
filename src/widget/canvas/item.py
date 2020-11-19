@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from settings import Color, Font, Widget 
-from util import get_class_name, get_font_color, argspec
+from util import classname, get_font_color, argspec
 from .entry import Entry
 from textwrap import fill
 from pprint import pformat
@@ -106,7 +106,7 @@ class Item:
         self.value = value
         x,y = self.get_position()
         node_size = Widget.NODE_SIZE*self.canvas.zoomlevel
-        self.canvas.itemconfig(self.class_label, text=get_class_name(value))
+        self.canvas.itemconfig(self.class_label, text=classname(value))
         num_args = len(self.args)
         if self.show_kwargs:
             num_args += len(self.kwargs)

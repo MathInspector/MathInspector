@@ -73,8 +73,7 @@ class SaveData:
 				self.app.projecttree.state(),
 				self.app.console.state(),
 				self.app.objecttree.state(),
-				self.app.output.save(),
-				self.app.docviewer.save()):
+				self.app.output.save()):
 				
 				pickle.dump(i, output, pickle.HIGHEST_PROTOCOL)
 
@@ -90,7 +89,6 @@ class SaveData:
 				console = pickle.load(data)
 				objecttree = pickle.load(data)
 				output = pickle.load(data)
-				docviewer = pickle.load(data)
 		except Exception:
 			self.new()			
 			return
@@ -105,7 +103,6 @@ class SaveData:
 		self.app.workspace.load(*workspace)
 		self.app.objecttree.state(*objecttree)
 		self.app.output.load(*output)
-		self.app.docviewer.load(*docviewer)
 		self.app.select(selected_object)
 		self.app.projecttree.order(order)
 		self.app.projecttree.expanded(expanded)

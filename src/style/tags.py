@@ -18,15 +18,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from settings import Color
 
-tags = {
+DOC_TAGS = {
     "name": {
         "font": "Montserrat 32 bold", 
         "foreground": Color.WHITE
     },
 
     "signature": {
-        "foreground": Color.VERY_LIGHT_GREY,
-        "font": "Menlo 15"
+        "font": "Monospace 14"
     },
 
     "class_name": {
@@ -55,7 +54,7 @@ tags = {
     },
 
     "h1": {
-        "font": "Montserrat 36 bold",
+        "font": "Montserrat 32 bold",
         "background": Color.DARK_PURPLE,
         "lmargin1": 16,
         "lmargin2": 8,
@@ -144,10 +143,20 @@ tags = {
         "foreground": Color.LINK_URL, 
     },
 
+    "examples": {
+        "background": Color.CONSOLE_BACKGROUND,
+        "font": "Menlo 16",
+        "spacing1": 2,
+        "spacing2": 0,
+        "spacing3": 8,
+        "lmargin1": 8,
+        "lmargin2": 38
+    },
+
     "code_sample": {
         "background": Color.CONSOLE_BACKGROUND, 
-        "foreground": Color.WHITE, 
-        "font": "Monospace 15",
+        # "foreground": Color.WHITE, 
+        "font": "Monospace 16",
         "spacing1": 2,
         "spacing2": 0,
         "spacing3": 8,

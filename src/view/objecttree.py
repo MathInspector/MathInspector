@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 from widget import Treeview, ContextMenu, TreeEntry
-from util import Color, unique_name, get_class_name, get_font_color
+from util import Color, unique_name, classname, get_font_color
 from settings import ButtonRight
 import re, inspect
 
@@ -60,11 +60,11 @@ class ObjectTree(Treeview):
 
 		if key not in self.get_children():
 			self.insert("", "end", key, text=key, tags=("object", "doc"))			
-			self.insert(key, "end", key + "<class>", text=get_class_name(obj), tags=("class", "no_hover"))
+			self.insert(key, "end", key + "<class>", text=classname(obj), tags=("class", "no_hover"))
 			if not callable(obj):
 				self.insert(key, "end", key + "<value>", text=str(obj), tags="editable")
 		else:
-			self.item(key + "<class>", text=get_class_name(obj))						
+			self.item(key + "<class>", text=classname(obj))						
 			if self.exists(key + "<value>"):
 				self.item(key + "<value>", text=str(obj))
 				if "default" in item.args and item.args["default"]["connection"]:

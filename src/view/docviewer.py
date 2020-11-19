@@ -17,11 +17,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import tkinter as tk
-import inspect, textwrap, re, sys, os, webbrowser, builtins
+import inspect, textwrap, re, sys, webbrowser, builtins
 from widget.text import Text
-from util import makereadonly, FunctionDoc, get_class_name, name_and_extension
+from util import makereadonly, FunctionDoc, classname, name_and_extension, strjoin
 from settings import Color
-import style.tags
+from style import DOC_TAGS
+from os import path
 import style.markdown
 
 pattern = {
@@ -29,173 +30,84 @@ pattern = {
     "menlo_italic": r"(?<!`)`(?!`)(.*?)`",
     # "italic": r"`(?!`)([0-9a-zA-Z.<> =()^]*)`(?!`)",
     "link_url": r"(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+~]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)",
-    "code_sample": r"(?s)(>>>.*?($|\n))\n",
+    "code_sample": r"(?s)(>>>.*?\n)\n",
     "console_prompt": r"(>>>)"
 }
 
 class DocViewer(Text):
     def __init__(self, app):
-        Text.__init__(self, app, 
-            font="Nunito-ExtraLight 16", 
-            cursor="arrow", 
-            insertbackground=Color.BACKGROUND
-        )
-
+        Text.__init__(self, app, font="Nunito-ExtraLight 16", cursor="arrow", insertbackground=Color.BACKGROUND)
         self.app = app
+        self.obj = None
         self.hover_range = None
-        self.selected_key = None
-        self.selected_filepath = None
-        self.selected_obj = None
-        self.hover = None
-
         makereadonly(self)
 
-        self.tag_bind("link_url", "<Enter>", lambda event: self._enter(event, "link_url"))
-        self.tag_bind("link_url", "<Leave>", lambda event: self._leave(event, "link_url"))
-        self.tag_bind("link_url", "<Button-1>", self._click_link)
-    
-        # self.tag_bind("doc_link", "<Enter>", lambda event: self._enter(event, "doc_link"))
-        self.tag_bind("doc_link", "<Leave>", lambda event: self._leave(event, "doc_link"))
-        self.tag_bind("doc_link", "<Motion>", self._motion)
-        self.tag_bind("doc_link", "<Button-1>", self._click_doc_link)
-    
-        self.tag_bind("code_sample", "<Enter>", lambda event: self._enter(event, "code_sample"))
-        self.tag_bind("code_sample", "<Leave>", lambda event: self._leave(event, "code_sample"))
-        self.tag_bind("code_sample", "<Button-1>", self._click_code_sample)
+        for i in ("link_url", "doc_link", "code_sample"):
+            self.tag_bind(i, "<Motion>", lambda event, key=i: self._motion(event, key))
+            self.tag_bind(i, "<Leave>", lambda event, key=i: self._leave(event, key))
+            self.tag_bind(i, "<Button-1>", lambda event, key=i: self._click(event, key))    
 
-        for tag in style.tags:
-            self.tag_configure(tag, **style.tags[tag])
+        for i in DOC_TAGS:
+            self.tag_configure(i, **DOC_TAGS[i])
 
-    def update_object(self, key):
-        return
-
-    def delete_object(self, key):
-        if key == self.selected_key:
-            self.select(None)
-
-    def clear(self):
-        self.delete("1.0", "end")
-
-    def select(self, key, filepath=None):
-        self.selected_key = key
-        obj = self.app.objects[key] if key in self.app.objects else self.app.modules[key] if key in self.app.modules else None
-        if filepath:
-            ext = os.path.splitext(filepath)[-1]
+    def select(self, key):
+        self.clear()
+        if key == None: return
+        
+        if key in self.app.objects:
+            self.obj = self.app.objects[key]
+        elif key in self.app.modules:
+            self.obj = self.app.modules[key]
+        elif path.isfile(key):
+            name, ext = name_and_extension(key)
             if ext == ".md":
                 content = open(filepath, "r").read()
                 self.show_markdown(content)
-                self.selected_filepath = filepath
             return
-        elif obj is None:
-            # self.delete('1.0', 'end')
-            self.selected_obj = None
-            return
-        
-        self.showdoc(obj)
-
-    def save(self):
-        return self.selected_key, self.selected_filepath
-
-    def load(self, key, filepath):
-        self.select(key, filepath=filepath)
-
-    def show(self, key): 
-        if key == None: 
-            # self.delete("1.0", "end")
-            return
-
-        # @REFACTOR: clean this up, not necc to use try/except I dont think
-        try:
-            module, attr = key.rsplit('.', 1)
-            obj = getattr(self.app.modules[module], attr)
-            doc = inspect.getdoc(obj)
-        except:
+        else:
             try:
-                obj = self.app.modules[key]
-                doc = inspect.getdoc(obj)
+                module, attr = key.rsplit('.', 1)
+                self.obj = getattr(self.app.modules[module], attr)
             except:
-                doc = None
-                pass
-
-
-        if doc:
-            self.showdoc(obj)
-            return True
-        
-        if "." in key:
-            items = key.split(".")
-            module = items[0]
-            attr = ".".join(items[1:])
-            if module == "builtins":
-                obj = getattr(builtins, attr)
-                self.showdoc(obj)
                 return
 
-        if key in self.app.objects:
-            obj = self.app.objects[key]
-            self.showdoc(obj)
-            return
-
-        name, ext = name_and_extension(key)
-        if ext == ".md":
-            content = open(key, "r").read()
-            self.show_markdown(content)
-
-    def showdoc(self, obj, sections=None):
-        # TODO - make this selected_key!!! causing a save problem ... sigh
-        self.selected_obj = obj
         try:
-            doc = FunctionDoc(obj)
+            doc = FunctionDoc(self.obj)
         except:
-            self.delete("1.0", "end")
-            #@TODO: cleanup docs that fail by spliting into \n\n
-            self.insert("1.0", obj.__doc__)
+            self.show_textfile(self.obj.__doc__)
             return
 
-        if inspect.isclass(obj):
-            name = obj.__module__ + "." + obj.__name__
-            # name = "." + obj.__name__
-        elif inspect.isfunction(obj) and obj.__module__ in sys.modules:
-            name = sys.modules[obj.__module__].__name__ + "." + obj.__name__
-        else:
-            if ( hasattr(obj,'__name__') ):
-                # if obj.__class__.__module__ == "builtins":
-                #     name = obj.__name__
-                # else:
-                name = obj.__class__.__module__ + "." + obj.__name__
-            else:
-                name = obj.__class__.__module__ + "." + obj.__class__.__name__
+        self.show_functiondoc(doc, classname(self.obj))
 
-        self.delete("1.0", "end")
-        if not sections or "Title" in sections:
-            self.insert("1.0", name + "\n", "h1")
-            self.tag_add("name", "1.0", "1." + str(len(name)))
+    def show_functiondoc(self, doc, name):
+        self.insert("1.0", name + "\n", "h1")
+        self.tag_add("name", "1.0", "1." + str(len(name)))
         
         for i in doc:            
             if len(doc[i]) > 0:
                 self.insert("end", "\n")
-                if i == "Signature" and (not sections or i in sections):
+                if i == "Signature":
                     signature = doc[i].replace(", /", "").replace(", \*", "").replace(", *", "")
                     self.insert("end", signature, "signature")
+                    self.syntax_highlight("end-1c linestart")
                     self.insert("end", "\n")
-                elif i  == "Summary" and (not sections or i in sections):
+                elif i  == "Summary":
                     self.insert("end", "".join(doc[i]) + "\n")
-                elif i  == "Extended Summary" and (not sections or i in sections):
-                    self.insert("end", self.join_items(doc[i]).replace("\n", "\n\n") + "\n")
-                elif i  in ("Other Parameters", "Attributes", "Methods", "Warnings") and (not sections or i in sections):
-                    #@NOTE these are sections which still need to be styled, need to find examples first...
+                elif i  == "Extended Summary":
+                    self.insert("end", strjoin(doc[i]).replace("\n", "\n\n") + "\n")
+                elif i  in ("Other Parameters", "Attributes", "Methods", "Warnings"):
                     self.insert("end", i + "\n", "see_also_title")
                     self.insert("end", " ".join(doc[i]) + "\n")
-                elif i in ("Parameters", "Returns", "Raises", "Yields", "Warns") and (not sections or i in sections):
+                elif i in ("Parameters", "Returns", "Raises", "Yields", "Warns"):
                     self.insert("end", i.upper() + "\n", ("section_title", "bordered_box", "spacing_top"))
                     for j in doc[i]:
                         self.insert("end", j[0], ("parameter_name", "bordered_box"))
                         self.insert("end", " : ", ("bordered_box"))
                         self.insert("end", j[1], ("italic", "blue", "bordered_box"))
                         self.insert("end", "\n", ("bordered_box"))
-                        self.insert("end", self.join_items(j[2]), ("parameter_description", "bordered_box", "spacing_bottom"))
+                        self.insert("end", strjoin(j[2]), ("parameter_description", "bordered_box", "spacing_bottom"))
                         self.insert("end", "\n", ("bordered_box"))
-                elif i == "See Also" and (not sections or i in sections):
+                elif i == "See Also":
                     self.insert("end", "See also:\n", ("see_also", "see_also_title"))
                     for j in doc[i]:
                         self.insert("end", j[0], ("doc_link", "see_also"))
@@ -204,20 +116,18 @@ class DocViewer(Text):
                         else:
                             self.insert("end", "\n", "see_also")
                     self.insert("end", "\n", "see_also")
-                elif i == "Notes" and (not sections or i in sections):
+                elif i == "Notes":
                     self.insert("end", "Notes\n", "underline_title")
                     self.insert("end", "\n", "horizontal_rule")
                     self.insert("end", "\n")
-                    self.insert("end", self.join_items(doc[i]) + "\n", "notes")
-                elif i == "References" and (not sections or i in sections):
+                    self.insert("end", strjoin(doc[i]) + "\n", "notes")
+                elif i == "References":
                     items = [j.strip() for j in doc[i]]
                     self.insert("end", "References\n", "underline_title")
                     self.insert("end", "\n", "horizontal_rule")
                     self.insert("end", "\n")
                     self.insert("end", " ".join(items).replace(".. ", "\n\n") + "\n", "references")
-                elif i == "Examples" and (not sections or i in sections):
-                    # print(doc[i])
-                    # items = [str(j) for j in doc[i] if j != ""]
+                elif i == "Examples":
                     self.insert("end", "Examples\n", "underline_title")
                     self.insert("end", "\n", "horizontal_rule")
                     self.insert("end", "\n")
@@ -225,6 +135,12 @@ class DocViewer(Text):
 
         for tag in pattern:
             self.highlight(pattern[tag], tag)
+
+        ranges = self.tag_ranges("code_sample")
+        for i in range(0, len(ranges), 2):
+            start = ranges[i]
+            stop = ranges[i+1]
+            self.syntax_highlight(start, stop)
 
     def show_markdown(self, content):
         self.delete("1.0", "end")
@@ -242,79 +158,60 @@ class DocViewer(Text):
         self.highlight(r"^[-\*+]", "unordered-list", newtext="•")
         self.highlight(r"^\t[-\*+]", "unordered-list", newtext="\t◦")
 
-    def join_items(self, str_list):
-        result = ""
-
-        for i in str_list:
-            if len(i) == 0:
-                result += "\n"
-            else:
-                result += i + " "
-
-        return result
-
-    def _motion(self, event):
-        hover_range = self.tag_prevrange("doc_link", "@" + str(event.x) + "," + str(event.y))
+    def show_textfile(self, content):
+        self.insert("end", content)
+        self.highlight(r"^(?!\n)(.*\n)==={1,}$", "h1")
+        self.highlight(r"^(==={1,})$", newtext="\n")
         
-        if not hover_range:
-            return
+        self.highlight(r"^(.*\n)---{1,}$", "section_title")
+        self.highlight(r"^(---{1,})$", "horizontal_rule", newtext="\n")
+        
+        # self.highlight(r"^(?!\n)(.*\n---{1,})$", "section_title")
+        # self.highlight(r"^(---{1,})$", "horizontal_rule", newtext="\n")
 
-        key = self.get(*hover_range)
-        if not self.hover:
-            self.hover = key
-            self.hover_range = hover_range
-            self.config(cursor="pointinghand")
-            self.tag_add("doc_link_hover", *self.hover_range)
-        elif self.hover != key:
-            self.hover = key
-            self.tag_add("doc_link_hover", *hover_range)
-            self.tag_remove("doc_link_hover", *self.hover_range)            
-            self.hover_range = hover_range
+        # for tag in style.markdown:
+        #     if isinstance(style.markdown[tag], tuple):
+        #         for regex in style.markdown[tag]:
+        #             self.highlight(regex, tag)
+        #     else:
+        #         self.highlight(style.markdown[tag], tag)
 
-    def _enter(self, event, tag):
+        # for tag in pattern:
+        #     self.highlight(pattern[tag], tag)     
+        
+        # content = content.split("\n\n")        
+        # for i in content:
+        #     self.insert("end", i + "\n==HELLLLLOOOO--==\n")
+        #     self.highlight(r"(-{3,})", )
+        
+
+    def clear(self):
+        self.delete("1.0", "end")
+
+    def _motion(self, event, tag):
         self.config(cursor="pointinghand")
-        self.hover_range = self.tag_prevrange(tag, "@" + str(event.x) + "," + str(event.y))
-        
-        if not self.hover_range:
-            return
+        hover_range = self.tag_prevrange(tag, "@" + str(event.x) + "," + str(event.y))
+        if not hover_range: return
 
-        content = self.get(*self.hover_range)
+        if self.hover_range and hover_range != self.hover_range:
+            self.tag_remove(tag + "_hover", *self.hover_range)
+
+        self.hover_range = hover_range
+        content = self.get(*hover_range)
         if content:
-            self.tag_add(tag + "_hover", *self.hover_range)
+            self.tag_add(tag + "_hover", *hover_range)
 
     def _leave(self, event, tag):
-        self.hover = None
         self.config(cursor="")
         if self.hover_range:
             self.tag_remove(tag + "_hover", *self.hover_range)
 
-    def _click_link(self, event):
-        tag_range = self.tag_prevrange('link_url', "@" + str(event.x) + "," + str(event.y))
-        webbrowser.open(self.get(*tag_range), new=2)
-
-    def _click_doc_link(self, event):
-        tag_range = self.tag_prevrange('doc_link', "@" + str(event.x) + "," + str(event.y))
-        key = self.get(*tag_range)
-
-        #@REFACTOR: clean this up
-        if inspect.isclass(self.selected_obj):
-            name = self.selected_obj.__module__
-        elif inspect.isfunction(self.selected_obj):
-            name = sys.modules[self.selected_obj.__module__].__name__
-        else:
-            if ( hasattr(self.selected_obj,'__name__') ):
-                name = self.selected_obj.__class__.__module__
-            else:
-                name = self.selected_obj.__class__.__module__
-        
-        self.show(name + "." + key)
-
-    def _click_code_sample(self, event):
-        xy = '@{0},{1}'.format(event.x, event.y)
-        tag_range = self.tag_prevrange('code_sample', xy)
-        code = self.get(*tag_range)
-        for cmd in re.findall(r">>> {0,}(.*)", code):
-            self.app.console.command(cmd)
-            self.app.nav.select("bottom", "console")
-
-
+    def _click(self, event, tag):
+        if tag == "link_url":
+            webbrowser.open(self.get(*self.hover_range), new=2)
+        elif tag == "doc_link":            
+            self.select(classname(self.obj).rsplit(".")[0] + "." + self.get(*self.hover_range))
+        elif tag == "code_sample":
+            for command in re.findall(r">>> {0,}(.*)", self.get(*self.hover_range)):
+                self.app.console.command(command)
+                self.app.nav.select("bottom" if self.app.nav.selected["top"] == "docviewer" else "top", "console")

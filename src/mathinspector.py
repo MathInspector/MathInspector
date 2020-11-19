@@ -81,7 +81,6 @@ class MathInspector(themed_tk.ThemedTk):
 		self.objecttree.delete_object(key)
 		self.workspace.delete_object(key)
 		self.output.delete_object(key)
-		self.docviewer.delete_object(key)
 
 	def select(self, key=None):
 		self.selected = key

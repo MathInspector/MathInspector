@@ -28,56 +28,53 @@ class Console(Text):
 		Text.__init__(self, app, background=Color.DARK_BLACK, font="Menlo 16")
 		self.app = app
 		self.history = { "items": [], "index": 1, "current": None }
-		
-		self.tag_configure("console_prompt", foreground=Color.PROMPT, font="Menlo 16 bold")
-		self.tag_configure("result", foreground=Color.BLUE)
-		self.tag_configure("error", foreground=Color.RED)
-		
 		self.bind("<Key>", self._on_key)
 		self.bind("<<Selection>>", self._on_text_selection)
 		self.bind("<<Modify>>", lambda event: self.syntax_highlight("end-1c linestart+5c", "end-1c"))
-
 		self.prompt()
 		
-	def prompt(self, text=None):
-		self.insert("end", ">>>  ", "console_prompt")
-		if text:
-			self.insert("end", text)
+	def prompt(self):
+		self.insert("end", ">>>  ", "dark_orange_bold")
 		self.see("end")
 		self.edit_reset()
+		self.focus()
 			
-	def command(self, command=None, history=None):
-		if command == None and history == None:
+	def command(self, command=None):
+		if command == None:
 			return self.get("end-1c linestart+5c", "end-1c")
-
+		if command == "":
+			return self.insert("end", "\n")
 		if command == "clear":
-			self.delete("1.0", "end")
-			self.prompt()
-			return
+			return self.delete("1.0", "end")
+		if not self.command():
+			self.insert("end", command)
+		
+		self.history["items"].append(command)
+		self.history["index"] = len(self.history["items"])
+		result = self.app.execute(command)
+		if result is None:
+			self.insert("end", "\n")
+		else:
+			self.insert("end", "\n" + str(result) + "\n\n", "red" if isinstance(result, Exception) else None)			
+		self.prompt()
 
-		if history == "up" and len(self.history["items"]) > 0:
+	def command_history(self, key):
+		if key == "Up" and len(self.history["items"]) > 0:
 			if self.history["index"] == len(self.history["items"]):
 				self.history["current"] = self.command()
 			if self.history["index"] > 0:
 				self.history["index"] -= 1
 			command = self.history["items"][self.history["index"]]
-		elif history == "down":
+		elif key == "Down":
 			if self.history["index"] < len(self.history["items"]) - 1:
 				self.history["index"] += 1
 				command = self.history["items"][self.history["index"]]
 			elif self.history["index"] >= len(self.history["items"]) - 1:
 				self.history["index"] = len(self.history["items"])
 				command = self.history["current"]
-
 		self.delete("end-1c linestart+5c", "end")
 		self.insert("end", command)
 
-		if not history:
-			self.history["items"].append(command)
-			self.history["index"] = len(self.history["items"])
-			result = self.app.execute(command)
-			self.insert("end", "\n" + str(result) + "\n\n", "error" if isinstance(result, Exception) else None)			
-			self.prompt()
 
 	def autocomplete(self):
 		command = self.command()
@@ -111,7 +108,8 @@ class Console(Text):
 			self.insert("end", common[len(keyword):])
 		else:
 			self.insert("end", "\n" + "        ".join(result) + "\n\n")
-			self.prompt(command)
+			self.prompt()
+			self.insert("end", command)
 
 	def state(self, history=None):
 		if not history:
@@ -144,12 +142,8 @@ class Console(Text):
 				print ("\a")
 				return "break"
 
-		if event.keysym == "Up":
-			self.command(history="up")	
-			return "break"
-		
-		if event.keysym == "Down":
-			self.command(history="down")	
+		if event.keysym in ("Up", "Down"):
+			self.command_history(event.keysym)	
 			return "break"		
 
 		if event.keysym == "Tab":

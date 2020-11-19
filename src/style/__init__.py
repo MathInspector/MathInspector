@@ -17,5 +17,5 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from style.markdown import markdown
-from style.tags import tags
-from style.syntax import syntax
+from style.tags import DOC_TAGS
+from style.syntax import *

@@ -66,7 +66,7 @@ class ProjectTree(Treeview):
 
 	def _on_select(self, event):
 		selection = self.selection()[0]		
-		self.app.docviewer.show(selection)
+		self.app.docviewer.select(selection)
 
 	def clear(self, *tags):
 		if len(tags):

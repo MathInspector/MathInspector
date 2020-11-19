@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 from settings import Color
-from util import get_class_name, makereadonly
+from util import classname, makereadonly
 from numpy import ndarray
 from PIL import Image,ImageTk
 from widget import SciPlot, InfoBox
@@ -86,9 +86,7 @@ class Output(tk.Frame):
 		
 		self.selected = key
 		self.name_label.config(text=key)
-
-		classname = get_class_name(item.value)
-		self.class_label.config(text=classname)
+		self.class_label.config(text=classname(item.value))
 
 		show_repr = False
 		if callable(item.value):

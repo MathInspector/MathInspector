@@ -18,7 +18,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from settings import Color
 
-syntax = {
+RE_PY = {   
+    "orange_italic": r"([a-zA-Z0-9_]*)=(.*?)( |\n)*(,|\))",
+    "green": r"def {1,}(\w+)\(",
+    "blue": r"(\w+)\(",
+}
+
+TAGS = {
     "blue": {
         "foreground": Color.BLUE
     },
@@ -47,6 +53,11 @@ syntax = {
 
     "orange": {
         "foreground": Color.ORANGE
+    },
+
+    "dark_orange_bold": {
+        "foreground": Color.DARK_ORANGE,
+        "font": "Menlo 16 bold"
     },
 
     "orange_italic": {

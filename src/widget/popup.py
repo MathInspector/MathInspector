@@ -103,7 +103,7 @@ class Popup(tk.Toplevel):
 		root.wait_window(self)
 
 	def _on_help(self):
-		self.app.docviewer.showdoc(self.obj)
+		self.app.docviewer.select(self.obj)
 		self.app.nav.select("top", "docviewer")
 
 	def _on_ok(self, event=None):
