@@ -9,7 +9,7 @@ from pygame._sdl2.video import Window
 OPTIONS = {
 	"title": "Math Inspector",
 	"show_grid": True,
-	"show_range": True,
+	"show_range": False,
 	"resolution": 1,
 	"size": (1280, 720),
 	"position": None,
@@ -60,13 +60,13 @@ class SDLWindow:
 		process.start()
 
 	def plot(self, *args, **kwargs):
+		self.args = args
 		OPTIONS.update(kwargs)
 		w, h = OPTIONS["size"]
 	
 		pygame.init()
 		pygame.display.set_caption(OPTIONS["title"])	
 		self.screen = pygame.display.set_mode((w,h), pygame.RESIZABLE)
-		self.font = pygame.font.SysFont("Monospace", 12)
 
 		# TODO - get position from OPTIONS
 		if not OPTIONS["position"]:
@@ -110,6 +110,7 @@ class SDLWindow:
 			delta_time = tick - last_tick
 			last_tick = tick
 
+			keypress = pygame.key.get_pressed()
 			for event in pygame.event.get(pump=False):
 				if event.type == pygame.ACTIVEEVENT:
 					is_focused = bool(event.gain)
@@ -147,7 +148,6 @@ class SDLWindow:
 					self.spacing = self.scale * self.zoom * SPACING
 				elif event.type == pygame.USEREVENT:
 					if hasattr(event, "args") and event.args:
-						print ("got args dawg")
 						self.args = event.args
 					elif hasattr(event, "kwargs"):
 						OPTIONS.update(event.kwargs)
@@ -160,7 +160,11 @@ class SDLWindow:
 						callback = event.animate[1]
 						self.is_animation_running = True
 					did_change = True
-				elif event.type == pygame.QUIT or (event.type == KEYUP and event.key == K_ESCAPE):
+				elif (event.type == pygame.QUIT 
+					or (event.type == KEYUP and event.key == K_ESCAPE) 
+					or (event.type == KEYUP and event.key == K_w and keypress[K_LMETA])
+					or (event.type == KEYUP and event.key == K_q and keypress[K_LMETA])
+				):
 					request_quit = True
 
 			if OPTIONS["on_update"] and not is_focused:
@@ -192,25 +196,24 @@ class SDLWindow:
 			if request_quit and not self.is_processing:
 				is_running = False
 
-			keypress = pygame.key.get_pressed()
-			if keypress[K_w] or keypress[K_UP]:
-				y0 += 5
-				did_change = True
-			if keypress[K_s] or keypress[K_DOWN]:
-				y0 -= 5
-				did_change = True
-			if keypress[K_d] or keypress[K_RIGHT]:
-				x0 -= 5
-				did_change = True
-			if keypress[K_a] or keypress[K_LEFT]:
-				x0 += 5
-				did_change = True
+			# if keypress[K_w] or keypress[K_UP]:
+			# 	y0 += 5
+			# 	did_change = True
+			# if keypress[K_s] or keypress[K_DOWN]:
+			# 	y0 -= 5
+			# 	did_change = True
+			# if keypress[K_d] or keypress[K_RIGHT]:
+			# 	x0 -= 5
+			# 	did_change = True
+			# if keypress[K_a] or keypress[K_LEFT]:
+			# 	x0 += 5
+			# 	did_change = True
 			
 			if did_change:
 				timer = 0
 				OPTIONS["position"] = x0, y0
 				OPTIONS["step"] = step = self.scale / self.spacing			
-				if OPTIONS["pixelmap"]:
+				if OPTIONS["pixelmap"] is not None:
 					self.screen.fill(BACKGROUND)
 					x1, y1, zoom2 = self.coords[0]
 					if len(self.coords) == 1 and not self.is_processing and (
@@ -249,6 +252,7 @@ class SDLWindow:
 			if not request_quit:
 				pygame.event.pump()
 		
+		self.is_animation_running = False
 		win_w, win_h = Window.from_display_module().position
 		OPTIONS["window_pos"] = str(win_w) + ", " + str(win_h)
 		os.environ["SDL_VIDEO_WINDOW_POS"] = OPTIONS["window_pos"]
@@ -270,7 +274,6 @@ class SDLWindow:
 			if instanceof(obj[0], complex):
 				pygame.draw.aalines(self.screen, BLUE, False, self.get_points(obj))
 			elif instanceof(obj[0], list) and len(obj[0]) == 2:
-				# print (self.get_points(obj))
 				pygame.draw.aalines(self.screen, BLUE, False, self.get_points(obj))
 			elif instanceof(obj[0], tuple):
 				pygame.draw.aalines(self.screen, BLUE, False, self.get_points(obj))
@@ -320,6 +323,9 @@ class SDLWindow:
 		x0, y0 = OPTIONS["position"]
 		w, h = OPTIONS["size"]
 		
+		if not self.font:
+			self.font = pygame.font.SysFont("Monospace", 12)
+
 		# margin
 		pygame.draw.rect(self.screen, BLACK, (0,h-MARGIN, w, h))
 		pygame.draw.rect(self.screen, BLACK, (0,0, MARGIN, h))

@@ -1,78 +1,122 @@
 import numpy as np
-import plot, numpy.doc, __main__, scipy, math, builtins
+import plot, __main__, scipy, math, builtins, os, sys, doc, examples, util.binop
 from widget import Popup, Menu
-import plot.example
 from style import Color
-from util import CONTROL_KEY
+from tkinter import filedialog
+from util import BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
+from util.common import open_editor
+from util.config import CONTROL_KEY, BASEPATH, BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
 from console import builtin_print
 from functools import partial
 
+TRIG_FUNCTIONS = [i for i in ("acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "cos", "cosh", "degrees", "sin", "sinh", "tan", "tanh")]
+MATH_FUNCTIONS = [i for i in dir(math) if callable(getattr(math, i)) and i not in TRIG_FUNCTIONS + ["pow"] and i[:1] != "_"]
+MATH_FUNCTIONS.append("power")
+MATH_FUNCTIONS.sort()
+MATH_CONSTANTS = [i for i in dir(math) if i not in MATH_FUNCTIONS + TRIG_FUNCTIONS and i[:1] != "_"]
 SASHPOS_MIN = 20
 
 class MainMenu(Menu):
 	def __init__(self, app):
+		self.project_menu = [{
+			"label": "New File",
+			"command": self.new_file
+		},{
+			"label": "Add File...",
+			"command": app.modules.addfile
+		},{
+			"label": "Add Folder...",
+			"command": app.modules.addfolder
+		},{
+			"label": "Import Module...",
+			"command": lambda event=None: help.import_module(self.import_module)
+		}]
+
+		self.object_menu = [{
+			"label": "Operator",
+			"menu": [{
+				"label": i,
+				"command": lambda key=i: self.create_object(key, util.binop)
+			} for i in dir(util.binop) if i[0] != "_"]
+		},{
+			"label": "Math",
+			"menu": [{
+				"label": "Constant",
+				"menu":[{
+					"label": i,
+					"command": lambda key=i: self.create_object(key, np if hasattr(np, key) else math)
+				} for i in MATH_CONSTANTS]
+			},{
+				"separator": None
+			},{
+				"label": "Trig",
+				"menu":[{
+					"label": i,
+					"command": lambda key=i: self.create_object(key, np if hasattr(np, key) else math)
+				} for i in TRIG_FUNCTIONS]
+			},{
+				"separator": None
+			}] + [{
+				"label": i,
+				"command": lambda key=i: self.create_object(key, np if hasattr(np, key) else math)
+			} for i in MATH_FUNCTIONS]
+		},{
+			"label": "Builtin Class",
+			"menu": [{	
+				"label": str(i),
+				"command": lambda key=i: self.create_object(key, builtins)
+			} for i in BUILTIN_CLASS if i[:1] != "_" and not i[:1].isupper() and "Error" not in i and "Warning" not in i]
+		},{
+			"label": "Builtin Function",
+			"menu": [{	
+				"label": str(i),
+				"command": lambda key=i: self.create_object(key, module=builtins)
+			} for i in BUILTIN_FUNCTION if i[:1] != "_" and not i[:1].isupper()]
+		},{
+			"label": "Examples",
+			"menu": [{	
+				"label": str(i).replace("_", " ").capitalize(),
+				"command": lambda key=i: self.create_object(key, module=examples)
+			} for i in dir(examples) if i[:1] != "_" and not i[:1].isupper() and i != "np"]
+		}]
+	
 		Menu.__init__(self, app, [{
 			"label": "File",
 			"menu": [{
 					"label": "New                    ",
-					"command": app.savedata.new,
+					"command": app.project.new,
 					"accelerator": CONTROL_KEY + "+n",
 				},
 				{
 					"label": "Open...            ",
-					"command": lambda event=None: app.savedata.load(None),
+					"command": lambda event=None: app.project.load(None),
 					"accelerator": CONTROL_KEY + "+o"	
 				},
 				{
 					"label": "Save            ",
-					"command": lambda event=None: app.savedata.save(app.modules.rootfolder),
+					"command": lambda event=None: app.project.save(app.modules.rootfolder),
 					"accelerator": CONTROL_KEY + "+s"	
 				},
 				{
 					"label": "Save As...            ",
-					"command": lambda event=None: app.savedata.save(None),
+					"command": lambda event=None: app.project.save(None),
 					"accelerator": CONTROL_KEY + "+Shift+s"	
 				}]
 			},{
 				"label": "Project",
-				"menu": [{
-					"label": "Add File...",
-					"command": app.modules.addfile
-				},{
-					"label": "Add Folder...",
-					"command": app.modules.addfolder
-				},{
-					"label": "Import Module...",
-					"command": lambda event=None: help.import_module(self.import_module)
-				}]
+				"menu": self.project_menu
+			},{
+				"label": "Object",
+				"menu": self.object_menu
 			},{
 				"label": "Plot",
 				"menu": [{
 					"label": "Show Grid Lines                      ✓",
 					"command": partial(self.plotconfig, "show_grid"),
 				},{
-					"label": "Show Range                            ✓",
+					"label": "Show Range                             ",
 					"command": lambda: self.plotconfig("show_range")
-				},
-				# {
-				# 	"label": "PixelMap Resolution",
-				# 	"menu": [{
-				# 			"label": "Increase 25%",
-				# 			"command": lambda: self.plotconfig("increase_resolution")
-				# 		},{
-				# 			"label": "Decrease 25%",
-				# 			"command": lambda: self.plotconfig("decrease_resolution")
-				# 		},{
-				# 			"label": "Restore Default",
-				# 			"command": lambda: self.plotconfig(resolution=1)
-				# 		},
-				# 		# {
-				# 		# 	"label": "Custom...",
-				# 		# 	"command": lambda: Popup(app, "Set Resolution", self.set_plot_resolution, eval_args=False)
-				# 		# }
-				# 		]
-				# }
-				],
+				}],
 			},
 			{
 				"label": "View",
@@ -90,12 +134,21 @@ class MainMenu(Menu):
 			{
 				"label": "Help",
 				"menu": [{
-					"label": "Math Inspector",
-					"command": lambda: help(__main__)
+					"label": "Getting Started",
+					"command": lambda: help(doc.manual.GettingStarted)
 				},{
-					"label": "Numpy Doc",
-					"command": lambda: help(numpy.doc)
+					"label": "User Manual",
+					"command": lambda: help(doc.manual)
 				},{
+					"label": "Examples",
+					"command": lambda: help(examples)
+				},
+				# {
+				##### for some reason this is failing in pyinstaller, can include this with .rst files maybe
+				# 	"label": "Numpy Doc",
+				# 	"command": lambda: help(np.doc)
+				# },
+				{
 					"separator": None
 				},{
 					"label": "Browse Modules...",
@@ -115,6 +168,10 @@ class MainMenu(Menu):
 		self.app = app
 		self.is_sidebar_visible = False
 		self.has_hidden_panel = False
+
+		if hasattr(sys, "_MEIPASS"):
+			app.createcommand('tkAboutDialog', lambda: help(os.path.join(BASEPATH, "assets/ABOUT.md"), "About Math Inspector"))
+
 		app.side_view.bind("<Configure>", self.on_config_sidebar)
 		app.node.output.bind("<Configure>", self.on_config_vertical_panel)
 
@@ -146,6 +203,9 @@ class MainMenu(Menu):
 		else:
 			self._["View"].entryconfig(1, label="Hide Node Editor")
 			self._["View"].entryconfig(2, label="Show Console")
+
+	def create_object(self, name, module):
+		self.app.objects.setobj(name, getattr(module, name), create_new=True)
 
 	def setview(self, key, force_open=False):
 		h_sashpos = self.app.horizontal_panel.sashpos(0)
@@ -182,6 +242,15 @@ class MainMenu(Menu):
 				self.app.horizontal_panel.sashpos(0,240)
 			# else:
 			# 	self.app.vertical_panel.sashpos(0, 0)
+
+	def new_file(self):
+		file = filedialog.asksaveasfilename(defaultextension=".py")
+		if not file: return
+		f = open(file, "a")
+		f.write("")
+		f.close()
+		self.app.modules.addfile(file)
+		open_editor(file)
 
 	def import_module(self, module, alias="", open_folders=False):
 		self.app.modules[alias or module] = __import__(module)

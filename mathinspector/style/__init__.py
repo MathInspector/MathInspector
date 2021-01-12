@@ -1,6 +1,6 @@
 """
 Math Inspector: a visual programming environment for scientific computing with python
-Copyright (C) 2020 Matt Calhoun
+Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

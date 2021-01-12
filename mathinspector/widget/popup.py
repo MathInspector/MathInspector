@@ -50,7 +50,13 @@ class Popup(tk.Toplevel):
 
 
 	def _on_ok(self, event=None):
-		result = { i: self.app.console.eval(self.params[i].get()) for i in self.params }
+		result = {}
+		for i in self.params:
+			try:
+				temp = self.app.console.eval(self.params[i].get())
+			except:
+				temp = self.params[i].get()
+			result[i] = temp
 		self.callback(result)
 		self.destroy()
 

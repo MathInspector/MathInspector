@@ -1,6 +1,6 @@
 """
 Math Inspector: a visual programming environment for scientific computing with python
-Copyright (C) 2020 Matt Calhoun
+Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ class Treeview(ttk.Treeview):
 	def __init__(self, app, *args, drag=True, **kwargs):
 		if not args:
 			args = [app]
-			
+		
 		ttk.Treeview.__init__(self, *args, **kwargs)
 
 		self.app = app
@@ -90,7 +90,7 @@ class Treeview(ttk.Treeview):
 				self.move(i["key"], "", i["index"])
 			else:
 				for j in items:
-					if j["filename"] == basename(i["key"]):
+					if self.exists(j["key"]) and j["filename"] == basename(i["key"]):
 						self.move(j["key"], "", i["index"])
 
 	def expanded(self, names=None, children=None):
@@ -182,12 +182,11 @@ class TreeEntry(Text):
 	def edit(self, key, event):
 		name = key[:key.index("<")]
 		item = self.app.node[name]
-		# REFACTOR - this can be done better
 		if key == name + "<value>":
 			argname = None
 			in_args = False
 		else:
-			argname = key[key.index("<arg=") + 5:key.index(">")]
+			argname = key[key.index("<arg=") + 5:key.index(">") + 1]
 			in_args = argname in item.args
 		self.editing = item, argname, in_args
 

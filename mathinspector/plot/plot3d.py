@@ -22,7 +22,7 @@ window = None
 class OpenGLWindow:
 	def __init__(self):
 		self.zoom = 1;
-		self.model = glm.mat4(1.0) # i'm not actually using model at all, can probably get rid of it
+		self.model = glm.mat4(1.0)
 		self.camera_pos = glm.vec3(0,10,7)
 		self.camera_front = glm.normalize(glm.vec3(0,-1,-1))
 		self.camera_up = glm.vec3(0,1,0)
@@ -41,6 +41,7 @@ class OpenGLWindow:
 
 	def plot(self, *args, **kwargs):
 		OPTIONS.update(kwargs)
+		self.projection = glm.perspective(glm.radians(45), OPTIONS["size"][0]/OPTIONS["size"][1], 0.1, 1000)		
 		pygame.init()
 		pygame.display.gl_set_attribute(GL_CONTEXT_MAJOR_VERSION, 4)
 		pygame.display.gl_set_attribute(GL_CONTEXT_MINOR_VERSION, 1)
@@ -62,6 +63,7 @@ class OpenGLWindow:
 		did_change = True
 		self.is_running = True
 		is_focused = False
+		keypress = pygame.key.get_pressed()
 		
 		if OPTIONS["on_update"]:
 			OPTIONS["on_update"]()
@@ -109,7 +111,10 @@ class OpenGLWindow:
 					self.projection = glm.perspective(glm.radians(45), event.size[0]/event.size[1], 0.1, 1000)
 				elif event.type == ACTIVEEVENT:
 					is_focused = bool(event.gain)					
-				elif (event.type == QUIT) or (event.type == KEYUP and event.key == K_ESCAPE):
+				elif (event.type == pygame.QUIT 
+					or (event.type == KEYUP and event.key == K_ESCAPE) 
+					or (event.type == KEYUP and event.key == K_w and keypress[K_LMETA])
+				):
 					self.is_running = False
 					if OPTIONS["on_close"]:					
 						OPTIONS["on_close"]()
@@ -129,8 +134,8 @@ class OpenGLWindow:
 			if not is_focused and OPTIONS["on_update"]:
 				OPTIONS["on_update"]()
 			
+			keypress = pygame.key.get_pressed()
 			if is_focused:
-				keypress = pygame.key.get_pressed()
 				if keypress[K_w] or keypress[K_UP]:
 					self.camera_pos += speed * self.camera_front
 					did_change = True

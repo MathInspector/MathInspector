@@ -2,7 +2,7 @@ import numpy as np
 import tkinter as tk
 import pygame
 from widget import Text
-from util import instanceof, MESSAGE_TIMEOUT
+from util import argspec, instanceof, MESSAGE_TIMEOUT
 from console.builtin_print import builtin_print
 from style import Color, getimage
 import plot
@@ -63,6 +63,8 @@ class Output(tk.Frame):
 
 		value = item.value()
 		window = plot.get_window(value)
+		if not window and not show_plot:
+			return
 		
 		if show_plot and window and plot.is_active() and window != plot.active_window:
 			item.move_wire()
@@ -75,11 +77,13 @@ class Output(tk.Frame):
 		if not show_plot: return
 
 		name = " ".join([i.name for i in self.items])
-		if isinstance(item.obj, plot.PixelMap):
+
+		if self.is_pixelmap(item.obj):
+			pixelmap_fn = lambda *args: item.obj(*args, **item.kwargs)
 			if plot.is_active():
-				plot.config(pixelmap=lambda *args: item.obj(*args, **item.kwargs))
+				plot.config(pixelmap=pixelmap_fn)
 			else:
-				plot.plot(pixelmap=lambda *args: item.obj(*args, **item.kwargs), title=name)
+				plot.plot(pixelmap=pixelmap_fn, title=name)
 		elif window:
 			self.values[item.name] = value
 			if plot.is_active():
@@ -115,10 +119,15 @@ class Output(tk.Frame):
 				plot.close()
 		else:
 			plot.update(*list(self.values.values()))
+
+	def is_pixelmap(self, obj):
+		if not callable(obj):
+			return False
+		return argspec(obj)[0] == ["position", "size", "step"]
 		
 	def update_value(self, item):
 		if plot.is_active():
-			if isinstance(item.obj, plot.PixelMap):
+			if self.is_pixelmap(item.obj):
 				plot.config(pixelmap=lambda *args: item.obj(*args, **item.kwargs))
 			else:
 				self.values[item.name] = item.value()

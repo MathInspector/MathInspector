@@ -8,7 +8,7 @@ def instanceof(value, classes):
     if isinstance(value, tuple):
         return tuple in classes
 
-    if np.dtype(value.__class__) == np.object_ and list in classes:
+    if value.__class__ in (np.array, np.ndarray) and list in classes:
         return True
 
     if np.dtype(value.__class__) == np.int64 and int in classes:

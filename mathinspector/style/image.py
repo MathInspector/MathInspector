@@ -1,8 +1,8 @@
 import os, sys
 from PIL import ImageTk, Image
-from util import BASEPATH
+from util.config import BASEPATH
 
-ASSET_PATH = os.path.join(BASEPATH, "style/img")
+ASSET_PATH = os.path.join(BASEPATH, "assets/img" if hasattr(sys, "_MEIPASS") else "img")
 
 IMAGE = {
 	".py": "pythonlogo-color.png",

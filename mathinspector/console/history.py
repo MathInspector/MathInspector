@@ -1,6 +1,6 @@
 from .builtin_print import builtin_print
 
-class History(list):
+class History:
 	def __init__(self, prompt):
 		self.cmds = []
 		self.prompt = prompt
@@ -20,6 +20,17 @@ class History(list):
 		elif self.i < len(self.cmds):
 			self.prompt.insert("1.5", self.cmds[self.i])
 
-	def extend(self, *args):
-		self.cmds.extend(args)
+	def clear(self):
+		self.cmds.clear()
+		self.i = 0
+
+	def append(self, obj):
+		self.cmds.append(obj)
 		self.i = len(self.cmds)
+
+	def extend(self, *args):
+		self.cmds.extend([i.rstrip() for i in args])
+		self.i = len(self.cmds)
+
+	def __repr__(self):
+		return str(self.cmds)

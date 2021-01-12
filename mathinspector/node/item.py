@@ -1,6 +1,6 @@
 """
 Math Inspector: a visual programming environment for scientific computing with python
-Copyright (C) 2020 Matt Calhoun
+Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,13 +32,13 @@ TEXTWRAP_SIZE = 28
 NODE_SIZE = 6
 
 class Item:
-    def __init__(self, canvas, name, coord=(0,0), args={}, kwargs={}, connection=None, opts={}, class_name=None):
+    def __init__(self, canvas, name, coord=(0,0), args={}, kwargs={}, connection=None, opts={}, class_name=None, is_output_item=False):
         self.canvas = canvas
         self.app = canvas.app
         self.name = name
         self.obj = self.app.objects[name]
         self.connection = connection
-        self.argspec = argspec(self.obj, withself=not isinstance(self.obj, plot.PixelMap))
+        self.argspec = argspec(self.obj, withself=not inspect.isclass(self.obj))
 
         self.args = vdict({}, 
             getitem=lambda key: self.getarg(key, "args"), 
@@ -168,6 +168,9 @@ class Item:
                 output.kwargs[output_arg] = self
             self.move_wire()
 
+        if is_output_item:
+            self.app.node.output.connect(self)
+
     # REFACTOR - not crazy about this function having two purposes, should use .setvalue instead
     def value(self, obj=None):
         if obj is None:
@@ -194,6 +197,7 @@ class Item:
 
         if self in self.canvas.output.items:
             self.canvas.output.update_value(self)
+
         self.move_wire()
         self.resize()
 
@@ -289,6 +293,7 @@ class Item:
                 for k in ("arg="+j, "argname="+j, "argvalue="+j):
                     self.config(k, state="normal" if self.opts["show_kwargs"] else "hidden")
             self.resize()
+            self.move()
         return False
 
     def content(self, *args, truncate=True):
@@ -356,7 +361,7 @@ class Item:
             
     def move_wire(self, *coord):
         if not coord:
-            if self in self.canvas.output.items:
+            if self in self.canvas.output.items or self == self.canvas.output.log_item:
                 coord = (self.canvas.winfo_width(), self.canvas.winfo_height()/2)
             elif self.connection:
                 x1, y1, x2, y2 = self.canvas.coords(self.canvas[self.connection[0]].ids["arg=" + self.connection[1]])
@@ -370,7 +375,10 @@ class Item:
             self.config("wire", fill=Color.PURPLE, state="normal")
 
         x,y = coord
-        x1, y1, x2, y2 = self.coords()
+        try:
+            x1, y1, x2, y2 = self.coords()
+        except:
+            return
         delta_x = x - (x1 + x2)/2
         node = NODE_SIZE * self.canvas.zoom
         self.coords("wire",

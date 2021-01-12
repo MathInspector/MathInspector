@@ -1,6 +1,6 @@
 """
 Math Inspector: a visual programming environment for scientific computing with python
-Copyright (C) 2020 Matt Calhoun
+Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,7 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import tkinter as tk
 from tkinter import ttk
 import inspect
-from util import argspec, classname, BUTTON_RIGHT, EXCLUDED_MODULES, INSTALLED_PKGS, BUILTIN_PKGS
+from util.argspec import argspec
+from util.common import classname
+from util.config import BUTTON_RIGHT, EXCLUDED_MODULES, INSTALLED_PKGS, BUILTIN_PKGS
 from console.builtin_print import builtin_print
 from widget import Notebook, Treeview, Button, Menu
 from .show_textfile import show_textfile
@@ -27,10 +29,16 @@ from .doc import Doc
 from style import Color
 
 class Browser(tk.Toplevel):
-    def __init__(self, app, obj=None, browse=False, on_import=None):
+
+    def __init__(self, app, obj=None, title=None, browse=False, on_import=None, geometry=None):
         tk.Toplevel.__init__(self, app, background=Color.BLACK)
+        if geometry:
+            self.geometry(geometry)
+        
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
+
         if obj:
-            self.title(classname(obj))
+            self.title(title or classname(obj))
             self.doc = Doc(self, obj, run_code=app.console.prompt.push)
             self.doc.pack(fill="both", expand=True)
             return
@@ -57,7 +65,7 @@ class Browser(tk.Toplevel):
         self.as_entry = tk.Entry(input_area_2, font="Monospace 14", highlightbackground=Color.BLACK)
 
         btn_area = tk.Frame(frame, background=Color.BLACK)
-        cancel_btn = Button(btn_area, text="Cancel", command=self._on_cancel)
+        cancel_btn = Button(btn_area, text="Cancel", command=self.destroy)
         self.ok_btn = Button(btn_area, text="Ok", command=self._on_ok)
 
         for i in INSTALLED_PKGS:
@@ -89,10 +97,10 @@ class Browser(tk.Toplevel):
             self.name_entry.pack(side="left", expand=True)      
 
             self.bind("<Return>", self._on_ok)
-            self.bind("<Escape>", self._on_cancel)
+            self.bind("<Escape>", lambda event: self.destroy())
         else:
             self.doc.paned_window.bind("<Configure>", self._on_configure_doc)
-        
+
         for i in ("installed_pkgs", "builtin_pkgs"):
             getattr(self, i).bind("<<TreeviewSelect>>", lambda event, key=i: self._on_selection(event, key))
             getattr(self, i).bind(BUTTON_RIGHT, lambda event, key=i: self._on_button_right(event, key))        
@@ -117,6 +125,10 @@ class Browser(tk.Toplevel):
 
         self.doc.show(module)
 
+    def _on_close(self):
+        help.geometry = self.geometry()
+        self.destroy()
+
     def _on_ok(self, event=None):
         name = self.name_entry.get()
         if not name:
@@ -125,10 +137,7 @@ class Browser(tk.Toplevel):
 
         if self.on_import:
             self.on_import(self.name_entry.get(), self.as_entry.get())
-        self.destroy()
-    
-    def _on_cancel(self, event=None):
-        self.destroy()
+        self.destroy()        
 
     def _on_button_right(self, event, name):
         attr = getattr(self, name)

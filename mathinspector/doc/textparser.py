@@ -1,0 +1,95 @@
+import re
+
+RE_TEXT = {
+    "code_sample": r"( |\t){0,}(>>>|\.\.\.).*",
+    "section_title": r"(---|===)",
+    "code": r"\`(.*?)\`",
+    "link_url": r"(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+~]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)",
+}
+
+class TextParser:
+    def __init__(self, content):
+        self.content = content
+        self.index = 0
+        self.buffer = []
+
+    def __iter__(self):
+        self.index = 0
+        self.count = 0
+        self.buffer.clear()
+        return self
+
+    def __next__(self):
+        self.count += 1
+        if len(self.buffer):
+            result, tag, offset = self.buffer.pop()
+            self.index += offset
+            return TextNode(result, tag)
+
+        if self.index < len(self.content):
+            result = ""
+            tag = ""
+            is_running = True
+            while is_running and self.index < len(self.content):
+                text = self.content[self.index:]
+                endline = -1 if "\n" not in text else text.index("\n")
+
+                if tag == "code_sample" and not text[:endline].strip():
+                    return TextNode(result, tag)
+
+                if tag and not re.findall(RE_TEXT[tag], text[:endline]):
+                    is_running = False
+
+                for i in RE_TEXT:
+                    match = re.findall(RE_TEXT[i], text[:endline])
+                    if match:
+                        tag = i
+                        if i in ("code", "link_url"):
+                            if i == "code": 
+                                endline = text.index("`")
+                                self.buffer.append((match[0], i, 1 + len(match[0])))
+                                self.index += 1 + endline
+                            elif i == "link_url":
+                                endline = text.index("http")
+                                self.buffer.append((match[0], i, 1 + len(match[0])))
+                                self.index += endline - 1
+                            result += text[:endline]
+                            return TextNode(result)
+
+                if tag and tag in ("section_title"):
+                    if self.count == 1:
+                        is_running = False
+                        self.index += 1 + endline
+                    else:
+                        self.buffer.append((result, "section_title", 1 + endline))
+                        return TextNode("\n")
+                elif endline == 0:
+                    self.index += 1
+                    if text[:1] == "\n":
+                        if not tag and result.strip():
+                            result += "\n"
+                        is_running = False
+                elif endline == -1:
+                    result += text
+                    self.index = len(self.content)
+                else:               
+                    result += text[:endline]
+                    if not tag:
+                        result += " "
+                    self.index += 1 + endline
+
+                if tag == "code_sample":
+                    result += "\n"
+
+            return TextNode(result, tag)
+        else:
+            raise StopIteration     
+
+
+class TextNode:
+    def __init__(self, text, tag=None):
+        self.text = text
+        self.tag = tag
+
+    def __repr__(self):
+        return f"{str(self.tag)}: {self.text}"

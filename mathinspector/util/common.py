@@ -21,7 +21,9 @@ def fontcolor(value, as_string=False):
     return result if as_string else getattr(Color, result.upper())
 
 def classname(obj):
-    if inspect.isfunction(obj) and obj.__module__:
+    if inspect.isclass(obj):
+        return obj.__name__
+    elif inspect.isfunction(obj) and obj.__module__:
         return obj.__module__ + "." + obj.__name__
     elif obj.__class__.__module__ and hasattr(obj, "__name__"):
         return obj.__class__.__module__ + "." + obj.__name__

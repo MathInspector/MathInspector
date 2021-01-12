@@ -6,7 +6,7 @@ BUTTON_RIGHT = '<Button-3>' if platform.system() == 'Windows' else '<Button-2>'
 BUTTON_RELEASE_RIGHT = '<ButtonRelease-3>' if platform.system() == 'Windows' else '<ButtonRelease-2>'
 BUTTON_RIGHT_MOTION = '<B3-Motion>' if platform.system() == 'Windows' else '<B2-Motion>'
 CONTROL_KEY = 'Control' if platform.system() == 'Windows' else 'Command'
-BASEPATH = sys._MEIPASS if hasattr(sys, "_MEIPASS") else os.path.abspath(os.path.join(__file__, "../../"))
+BASEPATH = os.path.join(sys._MEIPASS, "../Resources") if hasattr(sys, "_MEIPASS") else os.path.abspath(os.path.join(__file__, "../../../assets"))
 AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
 
 MESSAGE_TIMEOUT = 4000

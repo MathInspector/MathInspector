@@ -1,6 +1,6 @@
 """
 Math Inspector: a visual programming environment for scientific computing with python
-Copyright (C) 2020 Matt Calhoun
+Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,12 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import tkinter as tk
 import numpy as np
 import inspect, plot
-from util import fontcolor, instanceof, classname, argspec, open_editor, vdict, instanceof
+from util import fontcolor, instanceof, classname, argspec, numargs, open_editor, vdict, instanceof
 from util.config import BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, BUTTON_RIGHT_MOTION, HITBOX, ZOOM_IN, ZOOM_OUT, FONTSIZE
 from style import Color, getimage
 from .output import Output
 from .item import Item
-from .menu import object_menu
 from widget import Popup, Menu, Text
 
 class NodeEditor(vdict, tk.Canvas):
@@ -94,7 +93,7 @@ class NodeEditor(vdict, tk.Canvas):
 			self.tag_bind(j, "<ButtonRelease-1>", lambda event, tag=j:self._on_item_button_release_1(event, tag))
 
 
-	def setitem(self, name, update_value=False, coord=None):
+	def setitem(self, name, update_value=False, coord=None, is_output_item=False):
 		if name not in self:
 			self[name] = Item(self, name, coord=coord or self.get_pointer(random=True))
 			self.scale_font()
@@ -112,7 +111,14 @@ class NodeEditor(vdict, tk.Canvas):
 		self[name].destroy()
 		if not coord:
 			coord = self.get_pointer(random=True)
-		self[name] = Item(self, name, coord=coord, args=item.args, kwargs=item.kwargs, connection=connection, opts=item.opts)
+		self[name] = Item(self, name, 
+			coord=coord, 
+			args=item.args, 
+			kwargs=item.kwargs, 
+			connection=connection, 
+			opts=item.opts,
+			is_output_item=is_output_item
+		)
 		self.scale_font()
 
 	def select(self, name):
@@ -443,7 +449,7 @@ class NodeEditor(vdict, tk.Canvas):
 				"font": "Nunito 12 bold",
 				"foreground": Color.DARK_ORANGE,
 				"state": "disabled"
-			}] + object_menu(self.app))
+			}] + self.app.menu.object_menu)
 		self.has_menu = False
 		self.pan_position = None
 		
@@ -468,7 +474,7 @@ class NodeEditor(vdict, tk.Canvas):
 			attr = getattr(item.obj, fn)	
 			methods.append({
 				"label": fn,
-				"command": lambda fn=fn, attr=attr: self.run_method(fn, attr)	
+				"command": lambda fn=fn, attr=attr, item=item: self.run_method(fn, attr, item)	
 			})
 		
 		window = plot.get_window(value)
@@ -486,17 +492,17 @@ class NodeEditor(vdict, tk.Canvas):
 			extras.append({
 				"label": "Plot",
 				"command": lambda: self.output.connect(item),
-				"state": "normal" if plot.active_window == window or not plot.active_window else "disabled"
+				"state": "normal" if (plot.active_window == window or not plot.is_active()) else "disabled"
 			})
 
 		extras.append({
 			"separator": None	
 		})
 
-		if instanceof(item.obj, (int, float)):
+		if self.app.animate.can_animate(item):
 			extras.append({
 				"label": "Animate",
-				"command": lambda: self.app.animate(item)
+				"command": lambda: self.app.animate(item.name)
 			})
 
 		if len(item.kwargs) > 0 and len(item.kwargs["connection"]) == 0:
@@ -505,10 +511,10 @@ class NodeEditor(vdict, tk.Canvas):
 				"command": lambda: item.option("show_kwargs")
 			})
 
-		if help.getobj(item.name):
+		if help.getobj(item.obj) is not None:
 			extras.append({
 				"label": "View Doc",
-				"command": lambda: help(item.name)	
+				"command": lambda: help(item.obj)	
 			})
 
 		try:
@@ -539,29 +545,43 @@ class NodeEditor(vdict, tk.Canvas):
 			"command": lambda: self._on_delete(item.name)
 		}])
 
-	def run_method(self, name, attr):
+	def run_method(self, name, attr, item):
 		args, kwargs = argspec(attr)
 		args = [i for i in args if i not in ("self")]
-		numargs = len(args) + len(kwargs)
-		if numargs > 0:
+		if len(args) + len(kwargs) > 0:
 			Popup(self.app, [{
 				"label": i	
 			} for i in args] + [{
 				"label": k,
 				"value": kwargs[k]
 			} for k in kwargs], 
-			lambda params: self._method_result(attr, params),
+			lambda params: self._method_result(name, attr, item, params),
 			title="Run Item Method",
 			header=name)
 		else:
-			self._method_result(attr)
+			self._method_result(name, attr, item)
 
-	def _method_result(self, attr, params={}):
-		result = attr(*[params[i] for i in params])
+	def _method_result(self, name, attr, item, params={}):
+		if params:
+			try:
+				argcount = numargs(attr)
+			except:
+				argcount = len(params) - 1
+			keys = list(params.keys())[1 + argcount:]
+			args = [params[i] for i in params][:argcount]
+			kwargs = { i:params[i] for i in keys }
+			if kwargs:
+				result = attr(*args, **kwargs)		
+			else:
+				result = attr(*[i for i in list(params.values()) if i != ""])		
+		else:
+			result = attr()
+
+		item.value(self.app.objects[item.name])		
 		if instanceof(result, (int, float, complex, bool)):
 			self.output.show(result)
 		elif result:
-			self.app.objects.setobj(attr.__name__, result, create_new=True)
+			self.app.objects.setobj(name, result, create_new=True)
 
 	def get_pointer(self, random=False):
 		if random:

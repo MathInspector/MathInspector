@@ -12,8 +12,8 @@ class AutoComplete():
 		self.tabcount = 0
 
 	def __call__(self):
-		self.tabcount += 1
 		content = self.prompt.get().strip()
+		self.tabcount += 1
 		s = RE_WORD.split(content)[-1] #REFACTOR - split to also split by any nonword characters (besides .) like paren
 		query = s.rsplit(".", 1)
 		is_import = (content[:7] == "import ")

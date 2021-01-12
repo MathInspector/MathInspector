@@ -1,32 +1,36 @@
-import __main__, builtins
-from util import INSTALLED_PKGS, BUILTIN_PKGS, BUILTIN_CLASS, name_ext
+import builtins
+from util.config import INSTALLED_PKGS, BUILTIN_PKGS, BUILTIN_CLASS
+from util.common import name_ext
 from os import path
 from console.builtin_print import builtin_print
 from .browser import Browser
+from . import manual
 
 class Help:
 	def __init__(self, app):
 		self.app = app
+		self.geometry = None
+		self.browser = None		
 
-	def __call__(self, key=None):
+	def __call__(self, key=None, title=None):
 		if not key:
-			return Browser(self.app, __main__)
+			self.browser = Browser(self.app, manual, "mathinspector", geometry=self.geometry)
+			return
 		obj = self.getobj(key)
 		if not obj: return
-		Browser(self.app, obj)
-		return ""
+		self.browser = Browser(self.app, obj, title=title, geometry=self.geometry)
 
 	def __repr__(self):
 		return "Type help() for interactive help, help(object) for help about object, or help.browse() to view all available documentation."
 
 	def browse(self, callback=None):
-		Browser(self.app, browse=True, on_import=callback)
+		self.browser = Browser(self.app, browse=True, on_import=callback)
 
 	def import_module(self, callback):
-		Browser(self.app, on_import=callback)
+		self.browser = Browser(self.app, on_import=callback)
 
 	def getobj(self, key):
-		if key is None: return __main__
+		if key is None: return manual
 
 		if not isinstance(key, str):
 			return key
@@ -59,4 +63,4 @@ class Help:
 				obj, attr = key.split('.', 1)
 				return getattr(self.app.objects[obj], attr)
 			except:
-				return None		
+				return None

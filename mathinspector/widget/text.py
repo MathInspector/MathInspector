@@ -1,6 +1,6 @@
 """
 Math Inspector: a visual programming environment for scientific computing with python
-Copyright (C) 2020 Matt Calhoun
+Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,19 +20,20 @@ import tkinter as tk
 from tkinter import ttk
 from style import Color
 from style import TAGS
-from util import BUTTON_RIGHT, BUILTIN_FUNCTION, BUILTIN_CLASS
+from util.config import BUTTON_RIGHT, BUILTIN_FUNCTION, BUILTIN_CLASS
 from widget.menu import Menu
+from console.builtin_print import builtin_print
 import io, re, tokenize, keyword, builtins, inspect
 
 RE_PY = {   
 	
 	"orange_italic": r"^def (\w+)\s?\(((\w+(,\s?)?)+)\)",
-	# "orange_italic": r"(\w+)\s?\(((\w+(,\s?)?)+)\)",
+	#"orange_italic": r"(\w+)\s?\(((\w+(,\s?)?)+)\)",
 	# "orange_italic": r".([a-zA-Z0-9_]*)=(.*?)( |\n)*(,|\))",
 	"green": r"(def {1,}(\w+))",
 	"blue": r"((\w+)\()",
 	"purple": r"((True|False|None))",
-	"console_prompt": r"((>>>))"
+	"console_prompt": r"((>>>|\.\.\.))"
 }
 
 # REFACTOR - this is a good pattern, move this into style
@@ -47,7 +48,7 @@ DEFAULT_OPTS = {
 	"highlightthickness": 0, 			
 	"selectbackground": Color.HIGHLIGHT,
 	"inactiveselectbackground": Color.HIGHLIGHT_INACTIVE,
-	"tabs": 84,
+	"tabs": ("3c","4c", "5c"),
 	"undo": True,
 	"wrap": "word"
 }
@@ -89,9 +90,10 @@ class Text(tk.Text):
 	
 	def insert(self, *args, syntax_highlight=False, **kwargs):		
 		idx = self.index(self.index(args[0]) + "-1c")
+		linestart = self.index(idx + " linestart")
 		super(Text, self).insert(*args, **kwargs)
 		if syntax_highlight:
-			self.syntax_highlight(idx, idx + "+" + str(len(args[1])) + "c")
+			self.syntax_highlight(linestart, idx + "+" + str(len(args[1])) + "c")
 
 	
 	def replace(self, pattern, tag=None, newtext=None, start="1.0", end="end"):
@@ -115,9 +117,8 @@ class Text(tk.Text):
 
 	def highlight(self, pattern, tag, start="1.0", end="end"):
 		for match in re.compile(pattern, re.MULTILINE).finditer(self.get(start, end)):
-			# print (match.start(2), match.end(2))
-			ind1 = self.index(start) + "+" + str(match.start(2)) + "c"
-			ind2 = self.index(start) + "+" + str(match.end(2)) + "c"		
+			ind1 = self.index(self.index(start) + "+" + str(match.start(2)) + "c")
+			ind2 = self.index(self.index(start) + "+" + str(match.end(2)) + "c")
 			self.tag_add(tag, ind1, ind2)
 		
 	def syntax_highlight(self, start="1.0", end="end"):
@@ -129,16 +130,16 @@ class Text(tk.Text):
 		
 		try:
 			for i in RE_PY:
-				self.highlight(RE_PY[i], i, start, end)
+				self.highlight(RE_PY[i], i, start, self.index(end))
 			
 			for typ, string, start_index, end_index, line in tokenize.generate_tokens(io.StringIO(content).readline):
 				token = tokenize.tok_name[typ]
 
-				ind1 = self.index(start) + "+" + str(start_index[0] - 1) + "l" + "+" + str(start_index[1]) + "c"
-				ind2 = self.index(start) + "+" + str(end_index[0] - 1) + "l" + "+" + str(end_index[1]) + "c"
+				ind1 = self.index(self.index(start) + "+" + str(start_index[0] - 1) + "l" + "+" + str(start_index[1]) + "c")
+				ind2 = self.index(self.index(start) + "+" + str(end_index[0] - 1) + "l" + "+" + str(end_index[1]) + "c")
 
 				if token == "NAME":
-					if string in ["def", "clear", "app", "help", "plot"]:
+					if string in ["def", "clear", "app", "help", "plot", "class"]:
 						self.tag_add("blue_italic", ind1, ind2)
 					elif string in keyword.kwlist:
 						self.tag_add("red", ind1, ind2)
@@ -216,6 +217,7 @@ class Text(tk.Text):
 		self.hover_range = hover_range
 		content = self.get(*hover_range)
 		if content:
+			# print ("ddd", tag + "_hover", content)
 			self.tag_add(tag + "_hover", *hover_range)
 
 	def _leave(self, event, tag):
@@ -223,4 +225,11 @@ class Text(tk.Text):
 		if self.hover_range:
 			self.tag_remove(tag + "_hover", *self.hover_range)
 
+	def get_tags(self, start, end):
+	    index = start
+	    tags = []
+	    while self.compare(index, "<=", end):
+	        tags.extend(self.tag_names(index))
+	        index = self.index(f"{index}+1c")
 
+	    return tuple(set(tags))

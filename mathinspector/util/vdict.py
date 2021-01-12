@@ -1,6 +1,6 @@
 """
 Math Inspector: a visual programming environment for scientific computing with python
-Copyright (C) 2020 Matt Calhoun
+Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from collections import OrderedDict
 
-class vdict(dict):
+class vdict(dict): # need to extend dict so it can be passed as an argument to exec()
 	"""
 	vdict: a dictionary class that has callbacks for get, set, and del events
 	"""

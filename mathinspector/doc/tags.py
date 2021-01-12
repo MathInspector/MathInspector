@@ -23,14 +23,18 @@ DOC_TAGS = {
     "section_title": {
         "font": "Montserrat 22 bold", 
         "foreground": Color.YELLOW,
-        "spacing1": 32,
-        "spacing3": 16
+        "spacing1": 0,
+        "spacing3": 8
     },
 
     "module_nav": {
         "font": "Montserrat 18 bold", 
-        "foreground": Color.VERY_LIGHT_GREY, 
+        "foreground": Color.DARK_GREY, 
         "spacing1": 12,
+    },
+
+    "module_nav_hover": {
+        "foreground": Color.WHITE, 
     },
 
     "root": {
@@ -129,8 +133,8 @@ DOC_TAGS = {
     "code_sample": {
         "background": Color.CONSOLE_BACKGROUND, 
         # "foreground": Color.WHITE, 
-        "font": "Monospace 16",
-        "spacing1": 2,
+        "font": "Menlo 15",
+        "spacing1": 8,
         "spacing2": 0,
         "spacing3": 8,
         "lmargin1": 8,
@@ -139,6 +143,11 @@ DOC_TAGS = {
     
     "code_sample_hover": {
         "background": Color.HIGHLIGHT_INACTIVE
+    },
+    
+    "code": {
+        "foreground": Color.GREY,
+        "font": "Menlo 16 bold"
     },
     
     "console_prompt": {

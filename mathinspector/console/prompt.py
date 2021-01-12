@@ -1,4 +1,4 @@
-import doc, keyword
+import keyword
 from .history import History
 from .builtin_print import builtin_print
 from .autocomplete import AutoComplete
@@ -37,9 +37,10 @@ class Prompt(Text):
 		self.console.see("end")
 		self.move()
 		self.focus()
+		self.edit_reset() # NOTE: this resets the tkinter undo stack
 
-	def get(self, start="1.5", end="end"):
-		return super(Prompt, self).get(start, end).rstrip()
+	def get(self, start="1.5", end="end-1c"):
+		return super(Prompt, self).get(start, end)
 
 	def _on_key(self, event):
 		self.console.remove_selection()
@@ -47,7 +48,7 @@ class Prompt(Text):
 			self.push(self.get())
 			return "break"
 
-		if event.keysym == "Tab" and (self.index("insert") != "1.5" or not self.console.buffer):
+		if event.keysym == "Tab" and self.get().strip():
 			self.autocomplete()
 			return "break"		
 
@@ -91,18 +92,18 @@ class Prompt(Text):
 				self.tag_add("sel", "insert wordstart", "insert wordend")
 				return "break"
 
-		if event.keysym == "question":
-			try:
-				obj = self.console.eval(self.get())
-			except:
-				builtin_print("\a")
-				return "break"
+		# if event.keysym == "question":
+		# 	try:
+		# 		obj = self.console.eval(self.get())
+		# 	except:
+		# 		builtin_print("\a")
+		# 		return "break"
 
-			if help.getobj(obj):
-				help(obj)
-			else:
-				builtin_print("\a")
-			return "break"
+		# 	if help.getobj(obj):
+		# 		help(obj)
+		# 	else:
+		# 		builtin_print("\a")
+		# 	return "break"
 
 	def push(self, s):
 		if s or not self.console.buffer:
@@ -179,16 +180,17 @@ class Prompt(Text):
 
 	def _on_paste(self, content=None):		
 		content = content or self.clipboard_get()
-		lines = content.split("\n")
-		if len(lines) == 1: return
+		if not content or "\n" not in content: return
 
 		tag_ranges = self.tag_ranges("sel")
 		if tag_ranges:
 			self.delete(*tag_ranges)
-		
-		# need to deal with case that paste with \n's but also have prev stuff in prompt before paste that needs to be included in the first line
-		for i in lines:
-			self.push(i + "\n")
+
+		self.console.write(">>>  " + content, syntax_highlight=True)
+		try:
+			self.console.exec(content)
+		except:
+			self.console.showtraceback()
 		return "break"
 
 	def on_focus_in(self, event):

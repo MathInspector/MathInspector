@@ -1,6 +1,33 @@
 """
-Math Inspector: a visual programming environment for scientific computing with python
-Copyright (C) 2020 Matt Calhoun
+The modules which are currently available in the global namespace
+are displayed in the left hand sidebar of the main window.  From this
+tab, you can explore the available functionality of any module, which
+can be very helpful for learning new parts of the python and numpy 
+ecosystems.
+
+It's possible to drag and drop any object listed in the Modules tab
+into the node editor.  This can be a convinient way to instantiate
+new objects without typing any code.
+
+Right clicking in an empty part of the Modules tab will bring up a
+menu of available options.  When you add a file or folder, they
+will be available in the global namespace just like any other module.
+
+The difference between importing a module and adding a file, is that
+when a file is added to the Modules tab, each line of that file is 
+executed, and any changes that are saved to that file are updated 
+in the node editor, as well as across all the other views.
+
+To directly access the global object which stores the names and values
+of all modules in the global namespace, use the command
+
+>>> app.modules
+
+See the class `ModuleTree` for a full list of available attributes.
+
+"""
+"""
+Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,6 +55,17 @@ from watchdog.observers import Observer
 from console.builtin_print import builtin_print
 
 class ModuleTree(vdict, Treeview):
+	"""
+	In order to synchronize the available modules across views,
+	math inspector stores the aliases and values of all modules in a vdict called the Module Tree.
+
+	When a file or folder is added to the Module Tree, the `watchdog` module 
+	is used to monitor changes in those files and update
+	the values of variables across all views.
+
+	Execution of code from source code is done by calling self.app.console.exec(source).
+	See the documentation for `app.console` for more information.
+	"""
 	def __init__(self, app):
 		vdict.__init__(self, getitem=self.getmodule, setitem=self.setmodule, delitem=self.delete)
 		Treeview.__init__(self, app)
@@ -137,7 +175,6 @@ class ModuleTree(vdict, Treeview):
 		return False
 
 	def addfile(self, file=None, parent="", index="end", watch=True, is_open=True, exec_file=True):
-
 		file = file or filedialog.askopenfilename()
 		if not file: return
 
@@ -147,7 +184,7 @@ class ModuleTree(vdict, Treeview):
 		if self.exists(name):
 			self.delete(name, del_objs=False)
 		
-		parent = self.insert(parent if parent != self.rootfolder else "", index, name, 
+		parent = self.insert(parent if (self.rootfolder and parent != self.rootfolder) else "", index, name, 
 			text="      " + name, 
 			image=getimage(ext), 
 			tags="local" if parent else ("local", "file"),
@@ -158,6 +195,14 @@ class ModuleTree(vdict, Treeview):
 		
 		if name in sys.modules:
 			del sys.modules[name]
+
+		if watch:
+			if not self.observer:
+				self.observer = Observer()
+				self.observer.start()
+			
+			self.watchers[name] = self.observer.schedule(FileHandler(self, file=file), 
+				path=os.path.dirname(file), recursive=False)
 
 		expanded = self.expanded()
 		spec = importlib.util.spec_from_file_location(name, file)
@@ -186,7 +231,12 @@ class ModuleTree(vdict, Treeview):
 		
 		if exec_file:
 			prev = self.app.objects.store.copy()
-			self.app.console.runscript(open(file, "r").read(), file)					
+			source = open(file, "r").read()
+			try:
+				self.app.console.exec(source)
+			except:
+				print ("TODO - exec failed")
+
 			new = self.app.objects.store.copy()
 
 			if name in self.locals:
@@ -201,14 +251,6 @@ class ModuleTree(vdict, Treeview):
 					del self.locals[name][i]
 					del self.app.objects[i]
 
-			if watch:
-				if not self.observer:
-					self.observer = Observer()
-					self.observer.start()
-				
-				self.watchers[name] = self.observer.schedule(FileHandler(self, file=file), 
-					path=os.path.dirname(file), recursive=False)
-
 
 	def addfolder(self, dirpath=None, parent="", watch=True, is_rootfolder=False, exec_file=True):
 		dirpath = dirpath or filedialog.askdirectory(initialdir=".")
@@ -220,7 +262,7 @@ class ModuleTree(vdict, Treeview):
 		if is_rootfolder:
 			self.rootfolder = dirpath
 		else:
-			parent = self.insert(parent, "end", os.path.dirname(dirpath), 
+			parent = self.insert(parent, "end", dirpath, 
 				text="      " + name, 
 				open=(not parent), 
 				image=getimage("folder"), 
@@ -298,16 +340,7 @@ class ModuleTree(vdict, Treeview):
 	def _on_button_release_right(self, event):
 		key = self.identify_row(event.y)
 		if not key:
-			self.menu.set_menu([{
-				"label": "Add File...",
-				"command": self.addfile
-			}, {
-				"label": "Add Folder...",
-				"command": self.addfolder
-			}, {
-				"label": "Import Module...",
-				"command": lambda: help.import_module(self.app.menu.import_module)
-			}])
+			self.menu.set_menu(self.app.menu.project_menu)
 			return self.menu.show(event)
 		
 		value = self.item(key)["values"][0]
@@ -330,11 +363,12 @@ class ModuleTree(vdict, Treeview):
 				"command": lambda: open_editor(inspect.getsourcefile(obj))
 			})
 		
-		if value in self.get_children() and value != self.rootfolder:
+		# print ('v', value)
+		if key in self.get_children() and value != self.rootfolder:
 			items.extend([{ 
 				"separator": None 
 			}, {
-				"label": "Remove " + value,
+				"label": "Remove " + key,
 				"command": lambda: self.delete(value)
 			}])	
 		
@@ -377,7 +411,7 @@ class FileHandler(FileSystemEventHandler):
 		index = self.modules.index(name)
 
 		dirname = os.path.dirname(event.src_path)
-		parent = "" if dirname == self.modules.rootfolder else dirname
+		parent = "" if (dirname == self.modules.rootfolder or name in self.modules) else dirname
 		if parent:
 			self.modules.addfile(event.src_path, parent, index=index, watch=False)
 		else:
