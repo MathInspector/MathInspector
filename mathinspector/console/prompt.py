@@ -1,3 +1,20 @@
+"""
+Math Inspector: a visual programming environment for scientific computing
+Copyright (C) 2021 Matt Calhoun
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
 import keyword
 from .history import History
 from .builtin_print import builtin_print
@@ -92,6 +109,7 @@ class Prompt(Text):
 				self.tag_add("sel", "insert wordstart", "insert wordend")
 				return "break"
 
+		## TODO - reenable this, designed to emulate the ipython ? functionality
 		# if event.keysym == "question":
 		# 	try:
 		# 		obj = self.console.eval(self.get())

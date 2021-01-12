@@ -1,3 +1,20 @@
+"""
+Math Inspector: a visual programming environment for scientific computing
+Copyright (C) 2021 Matt Calhoun
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
 import tkinter as tk
 from tkinter import ttk
 import inspect, re, os, webbrowser
@@ -93,12 +110,9 @@ class Doc(tk.Frame):
 			tag_ranges = self.nav.tag_ranges("subpath")
 			if tag_ranges:
 				self.nav.delete(*tag_ranges)
-			# self.nav.delete(self.nav.tag_ranges("basepath")[1], "end") # "basepath" tag used when clearing the nav
-			# self.nav.tag_remove("basepath", "1.0", "end") 
 			self.nav.insert("end", " > ", ("blue", "nav_count="+str(self.nav_count)))
 			self.nav.insert("end", name, ("module_nav", "basepath", "nav_count="+str(len(self.objects))))
 			self.objects.append(obj)
-			# self.nav_count += len(self.objects)
 
 		self.clear()
 

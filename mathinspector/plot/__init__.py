@@ -56,10 +56,7 @@ resolution artifacts which are hard to miss when moving very quickly.
 Look for video rendering functionality in an upcoming release to address the 
 performance issues associated with the most computationally expensive animations.
 """
-
 """
-Math Inspector: a visual programming environment for scientific computing
----
 Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify
@@ -74,16 +71,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-
-How to use the documentation
----
-Whatever object you are interacting with, you can always learn more by reading the documentation in the doc viewer.  
-This makes it easy to find and interact with the extensive documentation of python, numpy, and scipy.  
-See a code example in the doc viewer you want to run?  Click on the code block to run it in the console.
-
 """
-
 
 from os import environ
 environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"

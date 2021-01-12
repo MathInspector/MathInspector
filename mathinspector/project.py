@@ -37,7 +37,6 @@ README file will be displayed in the doc browser.
 
 """
 """
-Math Inspector: a visual programming environment for scientific computing with python
 Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify

@@ -1,5 +1,5 @@
 """
-Math Inspector: a visual programming environment for scientific computing with python
+Math Inspector: a visual programming environment for scientific computing
 Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify

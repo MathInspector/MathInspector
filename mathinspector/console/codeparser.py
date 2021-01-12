@@ -1,3 +1,24 @@
+"""
+Used for preprocessing and post-processing commands strings in order to perform any updates to the
+various views throughout the app which are not captured by other methods.
+"""
+"""
+Math Inspector: a visual programming environment for scientific computing
+Copyright (C) 2021 Matt Calhoun
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
 import ast, util.binop
 
 class CodeParser(ast.NodeVisitor):
@@ -22,7 +43,10 @@ class CodeParser(ast.NodeVisitor):
 		except:
 			return
 		
-		# self.assign_visitor.visit(tree)  ## TODO - add this as an option, but default is turned off
+		## NOTE: the reason for removing the assign visitor is to ensure the math inspector interpreter
+		##			always exec's all sequences of command strings, and produces the same output,
+		##			exactly as would occur when using the python command line interpreter
+		# self.assign_visitor.visit(tree)  ## TODO - add this as a toggle option in the main menu, default is turned off
 		return tree
 		
 class CallVisitor(ast.NodeVisitor):
