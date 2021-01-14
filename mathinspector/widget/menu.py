@@ -22,7 +22,7 @@ from console.builtin_print import builtin_print
 
 class Menu(tk.Menu):
 	def __init__(self, parent, items=[], **kwargs):
-		tk.Menu.__init__(self, parent)
+		tk.Menu.__init__(self, parent, tearoff=False)
 		self._ = {}
 		self.parent = parent
 		self.set_menu(items)

@@ -41,6 +41,11 @@ ZOOM_OUT = 0.9
 HITBOX = 32
 FONTSIZE = "12"
 
+if platform.system() == "Windows":
+    PROMPT_FONTSIZE = 24
+else:
+    PROMPT_FONTSIZE = 18.5
+
 EXCLUDED_MODULES = [
     "absolute_import",
     "division",

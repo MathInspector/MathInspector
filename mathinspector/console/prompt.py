@@ -15,14 +15,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import keyword
+import keyword, platform
 from .history import History
 from .builtin_print import builtin_print
 from .autocomplete import AutoComplete
+from util.config import PROMPT_FONTSIZE as FONTSIZE
 from widget import Text
 from style import Color
-
-FONTSIZE = 18.5
 
 class Prompt(Text):
 	def __init__(self, console, frame):

@@ -1,4 +1,4 @@
-import pygame
+import pygame, platform
 from .util import color
 
 FONT_SIZE = 12
@@ -10,3 +10,8 @@ BLACK = color("333333")
 WHITE = color("f8f8f2")
 BLUE = color("60d9f1")
 RADIUS = 4
+
+if platform.system() == "Windows":
+    MULTIPROCESS_CONTEXT = "spawn"
+else:
+    MULTIPROCESS_CONTEXT = "fork"

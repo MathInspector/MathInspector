@@ -14,11 +14,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import pygame, os
+import pygame, os, platform
 import numpy as np
-from .config import FONT_SIZE, SPACING, MARGIN, BACKGROUND, PALE_BLUE, BLACK, WHITE, BLUE, RADIUS
+import multiprocessing as mp
+from .config import MULTIPROCESS_CONTEXT, SPACING, MARGIN, BACKGROUND, PALE_BLUE, BLACK, WHITE, BLUE, RADIUS
 from .util import instanceof, is_iterable
-from multiprocessing import Process, Queue, set_start_method
 from pygame.locals import *
 from pygame._sdl2.video import Window
 
@@ -34,13 +34,12 @@ OPTIONS = {
 	"on_update": None,
 	"on_close": None,
 	"pixelmap": None,
-	"window_pos": None
+	"window_pos": None,
+	"fontsize": 12
 }
 
 class SDLWindow:
 	def __init__(self):
-		set_start_method("fork")
-		self.queue = Queue()
 		self.zoom = 1
 		self.screen = None
 		self.font = None
@@ -48,6 +47,8 @@ class SDLWindow:
 		self.scale = 1
 		self.args = []
 		self.spacing = 1 / OPTIONS["step"]
+		self.ctx = mp.get_context(MULTIPROCESS_CONTEXT)
+		self.queue = self.ctx.Queue()
 
 	def get_pixels(self, res, size):
 		x0, y0 = OPTIONS["position"]
@@ -72,7 +73,7 @@ class SDLWindow:
 		self.is_processing = True
 		w,h = OPTIONS["size"]
 		self.coords.append([w/self.pan_res,h/self.pan_res,res])
-		process = Process(target=lambda res,size: self.queue.put(self.get_pixels(res,size)), args=(res,size), )
+		process = self.ctx.Process(target=lambda res,size: self.queue.put(self.get_pixels(res,size)), args=(res,size), )
 		process.start()
 
 	def plot(self, *args, **kwargs):
@@ -351,7 +352,7 @@ class SDLWindow:
 		while x < w - MARGIN:
 			x_mark = str(round((x - x0) * self.scale/self.spacing, 2))
 			text = self.font.render(x_mark, False, PALE_BLUE)
-			self.screen.blit(text,(x - 4*len(x_mark), h - (FONT_SIZE + MARGIN)/2))
+			self.screen.blit(text,(x - 4*len(x_mark), h - (OPTIONS["fontsize"] + MARGIN)/2))
 			x += self.spacing
 
 		y = y0 % self.spacing

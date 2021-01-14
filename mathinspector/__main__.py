@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 from tkinter import ttk
-from ttkthemes import themed_tk
+from style.ttkthemes import themed_tk
 from console import Interpreter
 from node import NodeEditor
 from objects import ObjectTree
