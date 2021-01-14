@@ -19,11 +19,11 @@ import inspect, os, platform, sys, pkg_resources, builtins, keyword, math
 from sys import builtin_module_names
 from pkgutil import iter_modules
 
-BUTTON_RIGHT = '<Button-3>' if platform.system() == 'Windows' else '<Button-2>'
-BUTTON_RELEASE_RIGHT = '<ButtonRelease-3>' if platform.system() == 'Windows' else '<ButtonRelease-2>'
-BUTTON_RIGHT_MOTION = '<B3-Motion>' if platform.system() == 'Windows' else '<B2-Motion>'
-CONTROL_KEY = 'Control' if platform.system() == 'Windows' else 'Command'
-if platform.system() == "Windows":
+BUTTON_RIGHT = '<Button-3>' if platform.system() in ("Windows", "Linux") else '<Button-2>'
+BUTTON_RELEASE_RIGHT = '<ButtonRelease-3>' if platform.system() in ("Windows", "Linux") else '<ButtonRelease-2>'
+BUTTON_RIGHT_MOTION = '<B3-Motion>' if platform.system() in ("Windows", "Linux") else '<B2-Motion>'
+CONTROL_KEY = 'Control' if platform.system() in ("Windows", "Linux") else 'Command'
+if platform.system() in ("Windows", "Linux"):
     BASEPATH = os.path.join(sys._MEIPASS, "Resources") if hasattr(sys, "_MEIPASS") else os.path.abspath(os.path.join(__file__, "../../../assets"))
 else:
     BASEPATH = os.path.join(sys._MEIPASS, "../Resources") if hasattr(sys, "_MEIPASS") else os.path.abspath(os.path.join(__file__, "../../../assets"))
@@ -45,7 +45,7 @@ HITBOX = 32
 FONTSIZE = "12" # TODO - refactor this into the rest of the FONTSIZE stuff
 PROMPT_FONTSIZE = 18.5
 
-if platform.system() == "Windows":
+if platform.system() in ("Windows", "Linux"):
     FONT = "LucidaConsole 12"
     DOC_FONT = "Nunito-ExtraLight 12"
     FONT_SIZE = {

@@ -50,7 +50,7 @@ def name_ext(file):
     return os.path.splitext(os.path.basename(file))
 
 def open_editor(file):
-    if platform.system() == "Windows":
+    if platform.system() in ("Windows", "Linux"):
         command = "start " + file
     elif platform.system() == "Darwin":
         command = "open " + file

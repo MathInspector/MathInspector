@@ -11,7 +11,7 @@ WHITE = color("f8f8f2")
 BLUE = color("60d9f1")
 RADIUS = 4
 
-if platform.system() == "Windows":
+if platform.system() in ("Windows", "Linux"):
     MULTIPROCESS_CONTEXT = "spawn"
     ZOOM_MODIFIER = 5
 else:

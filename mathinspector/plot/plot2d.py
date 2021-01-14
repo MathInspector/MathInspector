@@ -47,7 +47,7 @@ class SDLWindow:
 		self.scale = 1
 		self.args = []
 		self.spacing = 1 / OPTIONS["step"]
-		if platform.system() != "Windows":
+		if platform.system() not in ("Windows", "Linux"):
 			self.ctx = mp.get_context(MULTIPROCESS_CONTEXT)
 			self.queue = self.ctx.Queue()
 
@@ -70,7 +70,7 @@ class SDLWindow:
 		pygame.display.flip()
 
 	def update_offscreen(self, res=1, size=3):
-		if self.is_processing or platform.system() == "Windows": return
+		if self.is_processing or platform.system() in ("Windows", "Linux"): return
 		self.is_processing = True
 		w,h = OPTIONS["size"]
 		self.coords.append([w/self.pan_res,h/self.pan_res,res])
@@ -203,7 +203,7 @@ class SDLWindow:
 				else:
 					animation_timer += delta_time
 								
-			if platform.system() != "Windows":
+			if platform.system() not in ("Windows", "Linux"):
 				if not self.queue.empty():
 					pixels = self.queue.get()
 				
@@ -235,7 +235,7 @@ class SDLWindow:
 				timer = 0
 				OPTIONS["position"] = x0, y0
 				OPTIONS["step"] = step = self.scale / self.spacing			
-				if OPTIONS["pixelmap"] is not None and platform.system() != "Windows":
+				if OPTIONS["pixelmap"] is not None and platform.system() not in ("Windows", "Linux"):
 					self.screen.fill(BACKGROUND)
 					x1, y1, zoom2 = self.coords[0]
 					if len(self.coords) == 1 and not self.is_processing and (

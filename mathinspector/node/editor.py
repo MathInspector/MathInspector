@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 import numpy as np
-import inspect, plot
+import inspect, plot, platform
 from util import fontcolor, instanceof, classname, argspec, numargs, open_editor, vdict, instanceof
 from util.config import BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, BUTTON_RIGHT_MOTION, HITBOX, ZOOM_IN, ZOOM_OUT, FONTSIZE, FONT_SIZE
 from style import Color, getimage
@@ -65,6 +65,9 @@ class NodeEditor(vdict, tk.Canvas):
 		self.bind("<ButtonRelease-1>", self._on_button_release_1)
 
 		self.bind("<MouseWheel>", self._on_mouse_wheel)		
+		if platform.system() == "Linux":
+			self.bind("<Button-4>", lambda event: self._on_mouse_wheel(event, 1))		
+			self.bind("<Button-5>", lambda event: self._on_mouse_wheel(event, -1))		
 		self.bind(BUTTON_RELEASE_RIGHT, self._on_button_release_2)
 		self.bind(BUTTON_RIGHT_MOTION, self._on_b2_motion)
 		
@@ -169,9 +172,10 @@ class NodeEditor(vdict, tk.Canvas):
 			else:				
 				item.config("output", fill=Color.EMPTY_NODE)
 
-	def _on_mouse_wheel(self, event):
+	def _on_mouse_wheel(self, event, delta=None):
+		event_delta = delta or event.delta
 		x, y = self.get_pointer()
-		if event.delta > 0:
+		if event_delta > 0:
 			self.scale("all", x,y, ZOOM_IN, ZOOM_IN)
 			self.zoom *= ZOOM_IN
 		else:
