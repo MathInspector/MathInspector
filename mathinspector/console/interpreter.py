@@ -20,7 +20,7 @@ import tkinter as tk
 import numpy as np
 import inspect, sys, traceback, os, re, plot
 from code import InteractiveInterpreter
-from util import vdict, open_editor, BUTTON_RIGHT, BASEPATH
+from util import vdict, open_editor, BUTTON_RIGHT, BASEPATH, FONT
 from doc import Help
 from style import Color, TAGS
 from types import CodeType
@@ -78,7 +78,7 @@ class Interpreter(Text, InteractiveInterpreter):
 		Text.__init__(self, self.frame,
 			readonly=True, 
 			background=Color.DARK_BLACK, 
-			font="Menlo 15",
+			font=FONT,
 			padx=0,
 			pady=0,
 			wrap="word",

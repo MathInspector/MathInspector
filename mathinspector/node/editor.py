@@ -20,7 +20,7 @@ import tkinter as tk
 import numpy as np
 import inspect, plot
 from util import fontcolor, instanceof, classname, argspec, numargs, open_editor, vdict, instanceof
-from util.config import BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, BUTTON_RIGHT_MOTION, HITBOX, ZOOM_IN, ZOOM_OUT, FONTSIZE
+from util.config import BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, BUTTON_RIGHT_MOTION, HITBOX, ZOOM_IN, ZOOM_OUT, FONTSIZE, FONT_SIZE
 from style import Color, getimage
 from .output import Output
 from .item import Item
@@ -446,7 +446,7 @@ class NodeEditor(vdict, tk.Canvas):
 		if not self.pan_position and not self.has_menu:
 			self.menu.show(event, [{
 				"label": "Add Object",
-				"font": "Nunito 12 bold",
+				"font": "Nunito " + FONT_SIZE["extra-small"] + " bold",
 				"foreground": Color.DARK_ORANGE,
 				"state": "disabled"
 			}] + self.app.menu.object_menu)
@@ -470,12 +470,14 @@ class NodeEditor(vdict, tk.Canvas):
 		obj = self.app.objects[item.name]
 		value = item.value()
 		item_methods = [i for i in dir(obj) if i[:1] != "_" and callable(getattr(obj, i)) and isinstance(i, str)]			
-		for fn in item_methods:
-			attr = getattr(item.obj, fn)	
-			methods.append({
-				"label": fn,
-				"command": lambda fn=fn, attr=attr, item=item: self.run_method(fn, attr, item)	
-			})
+		if item_methods:
+			methods.append({ "separator": None })			
+			for fn in item_methods:
+				attr = getattr(item.obj, fn)	
+				methods.append({
+					"label": fn,
+					"command": lambda fn=fn, attr=attr, item=item: self.run_method(fn, attr, item)	
+				})
 		
 		window = plot.get_window(value)
 		if item in self.output.items:
@@ -533,14 +535,9 @@ class NodeEditor(vdict, tk.Canvas):
 		# 	"command": lambda: Popup(self.app, item.name + ".set_color", obj=lambda color: item.option("line_color", color), canvas_item=item)
 		# })	
 
-		self.menu.show(event, extras + [{
+		self.menu.show(event, extras + methods + [{
 			"separator": None 
-		}] + methods + [{ 
-			"label": "graph", 
-			"menu": graph
-		}, {
-			"separator": None
-		}, {
+		},{
 			"label": "Delete " + item.name,
 			"command": lambda: self._on_delete(item.name)
 		}])

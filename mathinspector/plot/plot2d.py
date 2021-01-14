@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pygame, os, platform
 import numpy as np
 import multiprocessing as mp
-from .config import MULTIPROCESS_CONTEXT, SPACING, MARGIN, BACKGROUND, PALE_BLUE, BLACK, WHITE, BLUE, RADIUS
+from .config import *
 from .util import instanceof, is_iterable
 from pygame.locals import *
 from pygame._sdl2.video import Window
@@ -47,8 +47,9 @@ class SDLWindow:
 		self.scale = 1
 		self.args = []
 		self.spacing = 1 / OPTIONS["step"]
-		self.ctx = mp.get_context(MULTIPROCESS_CONTEXT)
-		self.queue = self.ctx.Queue()
+		if platform.system() != "Windows":
+			self.ctx = mp.get_context(MULTIPROCESS_CONTEXT)
+			self.queue = self.ctx.Queue()
 
 	def get_pixels(self, res, size):
 		x0, y0 = OPTIONS["position"]
@@ -69,12 +70,15 @@ class SDLWindow:
 		pygame.display.flip()
 
 	def update_offscreen(self, res=1, size=3):
-		if self.is_processing: return
+		if self.is_processing or platform.system() == "Windows": return
 		self.is_processing = True
 		w,h = OPTIONS["size"]
 		self.coords.append([w/self.pan_res,h/self.pan_res,res])
-		process = self.ctx.Process(target=lambda res,size: self.queue.put(self.get_pixels(res,size)), args=(res,size), )
+		process = self.ctx.Process(target=self.process_target, args=(res,size))
 		process.start()
+
+	def process_target(self, res, size):
+		self.queue.put(self.get_pixels(res,size))
 
 	def plot(self, *args, **kwargs):
 		self.args = args
@@ -147,7 +151,7 @@ class SDLWindow:
 				elif event.type == pygame.MOUSEWHEEL:
 					did_change = True
 					mode = "zoomin" if event.y > 0 else "zoomout"
-					delta = event.y/SPACING
+					delta = event.y*ZOOM_MODIFIER/SPACING
 					self.zoom *= 1 + delta
 					x, y = pygame.mouse.get_pos()
 					x0 += delta*(x0 - x)
@@ -199,16 +203,17 @@ class SDLWindow:
 				else:
 					animation_timer += delta_time
 								
-			if not self.queue.empty():
-				pixels = self.queue.get()
-			
-				if offscreen_size != (pixels.shape[0], pixels.shape[1]):
-					offscreen_surf = pygame.Surface((pixels.shape[0], pixels.shape[1]))
-					offscreen_size = offscreen_surf.get_size()
+			if platform.system() != "Windows":
+				if not self.queue.empty():
+					pixels = self.queue.get()
+				
+					if offscreen_size != (pixels.shape[0], pixels.shape[1]):
+						offscreen_surf = pygame.Surface((pixels.shape[0], pixels.shape[1]))
+						offscreen_size = offscreen_surf.get_size()
 
-				pygame.surfarray.blit_array(offscreen_surf, pixels)
-				self.coords.pop(0)
-				self.is_processing = False
+					pygame.surfarray.blit_array(offscreen_surf, pixels)
+					self.coords.pop(0)
+					self.is_processing = False
 
 			if request_quit and not self.is_processing:
 				is_running = False
@@ -230,7 +235,7 @@ class SDLWindow:
 				timer = 0
 				OPTIONS["position"] = x0, y0
 				OPTIONS["step"] = step = self.scale / self.spacing			
-				if OPTIONS["pixelmap"] is not None:
+				if OPTIONS["pixelmap"] is not None and platform.system() != "Windows":
 					self.screen.fill(BACKGROUND)
 					x1, y1, zoom2 = self.coords[0]
 					if len(self.coords) == 1 and not self.is_processing and (
@@ -303,16 +308,17 @@ class SDLWindow:
 		w, h = OPTIONS["size"]
 
 		# sub grid lines
-		s1 = pygame.Surface((w,h))
-		s1.set_alpha(int(255 * (2 * self.spacing/SPACING - 1)))
+		s1 = pygame.Surface((w,h), SRCALPHA)
+		alpha = int(255*(2 * self.spacing/SPACING - 1))
+		_black = pygame.Color(51,51,51,alpha)
 		x = x0 % self.spacing + self.spacing/2
 		while x < w:
-			pygame.draw.line(s1, BLACK, [x, 0], [x, h], 1)		
+			pygame.draw.line(s1, _black, [x, 0], [x, h], 1)		
 			x += self.spacing
 
 		y = y0 % self.spacing + self.spacing/2
 		while y < h:
-			pygame.draw.line(s1, BLACK, [0, y], [w, y], 1)		
+			pygame.draw.line(s1, _black, [0, y], [w, y], 1)		
 			y += self.spacing
 
 		self.screen.blit(s1, (0,0))

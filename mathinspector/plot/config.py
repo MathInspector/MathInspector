@@ -13,5 +13,7 @@ RADIUS = 4
 
 if platform.system() == "Windows":
     MULTIPROCESS_CONTEXT = "spawn"
+    ZOOM_MODIFIER = 5
 else:
     MULTIPROCESS_CONTEXT = "fork"
+    ZOOM_MODIFIER = 1

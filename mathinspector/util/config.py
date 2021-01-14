@@ -23,7 +23,10 @@ BUTTON_RIGHT = '<Button-3>' if platform.system() == 'Windows' else '<Button-2>'
 BUTTON_RELEASE_RIGHT = '<ButtonRelease-3>' if platform.system() == 'Windows' else '<ButtonRelease-2>'
 BUTTON_RIGHT_MOTION = '<B3-Motion>' if platform.system() == 'Windows' else '<B2-Motion>'
 CONTROL_KEY = 'Control' if platform.system() == 'Windows' else 'Command'
-BASEPATH = os.path.join(sys._MEIPASS, "../Resources") if hasattr(sys, "_MEIPASS") else os.path.abspath(os.path.join(__file__, "../../../assets"))
+if platform.system() == "Windows":
+    BASEPATH = os.path.join(sys._MEIPASS, "Resources") if hasattr(sys, "_MEIPASS") else os.path.abspath(os.path.join(__file__, "../../../assets"))
+else:
+    BASEPATH = os.path.join(sys._MEIPASS, "../Resources") if hasattr(sys, "_MEIPASS") else os.path.abspath(os.path.join(__file__, "../../../assets"))
 AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
 
 MESSAGE_TIMEOUT = 4000
@@ -39,12 +42,45 @@ KEYWORD_LIST = keyword.kwlist
 ZOOM_IN = 1.1
 ZOOM_OUT = 0.9
 HITBOX = 32
-FONTSIZE = "12"
+FONTSIZE = "12" # TODO - refactor this into the rest of the FONTSIZE stuff
+PROMPT_FONTSIZE = 18.5
 
 if platform.system() == "Windows":
-    PROMPT_FONTSIZE = 24
+    FONT = "LucidaConsole 12"
+    DOC_FONT = "Nunito-ExtraLight 12"
+    FONT_SIZE = {
+        "extra-small": "8",
+        "small": "10",
+        "default": "12",
+        "medium": "16",
+        "large": "18",
+        "extra-large": "22",
+    }
+    ITEM_FONTSIZE = {
+        "name": "14",
+        "class": "8",
+        "value": "12",
+        "argname": "8",
+        "argvalue": "10",
+    }
 else:
-    PROMPT_FONTSIZE = 18.5
+    FONT = "Menlo 15"
+    DOC_FONT = "Nunito-ExtraLight 16"
+    FONT_SIZE = {
+        "extra-small": "12",
+        "small": "14",
+        "default": "15",
+        "medium": "18",
+        "large": "22",
+        "extra-large": "24",
+    }
+    ITEM_FONTSIZE = {
+        "name": "18",
+        "class": "12",
+        "value": "16",
+        "argname": "8",
+        "argvalue": "12",
+    }
 
 EXCLUDED_MODULES = [
     "absolute_import",

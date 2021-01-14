@@ -20,6 +20,7 @@ import inspect, traceback, plot
 from style import Color
 from util import vdict
 from util import classname, fontcolor, argspec
+from util.config import ITEM_FONTSIZE as FONTSIZE
 from .entry import Entry
 from textwrap import fill
 from pprint import pformat
@@ -74,13 +75,13 @@ class Item:
             fill=Color.BLACK)
         
         self.ids["name"] = canvas.create_text(0,0, 
-            tags=("name", "draggable", "name=" + self.name, "font", "fontsize=18", "stop_scaling"), 
+            tags=("name", "draggable", "name=" + self.name, "font", "fontsize="+FONTSIZE["name"], "stop_scaling"), 
             text=name or '', 
             fill=Color.WHITE, 
             font="Menlo 18")
         
         self.ids["class"] = canvas.create_text(0,0, 
-            tags=("class", "draggable", "name=" + self.name, "font", "fontsize=12", "stop_scaling"), 
+            tags=("class", "draggable", "name=" + self.name, "font", "fontsize="+FONTSIZE["argvalue"], "stop_scaling"), 
             width=0,
             text=self.classname,
             fill=Color.BLUE)
@@ -99,7 +100,7 @@ class Item:
         
         if not self.is_callable:
             self.ids["value"] = canvas.create_text(x,y, 
-                tags=("value", "draggable", "editable", "name=" + self.name, "argvalue=<value>", "font", "fontsize=16"), 
+                tags=("value", "draggable", "editable", "name=" + self.name, "argvalue=<value>", "font", "fontsize="+FONTSIZE["value"]), 
                 text=self.content(),
                 fill=fontcolor(self.obj),
                 font="Menlo 16")
@@ -122,13 +123,13 @@ class Item:
                     fill=Color.EMPTY_NODE)
                 
                 self.ids["argname=" + j] = canvas.create_text(0,0, 
-                    tags=("name=" + self.name, "draggable", "font", "fontsize=8"), 
+                    tags=("name=" + self.name, "draggable", "font", "fontsize="+FONTSIZE["argname"]), 
                     text=j,
                     fill=Color.DARK_ORANGE,
                     anchor="w")
                 
                 self.ids["argvalue=" + j] = canvas.create_text(0,0, 
-                    tags=("argvalue=" + j, "draggable", "editable", "name=" + self.name, "font", "fontsize=12"),
+                    tags=("argvalue=" + j, "draggable", "editable", "name=" + self.name, "font", "fontsize="+FONTSIZE["argvalue"]),
                     text="None",
                     fill=Color.RED,
                     anchor="w")
@@ -145,14 +146,14 @@ class Item:
                 
                 self.ids["argname=" + k] = canvas.create_text(0,0,
                     text=k, 
-                    tags=("name=" + self.name, "argname="+k, "draggable", "font", "fontsize=8"), 
+                    tags=("name=" + self.name, "argname="+k, "draggable", "font", "fontsize="+FONTSIZE["argname"]), 
                     state="normal" if self.opts["show_kwargs"] else "hidden", 
                     fill=Color.ORANGE,
                     anchor="w")
                 
                 self.ids["argvalue=" + k] = canvas.create_text(0,0, 
                     text=str(self.kwargs[k]), 
-                    tags=("argvalue=" + k, "draggable", "editable", "name=" + self.name, "font", "fontsize=12"), 
+                    tags=("argvalue=" + k, "draggable", "editable", "name=" + self.name, "font", "fontsize="+FONTSIZE["argvalue"]), 
                     state="normal" if self.opts["show_kwargs"] else "hidden", 
                     fill=fontcolor(self.kwargs[k]),
                     anchor="w")

@@ -24,7 +24,7 @@ from style import Color, getimage
 from util.argspec import argspec
 from util.docscrape import FunctionDoc
 from util.common import open_editor, classname
-from util.config import EXCLUDED_MODULES, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, INSTALLED_PKGS, BUILTIN_PKGS
+from util.config import EXCLUDED_MODULES, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, INSTALLED_PKGS, BUILTIN_PKGS, DOC_FONT
 from .show_functiondoc import show_functiondoc
 from .show_textfile import show_textfile
 from numpy import ufunc
@@ -37,8 +37,8 @@ class Doc(tk.Frame):
 		self.title = title
 
 		frame = tk.Frame(self, background=Color.BACKGROUND)
-		self.nav = Text(frame, padx=16, height=2, readonly=True, font="Nunito-ExtraLight 16", cursor="arrow", insertbackground=Color.BACKGROUND, selectbackground=Color.BACKGROUND)
-		self.text = Text(frame, readonly=True, has_scrollbar=False, font="Nunito-ExtraLight 16", cursor="arrow", insertbackground=Color.BACKGROUND)
+		self.nav = Text(frame, padx=16, height=2, readonly=True, font=DOC_FONT, cursor="arrow", insertbackground=Color.BACKGROUND, selectbackground=Color.BACKGROUND)
+		self.text = Text(frame, readonly=True, has_scrollbar=False, font=DOC_FONT, cursor="arrow", insertbackground=Color.BACKGROUND)
 
 		self.notebook = Notebook(self)
 		self.nav_count = 0

@@ -17,6 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from .color import Color
+from util.config import FONT
 
 TAGS = {
     "red": {
@@ -29,7 +30,7 @@ TAGS = {
 
     "blue_italic": {
         "foreground": Color.BLUE, 
-        "font": "Menlo 15 italic"
+        "font": FONT + " italic"
     },
 
     "green": {
@@ -37,7 +38,7 @@ TAGS = {
     },
 
     "underline": {
-        "font": "Menlo 16 italic", 
+        "font": FONT + " italic", 
         "underline": True
     },
 
@@ -51,18 +52,18 @@ TAGS = {
 
     "dark_orange_bold": {
         "foreground": Color.DARK_ORANGE,
-        "font": "Menlo 16 bold",
+        "font": FONT + " bold",
     },
 
     "console_prompt": {
         "foreground": Color.DARK_ORANGE,
-        "font": "Menlo 16 bold",
+        "font": FONT + " bold",
         "selectbackground": Color.DARK_BLACK,
     },
 
     "orange_italic": {
         "foreground": Color.ORANGE, 
-        "font": "Menlo 15 italic"
+        "font": FONT + " italic"
     },
 
     "comment": {

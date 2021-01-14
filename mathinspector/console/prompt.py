@@ -19,7 +19,7 @@ import keyword, platform
 from .history import History
 from .builtin_print import builtin_print
 from .autocomplete import AutoComplete
-from util.config import PROMPT_FONTSIZE as FONTSIZE
+from util.config import FONT, PROMPT_FONTSIZE as FONTSIZE
 from widget import Text
 from style import Color
 
@@ -27,7 +27,7 @@ class Prompt(Text):
 	def __init__(self, console, frame):
 		Text.__init__(self, frame, 
 			background=Color.DARK_BLACK, 
-			font="Menlo 15",
+			font=FONT,
 			padx=0,
 			pady=0,
 			height=2)

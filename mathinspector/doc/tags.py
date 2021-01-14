@@ -16,36 +16,37 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from style import Color
+from util.config import FONT, FONT_SIZE
 
 DOC_TAGS = {
     "name": {
-        "font": "Montserrat 32 bold", 
+        "font": "Montserrat " + FONT_SIZE["extra-large"] + " bold", 
         "foreground": Color.WHITE
     },
 
     "signature": {
-        "font": "Monospace 14"
+        "font": "Monospace " + FONT_SIZE["small"]
     },
 
     "function_name": {
         "spacing1": 8,
         "spacing3": 8,
-        "font": "Monospace 18"
+        "font": "Monospace " + FONT_SIZE["medium"]
     },
 
     "class_name": {
-        "font": "Nunito 24"
+        "font": "Nunito " + FONT_SIZE["extra-large"]
     },
 
     "section_title": {
-        "font": "Montserrat 22 bold", 
+        "font": "Montserrat " + FONT_SIZE["large"] + " bold", 
         "foreground": Color.YELLOW,
         "spacing1": 0,
         "spacing3": 8
     },
 
     "module_nav": {
-        "font": "Montserrat 18 bold", 
+        "font": "Montserrat " + FONT_SIZE["medium"] + " bold", 
         "foreground": Color.DARK_GREY, 
         "spacing1": 12,
     },
@@ -55,7 +56,7 @@ DOC_TAGS = {
     },
 
     "root": {
-        "font": "Montserrat 18 bold", 
+        "font": "Montserrat " + FONT_SIZE["medium"] + " bold", 
         "foreground": Color.DARK_ORANGE, 
     },
 
@@ -78,7 +79,7 @@ DOC_TAGS = {
     },
 
     "h1": {
-        "font": "Montserrat 32 bold",
+        "font": "Montserrat " + FONT_SIZE["extra-large"] + " bold",
         "background": Color.DARK_PURPLE,
         "lmargin1": 16,
         "lmargin2": 8,
@@ -88,7 +89,7 @@ DOC_TAGS = {
 
     "parameter_name": {
         "spacing1": 8,
-        "font": "Monospace 16 bold",
+        "font": "Monospace "+ FONT_SIZE["default"] + " bold",
         "lmargin1": 24,
         "foreground": Color.ORANGE
     },
@@ -96,7 +97,7 @@ DOC_TAGS = {
     "submodule": {
         "spacing1": 8,
         "spacing3": 8,
-        "font": "Monospace 16 bold",
+        "font": "Monospace "+ FONT_SIZE["default"] + " bold",
         "lmargin1": 24,
         "foreground": Color.ORANGE
     },
@@ -106,7 +107,7 @@ DOC_TAGS = {
     },
 
     "parameter_type": {
-        "font": "Nunito 24"
+        "font": "Nunito " + FONT_SIZE["extra-large"]
     },
 
     "parameter_description": {
@@ -115,7 +116,7 @@ DOC_TAGS = {
     },
 
     "underline_title": {
-        "font": "Montserrat 22 bold", 
+        "font": "Montserrat " + FONT_SIZE["large"] + " bold", 
         "foreground": Color.VERY_LIGHT_GREY, 
         "spacing1": 16
     },
@@ -124,11 +125,11 @@ DOC_TAGS = {
     },
 
     "references": {
-        "font": "Nunito 14 bold"
+        "font": "Nunito " + FONT_SIZE["small"] + " bold"
     },
 
     "see_also_title": {
-        "font": "Montserrat 18 bold",
+        "font": "Montserrat " + FONT_SIZE["medium"] + " bold",
         "spacing1": 16,
         "spacing3": 8,
     },
@@ -150,7 +151,7 @@ DOC_TAGS = {
     "code_sample": {
         "background": Color.CONSOLE_BACKGROUND, 
         # "foreground": Color.WHITE, 
-        "font": "Menlo 15",
+        "font": FONT,
         "spacing1": 8,
         "spacing2": 0,
         "spacing3": 8,
@@ -164,12 +165,12 @@ DOC_TAGS = {
     
     "code": {
         "foreground": Color.GREY,
-        "font": "Menlo 16 bold"
+        "font": FONT + " bold"
     },
     
     "console_prompt": {
         "foreground": Color.PROMPT,
-        "font": "Menlo 15 bold",
+        "font": FONT + " bold",
         "selectbackground": "red"
     },
 
@@ -188,17 +189,17 @@ DOC_TAGS = {
     },
     
     "underline_heading": {
-        "font": "Lato 18", 
+        "font": "Lato " + FONT_SIZE["medium"], 
         "foreground": Color.BLACK, 
         "underline": "true"
     },
     
     "bold": {
-        "font": "Montserrat 15 bold",
+        "font": "Montserrat " + FONT_SIZE["default"] + " bold",
     },
     
     "menlo_italic": {
-        "font": "Menlo 15 italic",
+        "font": FONT + " italic",
     },
     
     "horizontal_rule": {

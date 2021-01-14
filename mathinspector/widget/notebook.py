@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import tkinter as tk
 from tkinter import ttk
 from style import Color
+from util.config import FONT_SIZE
 
 class Notebook(ttk.Notebook):
 	def __init__(self, *args, has_labels=False, **kwargs):
@@ -65,7 +66,7 @@ class NotebookTab(tk.Frame):
 		tk.Frame.__init__(self, parent.nav, background=Color.BLACK)
 		self.label = tk.Label(self, 
 			text=name, 
-			font="SourceSansPro 12 bold", 
+			font="SourceSansPro " + FONT_SIZE["extra-small"] + " bold", 
 			foreground=Color.WHITE,
 			background=Color.BLACK, 
 			padx=12, 
