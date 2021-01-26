@@ -20,11 +20,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Install
 ---
-Clone this repo and make sure you have Python 3.7.6 and Numpy installed on your machine.  
+Clone this repo and install the dependencies listed in INSTALL.md  
 
-To start math inspector, goto the src directory and run the following command
+To start math inspector, goto the project root directory and run the following command
 
-`$[PROJECT_ROOT]/src/python mathinspector.py`
+`$python mathinspector`
 
 Overview
 ---
@@ -43,8 +43,27 @@ Math Inspector makes it easy to save your project and share it with others, and 
 
 Features
 ---
-In Math Inspector there are three primary ways of interacting with a running program
 
-- Python console
-- Visual block coding workspace 
-- Interactive debugger
+###Python Interpreter
+Math inspector is a traditional python interpreter that has a number of quality of 
+life improvements; such as syntax highlighting, and lots of hotkeys. Before and after each command is executed, the command string is parsed to keep all of the views synchronized.
+
+###Block Coding
+The block coding system in math inspector is capable of representing arbitrary python functions and objects of any kind; it has been designed to make it as easy as possible to experiment and interact with complex programs without the need to write any code.  
+
+###Interactive Plots
+Math inspector's plotting library updates and modernizes the functionality available in matplotlib.  It provides high performance interactive 2D and 3D plots.  Capable of plotting parametric curves, algebraic varieties, fractals, curved surfaces, and much more.
+
+###Animation
+The animation system has been designed to render production quality animations for educational content creators.  A lot of care has been put into optimizing the performance of animations to enable a smooth 60 frames per second while panning and zooming during animations.
+
+###Object Debugger
+Variables in the local namespace are displayed in an interactive side panel, from which you can change the value of objects, function arguments, run methods, view source code, and mucn more.  It's similar to the object debugger in modern web browsers, except for python.
+
+###Doc Browser
+Most modules and classes in python come with a lot of documentation. The doc browser parses these docstrings to automatically produce a beautiful and well organized interface for exploring the documentation.  See a code sample you want to run?  Just click on it and it will be executed by the interpreter.
+
+###Export Projects
+Math inspector was designed to make it as simple as possible to share projects online.
+To share a project on social media, simply upload the project folder to a hosting platform like
+github and share the link with your friends.
