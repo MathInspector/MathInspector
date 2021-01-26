@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import tkinter as tk
 from tkinter import ttk
 from ttkthemes import themed_tk
-import multiprocessing as mp
+# import multiprocessing as mp
 from console import Interpreter
 from node import NodeEditor
 from objects import ObjectTree
@@ -59,5 +59,5 @@ class App(themed_tk.ThemedTk):
 		self.project.load(is_first_load=True)
 
 if __name__ == '__main__':
-	mp.freeze_support() #required for windows
+	# mp.freeze_support() #required for windows
 	App().mainloop()

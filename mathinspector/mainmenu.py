@@ -279,6 +279,8 @@ class MainMenu(Menu):
 
 	def plotconfig(self, key=None, **kwargs):
 		opts = plot.config()
+		if not opts: return # BUG: make sure this works when loading a project
+
 		if key is None:
 			plot.config(**kwargs)
 			if "show_grid" in kwargs:

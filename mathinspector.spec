@@ -52,7 +52,7 @@ app = BUNDLE(coll,
               'NSHighResolutionCapable': 'True',
               'CFBundleDocumentTypes': [
                 {
-                    'CFBundleTypeName': 'Math Inspector',
+                    'CFBundleTypeName': 'MathInspector',
                     'CFBundleTypeIconFile': 'icons_3',
                     'LSItemContentTypes': ['com.math.inspector'],
                     'CFBundleTypeExtensions': ['math'],

@@ -98,6 +98,7 @@ class Interpreter(Text, InteractiveInterpreter):
 		self.prompt = Prompt(self, self.frame)
 		self.parse = CodeParser(app)
 		self.buffer = []
+		self.prevent_module_import = False
 
 		self.bind("<Key>", self._on_key_log)
 		self.bind("<Configure>", self.prompt.on_configure_log)
@@ -122,7 +123,8 @@ class Interpreter(Text, InteractiveInterpreter):
 
 	def setitem(self, key, value):
 		if inspect.ismodule(value):
-			self.app.modules[key] = value
+			if not self.prevent_module_import:
+				self.app.modules[key] = value
 		else:
 			self.app.objects[key] = value
 
@@ -140,12 +142,13 @@ class Interpreter(Text, InteractiveInterpreter):
 		self.synclocals()
 		return eval(source, self.locals)
 
-	def exec(self, source):
+	def exec(self, source, filename="<file>"):
+		self.prevent_module_import = True
 		self.synclocals()
 		self.parse.preprocess(source)
-		exec(source, self.locals)
+		self.runsource(source, filename, "exec")
 		self.parse.postprocess(source)
-		return 
+		self.prevent_module_import = False
 
 	def push(self, s, filename="<input>", log=True, symbol="single"):
 		self.synclocals()

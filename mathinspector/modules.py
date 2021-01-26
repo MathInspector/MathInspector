@@ -167,7 +167,11 @@ class ModuleTree(vdict, Treeview):
 
 			if key in self.watchers:
 				if self.observer:
-					self.observer.unschedule(self.watchers[key])
+					# TODO: use a better system for unscheduling
+					try:
+						self.observer.unschedule(self.watchers[key])
+					except:
+						pass
 				del self.watchers[key]
 		
 		if key in self.store:
@@ -233,9 +237,10 @@ class ModuleTree(vdict, Treeview):
 			prev = self.app.objects.store.copy()
 			source = open(file, "r").read()
 			try:
-				self.app.console.exec(source)
+				self.app.console.exec(source, file)
 			except:
 				print ("TODO - exec failed")
+				return
 
 			new = self.app.objects.store.copy()
 
@@ -244,12 +249,17 @@ class ModuleTree(vdict, Treeview):
 			else:
 				self.locals[name] = { k: new[k] for k in set(new) - set(prev) }
 
-			objects = [i for i in dir(module) if not inspect.ismodule(getattr(module,i))]
+			objects = [i for i in dir(module)]
 			keys = list(self.locals[name].keys())
 			for i in keys:
 				if i not in objects:
 					del self.locals[name][i]
 					del self.app.objects[i]
+
+			# for i in objects:
+			# 	attr = getattr(module, i)
+			# 	if inspect.ismodule(attr):
+			# 		self.setmodule(i, attr, name)
 
 
 	def addfolder(self, dirpath=None, parent="", watch=True, is_rootfolder=False, exec_file=True):

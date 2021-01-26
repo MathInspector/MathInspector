@@ -128,6 +128,8 @@ def get_window(*args, **kwargs):
 	return False
 
 def config(**kwargs):
+	if not pygame.get_init(): return
+	
 	if kwargs:
 		OPTIONS_2D.update(kwargs)
 		OPTIONS_3D.update(kwargs)

@@ -39,7 +39,7 @@ class Item:
         self.name = name
         self.obj = self.app.objects[name]
         self.connection = connection
-        self.argspec = argspec(self.obj, withself=not inspect.isclass(self.obj))
+        self.argspec = argspec(self.obj)#, withself=inspect.isclass(self.obj))
 
         self.args = vdict({}, 
             getitem=lambda key: self.getarg(key, "args"), 
