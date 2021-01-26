@@ -24,7 +24,7 @@ Clone this repo and install the dependencies listed in INSTALL.md
 
 To start math inspector, goto the project root directory and run the following command
 
-`$python mathinspector`
+`python mathinspector`
 
 Overview
 ---
