@@ -24,10 +24,19 @@ BUTTON_RELEASE_RIGHT = '<ButtonRelease-3>' if platform.system() in ("Windows", "
 BUTTON_RIGHT_MOTION = '<B3-Motion>' if platform.system() in ("Windows", "Linux") else '<B2-Motion>'
 CONTROL_KEY = 'Control' if platform.system() in ("Windows", "Linux") else 'Command'
 if platform.system() in ("Windows", "Linux"):
-    BASEPATH = os.path.join(sys._MEIPASS, "Resources") if hasattr(sys, "_MEIPASS") else os.path.abspath(os.path.join(__file__, "../../../assets"))
+    if hasattr(sys, "_MEIPASS"):
+        BASEPATH = os.path.join(sys._MEIPASS, "Resources")
+        AUTOSAVE_PATH = os.path.join(os.path.join(os.getenv('LOCALAPPDATA'), "MathInspector"), "autosave.math")
+    else:
+        BASEPATH = os.path.abspath(os.path.join(__file__, "../../../assets"))
+        AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
+
 else:
     BASEPATH = os.path.join(sys._MEIPASS, "../Resources") if hasattr(sys, "_MEIPASS") else os.path.abspath(os.path.join(__file__, "../../../assets"))
-AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
+    AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
+
+
+
 
 MESSAGE_TIMEOUT = 4000
 
