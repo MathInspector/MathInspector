@@ -90,7 +90,7 @@ class ModuleTree(vdict, Treeview):
 	def setmodule(self, name, module, parent=None, file=None):
 		if not parent:
 			self.store[name] = module
-			parent = self.insert("", 'end', name, 
+			parent = self.insert("", 'end', module.__name__, 
 				text="      " + name, 
 				values=name, 
 				image=getimage(".py"),
@@ -106,7 +106,11 @@ class ModuleTree(vdict, Treeview):
 		constants = []
 		submodules = []
 		for fn in dir(module):
-			attr = getattr(module, fn)
+			try:
+				attr = getattr(module, fn)
+			except:
+				fn = "_" + fn
+				
 			if fn[:1] != "_":
 				if inspect.isclass(attr):
 					classes.append(fn)
@@ -115,7 +119,7 @@ class ModuleTree(vdict, Treeview):
 				elif callable(attr):
 					builtin_fn.append(fn)
 				elif inspect.ismodule(attr):
-					if attr.__name__ not in EXCLUDED_MODULES + BUILTIN_PKGS + INSTALLED_PKGS:
+					if attr.__name__ not in EXCLUDED_MODULES:# + BUILTIN_PKGS + INSTALLED_PKGS:
 						submodules.append((fn, attr))
 				else:
 					constants.append(fn)
@@ -143,8 +147,9 @@ class ModuleTree(vdict, Treeview):
 
 		if submodules:
 			for fn, attr in submodules:
-				folder = self.insert(parent, "end", text="      " + fn, values=attr.__name__, image=getimage(".py"))
-				self.setmodule(attr.__name__, attr, folder)
+				if not self.exists(attr.__name__):
+					folder = self.insert(parent, "end", attr.__name__, text="      " + fn, values=attr.__name__, image=getimage(".py"))
+					self.setmodule(attr.__name__, attr, folder)
 		return False
 
 	def delete(self, key, del_objs=True):

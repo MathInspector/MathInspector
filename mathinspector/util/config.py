@@ -26,7 +26,10 @@ CONTROL_KEY = 'Control' if platform.system() in ("Windows", "Linux") else 'Comma
 if platform.system() in ("Windows", "Linux"):
     if hasattr(sys, "_MEIPASS"):
         BASEPATH = os.path.join(sys._MEIPASS, "Resources")
-        AUTOSAVE_PATH = os.path.join(os.path.join(os.getenv('LOCALAPPDATA'), "MathInspector"), "autosave.math")
+        if platform.system() == "Windows":
+            AUTOSAVE_PATH = os.path.join(os.path.join(os.getenv('LOCALAPPDATA'), "MathInspector"), "autosave.math")
+        else:
+            AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
     else:
         BASEPATH = os.path.abspath(os.path.join(__file__, "../../../assets"))
         AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
@@ -42,6 +45,7 @@ MESSAGE_TIMEOUT = 4000
 
 INSTALLED_PKGS = sorted([str(i).split(" ")[0] for i in pkg_resources.working_set], key=str.casefold)
 BUILTIN_PKGS = sorted([j.name for j in iter_modules()], key=str.casefold)
+
 BUILTIN_CLASS = [i for i in dir(builtins) if inspect.isclass(getattr(builtins, i))]
 BUILTIN_FUNCTION = [i for i in dir(builtins) if callable(getattr(builtins, i)) and i not in BUILTIN_CLASS]
 BUILTIN_CONSTANT = [i for i in dir(builtins) if i not in BUILTIN_FUNCTION and i not in BUILTIN_CLASS]
