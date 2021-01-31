@@ -99,7 +99,7 @@ class Prompt(Text):
 
 		ctrl = (event.state & 0x4) != 0
 		meta = (event.state & 0x8) != 0
-		is_mod = ctrl or meta
+		is_mod = (ctrl or meta) and platform.system() != "Windows"
 		if is_mod:
 			if event.char == "v": 
 				return self._on_paste()
