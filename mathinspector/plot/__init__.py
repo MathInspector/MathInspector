@@ -127,13 +127,11 @@ def get_window(*args, **kwargs):
 			return get_window(*arg)
 	return False
 
-def config(**kwargs):
-	if not pygame.get_init(): return
-	
+def config(**kwargs):	
 	if kwargs:
 		OPTIONS_2D.update(kwargs)
 		OPTIONS_3D.update(kwargs)
-		if active_window:
+		if active_window and pygame.get_init():
 			active_window.config(**kwargs)
 		return
 	

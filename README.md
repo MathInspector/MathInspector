@@ -1,4 +1,5 @@
 # Math Inspector
+*version 0.9.1 (Beta)*
 [https://mathinspector.com/](https://mathinspector.com/)
 
 Math Inspector is a visual programming environment for scientific computing based on numpy & scipy. Appropriate for users of all ages and skill levels.

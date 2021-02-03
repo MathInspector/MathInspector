@@ -72,7 +72,7 @@ class ModuleTree(vdict, Treeview):
 		
 		self.drag = None
 		self.rootfolder = None
-		self.handler = None#FolderHandler(self)
+		self.handler = None
 		self.observer = None
 		self.watchers = {}
 		self.locals = {}
@@ -89,6 +89,8 @@ class ModuleTree(vdict, Treeview):
 
 	def setmodule(self, name, module, parent=None, file=None):
 		if not parent:
+			if self.exists(module.__name__):
+				self.delete(module.__name__)
 			self.store[name] = module
 			parent = self.insert("", 'end', module.__name__, 
 				text="      " + name, 

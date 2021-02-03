@@ -177,7 +177,7 @@ class Item:
         if obj is None:
             if self.is_callable and self.hasargs():
                 try:
-                    return self.obj(*[self.args[i] for i in self.args], **{ k: self.kwargs[k] for k in self.kwargs})
+                    return self.obj(*[self.args[i] for i in self.args], **{ k: self.kwargs[k] for k in self.kwargs if self.kwargs.store[k] is not None })
                 except Exception as err:
                     pass
             return self.obj
@@ -393,6 +393,7 @@ class Item:
 
     def hide_wire(self):
         self.config("wire", state="hidden")
+        self.config("output", fill=Color.EMPTY_NODE)
         self.show_wire = False
 
     def hasargs(self):

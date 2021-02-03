@@ -95,6 +95,10 @@ class NodeEditor(vdict, tk.Canvas):
 			self.tag_bind(j, "<B1-Motion>", lambda event, tag=j:self._on_item_b1_motion(event, tag))
 			self.tag_bind(j, "<ButtonRelease-1>", lambda event, tag=j:self._on_item_button_release_1(event, tag))
 
+		self.output.node.bind("<Button-1>", self._on_output_button_1)
+		self.output.node.bind("<B1-Motion>", self._on_output_b1_motion)
+		self.output.node.bind("<ButtonRelease-1>", self._on_output_button_release_1)
+
 
 	def setitem(self, name, update_value=False, coord=None, is_output_item=False):
 		if name not in self:
@@ -251,6 +255,24 @@ class NodeEditor(vdict, tk.Canvas):
 		item.move_wire(event.x, event.y)
 		self.connect = (item, None, None, None)
 
+	def _on_output_button_1(self, event):
+		if not self.output.items: return
+		self.connect = (self.output.items[0], None, None, True)
+		self.output.disconnect(self.output.items[0])
+
+	def _on_output_b1_motion(self, event):
+		if not self.connect: return
+		item, output, argname, was_in_output = self.connect
+		item.move_wire(
+			self.winfo_pointerx() - self.winfo_rootx(), 
+			self.winfo_pointery() - self.winfo_rooty()
+		)
+	
+	def _on_output_button_release_1(self, event):
+		if not self.connect: return		
+		item, output, argname, was_in_output = self.connect
+		item.hide_wire()
+
 	def _on_item_b1_motion(self, event, tag):
 		if not self.connect: return
 		
@@ -262,7 +284,7 @@ class NodeEditor(vdict, tk.Canvas):
 
 		if was_in_output and not in_items:
 			self.output.hover(True)
-			item.move_wire(self.winfo_width() + 16, self.winfo_height()/2)
+			item.move_wire(event.x, event.y)
 			return
 		elif item in self.output.items and in_items:
 			self.output.disconnect(item)

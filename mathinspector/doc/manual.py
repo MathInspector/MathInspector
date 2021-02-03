@@ -35,7 +35,7 @@ module is imported, the directory of it's contents will appear in the sidebar.
 
 Math inspector comes with numpy and scipy pre-installed, as well as a number of other modules 
 which can be imported in a similar manner.  Any python module on your system can be
-imported as long as it's compatible with python version 3.7.6
+imported as long as it's compatible with python version 3.9.1
 
 The node editor
 ---

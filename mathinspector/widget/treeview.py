@@ -155,8 +155,10 @@ class Treeview(ttk.Treeview):
 				obj = getattr(self[name], attr)
 				key = self.app.objects.setobj(attr, obj, create_new=True, coord=self.app.node.get_pointer())
 				item = self.app.node[key]
-			except:
-				pass
+			except Exception as err:
+				self.app.console.showtraceback(err)
+				return
+				# pass
 		self.drag = item, event.x, event.y
 		
 		if not item:
