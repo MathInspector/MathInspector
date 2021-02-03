@@ -212,6 +212,8 @@ class Item:
         prev = self.args.store[key] if key in self.args["connection"] else self.kwargs.store[key] if key in self.kwargs["connection"] else None
         result = value
         if isinstance(value, Item):
+            if value == self: return False
+
             if key == "<value>":
                 try:
                     result = self.obj.__class__(value.value())

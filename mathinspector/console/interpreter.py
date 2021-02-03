@@ -21,6 +21,7 @@ import numpy as np
 import inspect, sys, traceback, os, re, plot
 from code import InteractiveInterpreter
 from util import vdict, open_editor, BUTTON_RIGHT, BASEPATH, FONT
+from version import VERSION
 from doc import Help
 from style import Color, TAGS
 from types import CodeType
@@ -118,7 +119,7 @@ class Interpreter(Text, InteractiveInterpreter):
 			self.bind("<Configure>", self.prompt.on_configure_log)
 		
 	def do_greet(self):
-		self.write("Math Inspector 0.9.0 (Beta)\nType \"help\", \"copyright\", \"credits\", \"license\" for more information")	
+		self.write("Math Inspector " + VERSION + " (Beta)\nType \"help\", \"copyright\", \"credits\", \"license\" for more information")	
 		self.prompt()
 
 	def setitem(self, key, value):

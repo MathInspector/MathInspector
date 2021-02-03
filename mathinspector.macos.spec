@@ -1,6 +1,7 @@
 # -*- mode: python -*-
 
 import os
+from mathinspector.version import VERSION
 
 block_cipher = None
 
@@ -54,6 +55,7 @@ app = BUNDLE(coll,
                 {
                     'CFBundleTypeName': 'MathInspector',
                     'CFBundleTypeIconFile': 'icons_3',
+                    'CFBundleShortVersionString': VERSION,
                     'LSItemContentTypes': ['com.math.inspector'],
                     'CFBundleTypeExtensions': ['math'],
                     'LSHandlerRank': 'Owner'

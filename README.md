@@ -29,10 +29,10 @@ To start math inspector, goto the project root directory and run the following c
 Overview
 ---
 ### Explore
-When you import a module in Math Inspector, it automatically imports all submodules at the same time and provides a file explorer style interface, enabling anyone to be able to see everything numpy, scipy, and sage are capable of at a glance.
+When you import a module in Math Inspector, it automatically imports all submodules at the same time and provides a file explorer style interface, enabling anyone to be able to see everything numpy & scipy are capable of at a glance.
 
 ### Learn
-Whatever object you are interacting with in Math Inspector, you can always learn more by reading the documentation in the doc viewer, which has been designed to make finding and interacting with the extensive documentation of numpy, scipy, and sage as easily as possible.  See a code example in the doc string you want to run?  Just click on it and see what happens.
+Whatever object you are interacting with in Math Inspector, you can always learn more by reading the documentation in the doc viewer, which has been designed to make finding and interacting with the extensive documentation of numpy & scipy as easily as possible.  See a code example in the doc string you want to run?  Just click on it and see what happens.
 
 ### Play
 The Math Inspector workspace is a visual block coding environment for interacting with all types of objects and functions by connecting wires to widets and adjusting parameter values. See a function in the module explorer that you want to learn more about?  All you have to do is drag and drop it into the workspace.

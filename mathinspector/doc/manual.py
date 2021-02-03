@@ -160,7 +160,7 @@ Let's now create a new variable `y` and assign it the value `f(x)`, using the va
 >>> y
 2
 
-The wires between `x`, `f`, and `y` should now be connected in the node editor, reflecting 
+The wires between `x` and `f` should now be connected in the node editor, reflecting 
 the code we just executed.
 
 Binary Operators
@@ -173,10 +173,8 @@ two new variables `a`,`b` and set them both equal to `1`
 
 >>> c = a + b
 
-When using the assignment operator, if the right hand side of the assignment
-is a binary operator between variables, a new object will appear in the 
-node editor representing the operator.  This will also happen if you use 
-a binary operator in a function call.
+When using a binary operator in a function call, a new object will appear in the 
+node editor representing the operator, and the wires will be connected.
 
 >>> z = f(x+c)
 
