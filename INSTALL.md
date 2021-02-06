@@ -24,7 +24,7 @@ $ pyinstaller mathinspector.linux.spec
 
 or
 
-$ pyinstaller mathinspector.windows.spec
+$ pyinstaller mathinspector.win.spec
 
 ## OpenGL Error on MacOS
 see the solution in this issue if OpenGL is not working on macos https://github.com/PixarAnimationStudios/USD/issues/1372
