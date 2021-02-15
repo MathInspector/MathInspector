@@ -8,6 +8,7 @@ dependencies:
 - cloudpickle
 - numpy
 - pillow
+- setuptools
 - scikit-image
 - scipy
 - watchdog

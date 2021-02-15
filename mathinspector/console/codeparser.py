@@ -19,7 +19,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import ast, util.binop
+import ast
+from ..util import binop
 
 class CodeParser(ast.NodeVisitor):
 	def __init__(self, app):
@@ -84,11 +85,11 @@ class CallVisitor(ast.NodeVisitor):
 				):
 					fn = get_binop(val.op)
 					name = fn + "_" + val.left.id + val.right.id
-					self.app.objects.setobj(name, getattr(util.binop, fn))
-					binop = self.app.node[name]
-					binop.args["a"] = self.app.node[val.left.id]
-					binop.args["b"] = self.app.node[val.right.id]
-					attr[argname] = binop
+					self.app.objects.setobj(name, getattr(binop, fn))
+					_binop = self.app.node[name]
+					_binop.args["a"] = self.app.node[val.left.id]
+					_binop.args["b"] = self.app.node[val.right.id]
+					attr[argname] = _binop
 				elif isinstance(val, ast.Call) and val.func.id in self.app.node:
 					self.visit_Call(val)
 					attr[argname] = self.app.node[val.func.id]
@@ -143,13 +144,13 @@ class AssignVisitor(ast.NodeVisitor):
 			):
 				fn = get_binop(val.op)
 				name = fn + "_" + val.left.id + val.right.id
-				self.app.objects.setobj(name, getattr(util.binop, fn))
-				binop = self.app.node[name]
-				binop.args["a"] = self.app.node[val.left.id]
-				binop.args["b"] = self.app.node[val.right.id]
-				item.args["<value>"] = binop
+				self.app.objects.setobj(name, getattr(binop, fn))
+				_binop = self.app.node[name]
+				_binop.args["a"] = self.app.node[val.left.id]
+				_binop.args["b"] = self.app.node[val.right.id]
+				item.args["<value>"] = _binop
 
 def get_binop(node):
-	for i in dir(util.binop):
+	for i in dir(binop):
 		if isinstance(node, getattr(ast, i)):
 			return i

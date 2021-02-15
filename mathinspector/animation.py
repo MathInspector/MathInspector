@@ -67,8 +67,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import numpy as np
-import plot
-from widget.popup import Popup
+from . import plot
+from .widget.popup import Popup
 
 DELAY = 0.01
 STEP = 0.005

@@ -18,14 +18,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 import numpy as np
-import inspect, sys, traceback, os, re, plot
+import inspect, sys, traceback, os, re
+from .. import plot
 from code import InteractiveInterpreter
-from util import vdict, open_editor, BUTTON_RIGHT, BASEPATH, FONT
-from version import VERSION
-from doc import Help
-from style import Color, TAGS
+from ..util import vdict, open_editor, BUTTON_RIGHT, BASEPATH, FONT
+from ..version import VERSION
+from ..doc import Help
+from ..style import Color, TAGS
 from types import CodeType
-from widget import Text, Menu
+from ..widget import Text, Menu
 from .prompt import Prompt, FONTSIZE
 from .codeparser import CodeParser
 from .builtin_print import builtin_print

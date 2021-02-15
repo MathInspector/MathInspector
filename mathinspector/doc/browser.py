@@ -19,14 +19,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import tkinter as tk
 from tkinter import ttk
 import inspect
-from util.argspec import argspec
-from util.common import classname
-from util.config import BUTTON_RIGHT, EXCLUDED_MODULES, INSTALLED_PKGS, BUILTIN_PKGS
-from console.builtin_print import builtin_print
-from widget import Notebook, Treeview, Button, Menu
+from ..util.argspec import argspec
+from ..util.common import classname
+from ..util.config import BUTTON_RIGHT, EXCLUDED_MODULES, INSTALLED_PKGS, BUILTIN_PKGS
+from ..console.builtin_print import builtin_print
+from ..widget import Notebook, Treeview, Button, Menu
 from .show_textfile import show_textfile
 from .doc import Doc
-from style import Color
+from ..style import Color
 
 class Browser(tk.Toplevel):
 

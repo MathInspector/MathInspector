@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from tkinter import ttk
-from style import Color
+from ..style import Color
 from os.path import basename
 from .menu import Menu
 from .text import Text

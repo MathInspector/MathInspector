@@ -124,7 +124,7 @@ along with this program.  If not, see https://www.gnu.org/licenses/.
 
 """
 
-import console, plot, node, objects, modules, examples, animation, project
+from .. import console, plot, node, objects, modules, examples, animation, project
 
 class GettingStarted:
 	"""To learn about the various features provided by math inspector, lets create

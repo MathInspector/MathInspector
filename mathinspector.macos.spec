@@ -6,7 +6,7 @@ VERSION = "0.9.1"
 block_cipher = None
 
 added_files = [
-  ('assets', 'assets')
+  ('mathinspector/assets', 'assets')
 ]
 
 a = Analysis(['mathinspector/__main__.py'],
@@ -44,7 +44,7 @@ coll = COLLECT(exe,
 
 app = BUNDLE(coll,
             name='mathinspector.app',
-            icon='assets/icons_3.icns',
+            icon='mathinspector/assets/icons_3.icns',
             bundle_identifier='com.math.inspector',
             info_plist={
               'CFBundleName': 'Math Inspector',

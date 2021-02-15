@@ -18,8 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 from tkinter import ttk
-from style import Color
-from util.config import FONT_SIZE
+from ..style import Color
+from ..util.config import FONT_SIZE
 
 class Notebook(ttk.Notebook):
 	def __init__(self, *args, has_labels=False, **kwargs):

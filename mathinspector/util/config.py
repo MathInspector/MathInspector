@@ -15,6 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from pkg_resources import resource_filename
 import inspect, os, platform, sys, pkg_resources, builtins, keyword, math
 from sys import builtin_module_names
 from pkgutil import iter_modules
@@ -31,11 +32,11 @@ if platform.system() in ("Windows", "Linux"):
         else:
             AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
     else:
-        BASEPATH = os.path.abspath(os.path.join(__file__, "../../../assets"))
+        BASEPATH = resource_filename("mathinspector", "assets")
         AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
 
 else:
-    BASEPATH = os.path.join(sys._MEIPASS, "../Resources") if hasattr(sys, "_MEIPASS") else os.path.abspath(os.path.join(__file__, "../../../assets"))
+    BASEPATH = os.path.join(sys._MEIPASS, "../Resources") if hasattr(sys, "_MEIPASS") else resource_filename("mathinspector", "assets")
     AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
 
 
