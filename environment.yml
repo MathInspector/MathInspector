@@ -3,7 +3,6 @@ channels:
 - conda-forge
 - defaults
 dependencies:
-- PyInstaller
 - PyOpenGL
 - cloudpickle
 - numpy
@@ -13,10 +12,7 @@ dependencies:
 - scipy
 - watchdog
 - pip:
-  - PyOpenGL_accelerate
-  - pygame
-  - pyglm
-  - ttkthemes
+  - .
 # base
 - python<3.9
 - pip
