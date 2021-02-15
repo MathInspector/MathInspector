@@ -21,11 +21,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Install
 ---
-Clone this repo and install the dependencies listed in INSTALL.md
+`python -m pip install mathinspector`
 
-To start math inspector, goto the project root directory and run the following command
+To start math inspector, run the following command
 
-`python mathinspector`
+`mathinspector`
+
+or
+
+`python -m mathinspector`
 
 Overview
 ---
