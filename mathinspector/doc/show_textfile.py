@@ -32,7 +32,7 @@ def show_textfile(text, content):
 
     for i in parse:
         text.insert("end", i.text, i.tag)
-    
+
         if i.tag in ("", "section_title"):
             text.insert("end", " \n")
             if i.tag == "section_title":
@@ -83,7 +83,7 @@ class TextParser:
                     if match:
                         tag = i
                         if i in ("code", "link_url"):
-                            if i == "code": 
+                            if i == "code":
                                 endline = text.index("`")
                                 self.buffer.append((match[0], i, 1 + len(match[0])))
                                 self.index += 1 + endline
@@ -110,7 +110,7 @@ class TextParser:
                 elif endline == -1:
                     result += text
                     self.index = len(self.content)
-                else:               
+                else:
                     result += text[:endline]
                     if not tag:
                         result += " "
@@ -121,7 +121,7 @@ class TextParser:
 
             return TextNode(result, tag)
         else:
-            raise StopIteration     
+            raise StopIteration
 
 
 class TextNode:

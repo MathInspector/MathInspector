@@ -33,7 +33,7 @@ class History:
 			self.i = 0
 			builtin_print("\a")
 			return
-		
+
 		self.prompt.delete("1.5", "end")
 		if self.i > len(self.cmds):
 			self.i = len(self.cmds)

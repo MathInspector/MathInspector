@@ -47,7 +47,7 @@ class AutoComplete():
 		if not choices:
 			builtin_print("\a")
 			return
-			
+
 		result = []
 		for j in choices:
 			word = content[7:] if is_import else query[0] if len(query) == 1 else query[1]
@@ -57,15 +57,15 @@ class AutoComplete():
 		if not result:
 			builtin_print("\a")
 			return
-	
+
 		common = findcommonstart(result)
-	
+
 		if len(result) == 1:
 			self.prompt.insert("end", result[0][len(word):])
 			self.tabcount = 0
 		elif word[:len(common)] != common:
 			self.prompt.insert("end", common[len(word):])
-		elif self.tabcount > 0:			
+		elif self.tabcount > 0:
 			self.console.write("\n" + "        ".join(result) + "\n\n")
 			self.prompt.move()
 			self.tabcount = 0
@@ -86,4 +86,4 @@ def findcommonstart(strlist):
         strlist.append(common)
         prev = common
 
-    return getcommonletters(strlist)    
+    return getcommonletters(strlist)

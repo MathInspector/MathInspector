@@ -25,25 +25,25 @@ class Notebook(ttk.Notebook):
 	def __init__(self, *args, has_labels=False, **kwargs):
 		self.frame = tk.Frame(*args, background=Color.BLACK, highlightthickness=4, highlightbackground=Color.BLACK, **kwargs)
 		ttk.Notebook.__init__(self, self.frame)
-		
+
 		self._tabs = {}
 		self.has_labels = has_labels
 
-		if has_labels:	
+		if has_labels:
 			self.nav = tk.Frame(self.frame, background=Color.BLACK, height=32)
 			self.nav.pack(fill='x', expand=False)
 
 		self.pack(fill='both', expand=True)
 		self.bind('<<NotebookTabChanged>>', self._on_changetab)
 
-	def add(self, name, widget, **kwargs):		
+	def add(self, name, widget, **kwargs):
 		super(Notebook, self).add(widget, **kwargs)
 		tab_id = super(Notebook, self).tabs()[-1]
 		if self.has_labels:
 			tab = NotebookTab(self, name)
 			self._tabs[tab_id] = tab
 			tab.label.bind("<Button-1>", lambda event: self.select(tab_id))
-				
+
 		return tab_id
 
 	def _on_changetab(self, event):
@@ -58,25 +58,25 @@ class Notebook(ttk.Notebook):
 				if i == tab_id:
 					self.select(i)
 				elif i in self._tabs:
-					self._tabs[i].unselect()	
+					self._tabs[i].unselect()
 
 class NotebookTab(tk.Frame):
 	def __init__(self, parent, name):
 
 		tk.Frame.__init__(self, parent.nav, background=Color.BLACK)
-		self.label = tk.Label(self, 
-			text=name, 
-			font="SourceSansPro " + FONT_SIZE["extra-small"] + " bold", 
+		self.label = tk.Label(self,
+			text=name,
+			font="SourceSansPro " + FONT_SIZE["extra-small"] + " bold",
 			foreground=Color.WHITE,
-			background=Color.BLACK, 
-			padx=12, 
+			background=Color.BLACK,
+			padx=12,
 			pady=8
 		)
 
 		self.parent = parent
 		self.name = name
 		self.is_selected = False
-			
+
 		self.label.pack(side="left", fill="both", expand=True)
 		self.pack(fill="x", expand=True, side="left")
 
@@ -94,7 +94,7 @@ class NotebookTab(tk.Frame):
 	def _on_enter(self, event):
 		if not self.is_selected:
 			self.label.config(background=Color.VERY_DARK_GREY)
-	
+
 	def _on_leave(self, event):
 		if not self.is_selected:
 			self.label.config(background=Color.BLACK)

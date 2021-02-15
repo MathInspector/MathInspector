@@ -53,7 +53,7 @@ class Doc(tk.Frame):
 			self.nav.pack(side="top", fill="x")
 
 		self.text.pack(side="bottom", fill="both", expand=True)
-		
+
 		self.paned_window.add(frame)
 		self.paned_window.pack(side="left", fill="both", expand=True)
 
@@ -71,20 +71,20 @@ class Doc(tk.Frame):
 
 		self.tree.bind(BUTTON_RIGHT, self._on_button_right)
 
-		self.tree.tag_bind("submodule", "<ButtonRelease-1>", self._on_button_release_1)		
-		self.tree.tag_bind("class", "<ButtonRelease-1>", self._on_button_release_1)		
+		self.tree.tag_bind("submodule", "<ButtonRelease-1>", self._on_button_release_1)
+		self.tree.tag_bind("class", "<ButtonRelease-1>", self._on_button_release_1)
 		self.tree.bind("<<TreeviewSelect>>", self._on_select)
 
 		for i in ("link_url", "doc_link", "code_sample", "submodule"):
 			self.text.tag_bind(i, "<Motion>", lambda event, key=i: self.text._motion(event, key))
 			self.text.tag_bind(i, "<Leave>", lambda event, key=i: self.text._leave(event, key))
-			self.text.tag_bind(i, "<Button-1>", lambda event, key=i: self._click(event, key))    
-		
+			self.text.tag_bind(i, "<Button-1>", lambda event, key=i: self._click(event, key))
+
 		for i in ("root", "module_nav"):
 			self.nav.tag_bind(i, "<Motion>", lambda event, key=i: self.nav._motion(event, key))
 			self.nav.tag_bind(i, "<Leave>", lambda event, key=i: self.nav._leave(event, key))
-			self.nav.tag_bind(i, "<Button-1>", lambda event, key=i: self._click_nav(event, key))    
-				
+			self.nav.tag_bind(i, "<Button-1>", lambda event, key=i: self._click_nav(event, key))
+
 		for i in DOC_TAGS:
 			self.nav.tag_configure(i, **DOC_TAGS[i])
 			self.text.tag_configure(i, **DOC_TAGS[i])
@@ -92,7 +92,7 @@ class Doc(tk.Frame):
 		self.objects = []
 		if obj:
 			self.show(obj)
-		
+
 	def show(self, obj, clear_nav=True, display_only=False):
 		self.obj = obj
 
@@ -136,8 +136,8 @@ class Doc(tk.Frame):
 			else:
 				pass
 
-		if self.classes:			
-			classes = self.tree.insert("", "end", text="classes", open=True)		
+		if self.classes:
+			classes = self.tree.insert("", "end", text="classes", open=True)
 			for k in self.classes:
 				temp = self.tree.insert(classes, "end", k, text=k, tags="class")
 
@@ -150,14 +150,14 @@ class Doc(tk.Frame):
 				self.tree.insert(parent, "end", j, text=j)
 
 		if self.functions:
-			functions = self.tree.insert("", "end", text="functions", open=True)		
+			functions = self.tree.insert("", "end", text="functions", open=True)
 			for j in self.functions:
 				self.tree.insert(functions, "end", j, text=j, open=True)
 
-		if self.submodules:			
+		if self.submodules:
 			for i in self.submodules:
 				self.tree.insert("", "end", i, image=getimage(".py"), text="      " + i, tags="submodule")
-		
+
 		if self.has_sidebar:
 			if not self.builtins and not self.functions and not self.classes and not self.submodules:
 				if self.paned_window.winfo_width() > 1:
@@ -196,7 +196,7 @@ class Doc(tk.Frame):
 
 	def getname(self, obj):
 		return self.title if self.title else obj.__name__ if hasattr(obj, "__name__") else obj.__class__.__name__
-	
+
 	def clear(self):
 		self.text.delete("1.0", "end")
 
@@ -224,7 +224,7 @@ class Doc(tk.Frame):
 	def _on_button_release_1(self, event):
 		key = self.tree.selection()[0]
 		self.show(getattr(self.obj, key), clear_nav=False)
-	
+
 	def _on_button_right(self, event):
 		name = self.tree.identify_row(event.y)
 		obj = getattr(self.obj, name)
@@ -233,7 +233,7 @@ class Doc(tk.Frame):
 			file = inspect.getsourcefile(obj)
 		except:
 			file = None
-		
+
 		if file:
 			self.menu.show(event, [{
 				"label": "View Source Code",
@@ -263,8 +263,8 @@ class Doc(tk.Frame):
 				if i[:10] == "nav_count=":
 					nav_count = int(i[10:])
 					break
-			if nav_count is None: return			
-			
+			if nav_count is None: return
+
 			self.nav.delete(self.nav.hover_range[1], "end")
 			self.show(self.objects[nav_count], display_only=True)
 

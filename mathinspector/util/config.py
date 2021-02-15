@@ -113,7 +113,7 @@ EXCLUDED_DIR = [
     "__pycache__",
     ".git"
 ]
-    
+
 EXCLUDED_FILES = [
     ".DS_Store",
     "__pycache__",

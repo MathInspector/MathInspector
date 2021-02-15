@@ -60,6 +60,6 @@ app = BUNDLE(coll,
                     'CFBundleTypeExtensions': ['math'],
                     'LSHandlerRank': 'Owner'
                     }
-                ]                                
+                ]
             }
 )

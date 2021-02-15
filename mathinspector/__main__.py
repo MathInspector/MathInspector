@@ -32,13 +32,13 @@ from widget import Notebook
 class App(themed_tk.ThemedTk):
 	def __init__(self):
 		themed_tk.ThemedTk.__init__(self)
-		self.set_theme("arc")		
-		ttk.Style(self)	
+		self.set_theme("arc")
+		ttk.Style(self)
 
 		self.horizontal_panel = ttk.PanedWindow(self, orient="horizontal")
-		self.vertical_panel = ttk.PanedWindow(self, orient="vertical")		
+		self.vertical_panel = ttk.PanedWindow(self, orient="vertical")
 		self.side_view = Notebook(self, has_labels=True)
-		
+
 		self.node = NodeEditor(self)
 		self.console = Interpreter(self)
 		self.modules = ModuleTree(self)
@@ -51,9 +51,9 @@ class App(themed_tk.ThemedTk):
 		self.horizontal_panel.add(self.side_view.frame)
 		self.horizontal_panel.add(self.vertical_panel)
 		self.horizontal_panel.pack(side="left", fill="both", expand=True)
-		
+
 		self.animate = Animation(self)
-		self.project = SaveData(self)						
+		self.project = SaveData(self)
 		self.menu = MainMenu(self)
 		self.config(menu=self.menu)
 		self.project.load(is_first_load=True)

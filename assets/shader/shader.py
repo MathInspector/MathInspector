@@ -11,9 +11,9 @@ class Shader:
 		vert = shaders.compileShader(self.vert_shader, GL_VERTEX_SHADER)
 		frag = shaders.compileShader(self.frag_shader, GL_FRAGMENT_SHADER)
 		self.program = shaders.compileProgram(vert, frag)
-		
+
 		uniform = uniform if isinstance(uniform, tuple) else (uniform,)
 		self.uniform = { i: glGetUniformLocation(self.program, i) for i in uniform }
 
 	def __getitem__(self, key):
-		return self.uniform[key]	
+		return self.uniform[key]

@@ -23,13 +23,13 @@ TAGS = {
     "red": {
         "foreground": Color.RED
     },
-    
+
     "blue": {
         "foreground": Color.BLUE
     },
 
     "blue_italic": {
-        "foreground": Color.BLUE, 
+        "foreground": Color.BLUE,
         "font": FONT + " italic"
     },
 
@@ -38,7 +38,7 @@ TAGS = {
     },
 
     "underline": {
-        "font": FONT + " italic", 
+        "font": FONT + " italic",
         "underline": True
     },
 
@@ -62,7 +62,7 @@ TAGS = {
     },
 
     "orange_italic": {
-        "foreground": Color.ORANGE, 
+        "foreground": Color.ORANGE,
         "font": FONT + " italic"
     },
 
@@ -95,7 +95,7 @@ TREE_TAGS = {
     "grey": {
         "foreground": Color.GREY
     },
-    
+
     "purple": {
         "foreground": Color.PURPLE
     },

@@ -24,7 +24,7 @@ def argspec(obj, withself=True):
     """
     tries to return inspect.getargspec, as a backup tries to parse the FunctionDoc
     """
-    if not callable(obj): 
+    if not callable(obj):
         return [], {}
 
     if isinstance(obj, dict):
@@ -51,7 +51,7 @@ def argspec(obj, withself=True):
             if fullargspec[5] and len(fullargspec[5]) > 0:
                 for name in fullargspec[5]:
                     kwargs[name] = fullargspec[5][name]
-        
+
             return args, kwargs
 
     if doc is not None:
@@ -60,7 +60,7 @@ def argspec(obj, withself=True):
         params = RE_FN.findall(signature)
         if len(params) == 0:
             return False
-        items = [i.lstrip() for i in params[0].split(",")]  
+        items = [i.lstrip() for i in params[0].split(",")]
 
         args = [i for i in items if "=" not in i]
         kwargs = {}

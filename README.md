@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Install
 ---
-Clone this repo and install the dependencies listed in INSTALL.md  
+Clone this repo and install the dependencies listed in INSTALL.md
 
 To start math inspector, goto the project root directory and run the following command
 
@@ -46,11 +46,11 @@ Features
 ---
 
 ### Python Interpreter
-Math inspector is a traditional python interpreter that has a number of quality of 
+Math inspector is a traditional python interpreter that has a number of quality of
 life improvements; such as syntax highlighting, and lots of hotkeys. Before and after each command is executed, the command string is parsed to keep all of the views synchronized.
 
 ### Block Coding
-The block coding system in math inspector is capable of representing arbitrary python functions and objects of any kind; it has been designed to make it as easy as possible to experiment and interact with complex programs without the need to write any code.  
+The block coding system in math inspector is capable of representing arbitrary python functions and objects of any kind; it has been designed to make it as easy as possible to experiment and interact with complex programs without the need to write any code.
 
 ### Interactive Plots
 Math inspector's plotting library updates and modernizes the functionality available in matplotlib.  It provides high performance interactive 2D and 3D plots.  Capable of plotting parametric curves, algebraic varieties, fractals, curved surfaces, and much more.
