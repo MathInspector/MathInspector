@@ -19,10 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import os, sys
 from PIL import ImageTk, Image
-from pkg_resources import resource_filename
 from ..util.config import BASEPATH
 
-ASSET_PATH = resource_filename("mathinspector", "assets/img")
+ASSET_PATH = os.path.join(BASEPATH, "img")
 
 IMAGE = {
 	".py": "pythonlogo-color.png",

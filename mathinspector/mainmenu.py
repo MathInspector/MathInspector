@@ -18,7 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import numpy as np
 import scipy, math, builtins, os, sys
 from functools import partial
-from pkg_resources import resource_filename
 from tkinter import filedialog
 
 from . import plot, doc, examples
@@ -191,7 +190,7 @@ class MainMenu(Menu):
 		self.has_hidden_panel = False
 
 		if hasattr(sys, "_MEIPASS"):
-			app.createcommand('tkAboutDialog', lambda: help(resource_filename("mathinspector", "assets/ABOUT.md"), "About Math Inspector"))
+			app.createcommand('tkAboutDialog', lambda: help(os.path.join(BASEPATH, "ABOUT.md"), "About Math Inspector"))
 
 		app.side_view.bind("<Configure>", self.on_config_sidebar)
 		app.node.output.bind("<Configure>", self.on_config_vertical_panel)

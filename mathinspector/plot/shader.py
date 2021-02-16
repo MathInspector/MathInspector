@@ -17,12 +17,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import sys
 from os import path
-from pkg_resources import resource_filename
 from ..util.config import BASEPATH
 from OpenGL.GL import GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, glGetUniformLocation
 from OpenGL.GL import shaders
 
-SHADER_DIR = resource_filename("mathinspector", "assets/shader")
+SHADER_DIR = path.join(BASEPATH, "shader")
 
 class Shader:
 	def __init__(self, vert_path, frag_path, uniform=()):
