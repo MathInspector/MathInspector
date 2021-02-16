@@ -16,20 +16,24 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import tkinter as tk
-import numpy as np
 import inspect, sys, traceback, os, re
-from .. import plot
+import numpy as np
+import tkinter as tk
 from code import InteractiveInterpreter
-from ..util import vdict, open_editor, BUTTON_RIGHT, BASEPATH, FONT
-from ..version import VERSION
+from types import CodeType
+
+from .. import plot
 from ..doc import Help
 from ..style import Color, TAGS
-from types import CodeType
+from ..util import vdict, open_editor, BUTTON_RIGHT, BASEPATH, FONT
 from ..widget import Text, Menu
-from .prompt import Prompt, FONTSIZE
-from .codeparser import CodeParser
 from .builtin_print import builtin_print
+from .codeparser import CodeParser
+from .prompt import Prompt, FONTSIZE
+try:
+	from ..version import VERSION
+except ImportError:
+	VERSION = "UNKNOWN"
 
 RE_TRACEBACK = r"^()(Traceback \(most recent call last\))"
 RE_FILEPATH = r"(File (\"(?!<).*\"))"
