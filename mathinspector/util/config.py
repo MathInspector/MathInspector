@@ -28,11 +28,11 @@ CONTROL_KEY = 'Control' if SYSTEM in ("Windows", "Linux") else 'Command'
 if hasattr(sys, "_MEIPASS"):
     BASEPATH = os.path.join(
         sys._MEIPASS,
-        "Resources/assets" if SYSTEM in ("Windows", "Linux") else "../Resources/assets")
+        "assets" if SYSTEM in ("Windows", "Linux") else "../assets")
     if SYSTEM == "Windows":
         AUTOSAVE_PATH = os.path.join(os.path.join(os.getenv('LOCALAPPDATA'), "MathInspector"), "autosave.math")
     else:
-        AUTOSAVE_PATH = os.path.join(BASEPATH, "..", "autosave.math")
+        AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
 else:
     BASEPATH = resource_filename("mathinspector", "assets")
     AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
