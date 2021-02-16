@@ -6,14 +6,12 @@ try:
     from mathinspector.verison import VERSION
 except ImportError:
     VERSION = "UNKNOWN"
-added_files = [
-  ('../mathinspector/assets', 'assets')
-]
 
 a = Analysis(['../mathinspector/_run.py'],
              pathex=[os.path.abspath('..')],
              binaries=[],
-             hiddenimports=['pywt._extensions._cwt'],
+             datas=[('../mathinspector/assets', 'assets')],
+             hiddenimports=['pywt._extensions._cwt', 'tcl8'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -33,7 +31,7 @@ exe = EXE(pyz,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=True )
+          console=True)
 
 coll = COLLECT(exe,
                a.binaries,
