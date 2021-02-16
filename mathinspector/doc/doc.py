@@ -209,7 +209,10 @@ class Doc(tk.Frame):
 			self.tree.delete(i)
 
 	def _on_select(self, event):
-		key = self.tree.selection()[0]
+		try:
+			key = self.tree.selection()[0]
+		except IndexError:
+			return
 		if not hasattr(self.obj, key): return
 
 		obj = getattr(self.obj, key)
