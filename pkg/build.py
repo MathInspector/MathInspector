@@ -1,3 +1,8 @@
+"""
+Usage:
+    MathInspector/pkg$ python -m pip install ../ PyInstaller
+    MathInspector/pkg$ python build.py
+"""
 import shutil
 from PyInstaller.__main__ import run as pyinstaller
 from platform import system
