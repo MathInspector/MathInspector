@@ -1,2 +1,2 @@
-from mathinspector import main
+from mathinspector.app import main
 main()
