@@ -22,7 +22,7 @@ the documentation for your own projects.
 One of the most interesting animations is the power function applied
 to a set of gridlines in the complex plane.  Check it out!
 
->>> from examples import complex_grid
+>>> from mathinspector.examples import complex_grid
 >>> from numpy import power
 >>> t=1
 >>> plot(power(complex_grid(), t))

@@ -29,7 +29,7 @@ will be plotted as distinct lines.
 
 An example of a function which draws multiple lines is complex grid
 
->>> from examples import complex_grid
+>>> from mathinspector.examples import complex_grid
 >>> plot(complex_grid())
 
 Lists of lists of 3-tuples are plotted as solid surfaces, but
@@ -42,7 +42,7 @@ by using the pixelmap key word argument.
 
 An example of a pixelmap function is the Domain Coloring function
 
->>> from examples import domain_coloring
+>>> from mathinspector.examples import domain_coloring
 >>> plot(pixelmap=domain_coloring)
 
 Animating pixelmaps is very computationally expensive, and the
