@@ -18,13 +18,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 import numpy as np
-import inspect, plot, platform
-from util import fontcolor, instanceof, classname, argspec, numargs, open_editor, vdict, instanceof
-from util.config import BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, BUTTON_RIGHT_MOTION, HITBOX, ZOOM_IN, ZOOM_OUT, FONTSIZE, FONT_SIZE
-from style import Color, getimage
+import inspect, platform
+from .. import plot
+from ..util import fontcolor, instanceof, classname, argspec, numargs, open_editor, vdict, instanceof
+from ..util.config import BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, BUTTON_RIGHT_MOTION, HITBOX, ZOOM_IN, ZOOM_OUT, FONTSIZE, FONT_SIZE
+from ..style import Color, getimage
 from .output import Output
 from .item import Item
-from widget import Popup, Menu, Text
+from ..widget import Popup, Menu, Text
 
 class NodeEditor(vdict, tk.Canvas):
 	def __init__(self, app):

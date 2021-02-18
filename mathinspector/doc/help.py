@@ -24,10 +24,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import builtins
-from util.config import INSTALLED_PKGS, BUILTIN_PKGS, BUILTIN_CLASS
-from util.common import name_ext
+from ..util.config import INSTALLED_PKGS, BUILTIN_PKGS, BUILTIN_CLASS
+from ..util.common import name_ext
 from os import path
-from console.builtin_print import builtin_print
+from ..console.builtin_print import builtin_print
 from .browser import Browser
 from . import manual
 

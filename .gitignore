@@ -10,6 +10,7 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+mathinspector/version.py
 .Python
 build/
 develop-eggs/

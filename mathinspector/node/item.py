@@ -16,11 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import inspect, traceback, plot
-from style import Color
-from util import vdict
-from util import classname, fontcolor, argspec
-from util.config import ITEM_FONTSIZE as FONTSIZE
+import inspect, traceback
+from .. import plot
+from ..style import Color
+from ..util import vdict
+from ..util import classname, fontcolor, argspec
+from ..util.config import ITEM_FONTSIZE as FONTSIZE
 from .entry import Entry
 from textwrap import fill
 from pprint import pformat

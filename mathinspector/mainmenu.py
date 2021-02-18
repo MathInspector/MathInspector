@@ -16,15 +16,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import numpy as np
-import plot, __main__, scipy, math, builtins, os, sys, doc, examples, util.binop
-from widget import Popup, Menu
-from style import Color
-from tkinter import filedialog
-from util import BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
-from util.common import open_editor
-from util.config import CONTROL_KEY, BASEPATH, BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
-from console import builtin_print
+import scipy, math, builtins, os, sys
 from functools import partial
+from tkinter import filedialog
+
+from . import plot, doc, examples
+from .util import binop
+from .widget import Popup, Menu
+from .style import Color
+from .util import BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
+from .util.common import open_editor
+from .util.config import CONTROL_KEY, BASEPATH, BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
+from .console import builtin_print
 
 TRIG_FUNCTIONS = [i for i in ("acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "cos", "cosh", "degrees", "sin", "sinh", "tan", "tanh")]
 MATH_FUNCTIONS = [i for i in dir(math) if callable(getattr(math, i)) and i not in TRIG_FUNCTIONS + ["pow"] and i[:1] != "_"]
@@ -53,8 +56,8 @@ class MainMenu(Menu):
 			"label": "Operator",
 			"menu": [{
 				"label": i,
-				"command": lambda key=i: self.create_object(key, util.binop)
-			} for i in dir(util.binop) if i[0] != "_"]
+				"command": lambda key=i: self.create_object(key, binop)
+			} for i in dir(binop) if i[0] != "_"]
 		},{
 			"label": "Math",
 			"menu": [{
@@ -187,7 +190,7 @@ class MainMenu(Menu):
 		self.has_hidden_panel = False
 
 		if hasattr(sys, "_MEIPASS"):
-			app.createcommand('tkAboutDialog', lambda: help(os.path.join(BASEPATH, "assets/ABOUT.md"), "About Math Inspector"))
+			app.createcommand('tkAboutDialog', lambda: help(os.path.join(BASEPATH, "ABOUT.md"), "About Math Inspector"))
 
 		app.side_view.bind("<Configure>", self.on_config_sidebar)
 		app.node.output.bind("<Configure>", self.on_config_vertical_panel)

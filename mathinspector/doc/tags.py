@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from style import Color
-from util.config import FONT, FONT_SIZE
+from ..style import Color
+from ..util.config import FONT, FONT_SIZE
 
 DOC_TAGS = {
     "name": {

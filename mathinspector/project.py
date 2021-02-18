@@ -52,9 +52,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import pickle, os, atexit, shutil, traceback, cloudpickle, plot
+import pickle, os, atexit, shutil, traceback, cloudpickle
+from . import plot
 from tkinter import messagebox, filedialog
-from util import name_ext, AUTOSAVE_PATH
+from .util import name_ext, AUTOSAVE_PATH
 from importlib import import_module
 
 class SaveData:
