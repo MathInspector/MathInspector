@@ -19,7 +19,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import ast, util.binop
+import ast
+from ..util import binop
 
 class CodeParser(ast.NodeVisitor):
 	def __init__(self, app):
@@ -27,28 +28,28 @@ class CodeParser(ast.NodeVisitor):
 		self.app = app
 		self.call_visitor = CallVisitor(app)
 		self.assign_visitor = AssignVisitor(app)
-	
+
 	def preprocess(self, source):
 		try:
 			tree = ast.parse(source)
 		except:
 			return
-		
+
 		self.call_visitor.visit(tree)
 		return tree
-		
+
 	def postprocess(self, source):
 		try:
 			tree = ast.parse(source)
 		except:
 			return
-		
+
 		## NOTE: the reason for removing the assign visitor is to ensure the math inspector interpreter
 		##			always exec's all sequences of command strings, and produces the same output,
 		##			exactly as would occur when using the python command line interpreter
 		# self.assign_visitor.visit(tree)  ## TODO - add this as a toggle option in the main menu, default is turned off
 		return tree
-		
+
 class CallVisitor(ast.NodeVisitor):
 	def __init__(self, app):
 		ast.NodeVisitor.__init__(self)
@@ -68,7 +69,7 @@ class CallVisitor(ast.NodeVisitor):
 						item.opts["show_kwargs"] = True
 					else:
 						return
-					
+
 				if isinstance(val, ast.Name):
 					if val.id in self.app.node:
 						attr[argname] = self.app.node[val.id]
@@ -76,19 +77,19 @@ class CallVisitor(ast.NodeVisitor):
 					attr[argname] = val.n
 				elif isinstance(val, ast.Str):
 					attr[argname] = val.s
-				elif (isinstance(val, ast.BinOp) 
-					and isinstance(val.left, ast.Name) 
+				elif (isinstance(val, ast.BinOp)
+					and isinstance(val.left, ast.Name)
 					and isinstance(val.right, ast.Name)
 					and val.left.id in self.app.node
 					and val.right.id in self.app.node
 				):
 					fn = get_binop(val.op)
 					name = fn + "_" + val.left.id + val.right.id
-					self.app.objects.setobj(name, getattr(util.binop, fn))
-					binop = self.app.node[name]
-					binop.args["a"] = self.app.node[val.left.id]
-					binop.args["b"] = self.app.node[val.right.id]
-					attr[argname] = binop
+					self.app.objects.setobj(name, getattr(binop, fn))
+					_binop = self.app.node[name]
+					_binop.args["a"] = self.app.node[val.left.id]
+					_binop.args["b"] = self.app.node[val.right.id]
+					attr[argname] = _binop
 				elif isinstance(val, ast.Call) and val.func.id in self.app.node:
 					self.visit_Call(val)
 					attr[argname] = self.app.node[val.func.id]
@@ -135,21 +136,21 @@ class AssignVisitor(ast.NodeVisitor):
 							item.args["<value>"] = self.app.node[val.func.id]
 						else:
 							self.app.objects[val.func.id] = item.value()
-			elif (isinstance(val, ast.BinOp) 
-				and isinstance(val.left, ast.Name) 
+			elif (isinstance(val, ast.BinOp)
+				and isinstance(val.left, ast.Name)
 				and isinstance(val.right, ast.Name)
 				and val.left.id in self.app.node
 				and val.right.id in self.app.node
 			):
 				fn = get_binop(val.op)
 				name = fn + "_" + val.left.id + val.right.id
-				self.app.objects.setobj(name, getattr(util.binop, fn))
-				binop = self.app.node[name]
-				binop.args["a"] = self.app.node[val.left.id]
-				binop.args["b"] = self.app.node[val.right.id]
-				item.args["<value>"] = binop
+				self.app.objects.setobj(name, getattr(binop, fn))
+				_binop = self.app.node[name]
+				_binop.args["a"] = self.app.node[val.left.id]
+				_binop.args["b"] = self.app.node[val.right.id]
+				item.args["<value>"] = _binop
 
 def get_binop(node):
-	for i in dir(util.binop):
+	for i in dir(binop):
 		if isinstance(node, getattr(ast, i)):
 			return i

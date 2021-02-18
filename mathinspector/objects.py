@@ -1,17 +1,17 @@
 """
 The objects which are currently in the local namespace are displayed in the left hand sidebar
-of the main window, in the "Objects" tab.  The Objects tab is a traditional object 
-debugger, which you might be familiar with from web inspector and related 
-development tools in modern web browsers.  
+of the main window, in the "Objects" tab.  The Objects tab is a traditional object
+debugger, which you might be familiar with from web inspector and related
+development tools in modern web browsers.
 
-From this tab, you can change the values of objects, or the value of arguments 
-and key word arguments to any function, simply by clicking on the relevant item 
+From this tab, you can change the values of objects, or the value of arguments
+and key word arguments to any function, simply by clicking on the relevant item
 and typing in a new value.
 
 A list of an object's methods are contained in the methods folder.  To run
 a method, either double click on it, or right click and choose "Run Method"
 from the options menu.  If the method doesn't have any arguments, it will
-be run, otherwise the method dialog will appear. It's also possible to drag 
+be run, otherwise the method dialog will appear. It's also possible to drag
 methods directly into the node editor from the Objects tab.
 
 To directly access the global object which stores the names and values
@@ -38,11 +38,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import doc, inspect
-from util import vdict
-from widget import Treeview, TreeEntry
-from util import Color, argspec, classname, fontcolor, open_editor, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT
-from style import TREE_TAGS
+import inspect
+from . import doc
+from .util import vdict, Color, argspec, classname, fontcolor, open_editor, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT
+from .style import TREE_TAGS
+from .widget import Treeview, TreeEntry
 
 class ObjectTree(vdict, Treeview):
 	"""
@@ -51,7 +51,7 @@ class ObjectTree(vdict, Treeview):
 	A vdict is like a normal python dictionary, except it has callbacks for things like setting and
 	deleting items.
 
-	A vdict stores its values in an ordered dictionary attribute named "store".  
+	A vdict stores its values in an ordered dictionary attribute named "store".
 	To display the current contents of the Object Tree, use the command
 
 	>>> app.objects.store
@@ -61,7 +61,7 @@ class ObjectTree(vdict, Treeview):
 
 	>>> x=1
 
-	which is equivilent to 
+	which is equivilent to
 
 	>>> app.objects["x"] = 1
 
@@ -70,7 +70,7 @@ class ObjectTree(vdict, Treeview):
 
 	>>> app.objects.setobj("x", 1)
 
-	See the documentation for `setobj` for more information 
+	See the documentation for `setobj` for more information
 	about the available keyword arguments
 	"""
 	def __init__(self, app, *args, **kwargs):
@@ -81,18 +81,18 @@ class ObjectTree(vdict, Treeview):
 		self.entry = TreeEntry(self)
 
 		for i in TREE_TAGS:
-			self.tag_configure(i, **TREE_TAGS[i])		
+			self.tag_configure(i, **TREE_TAGS[i])
 
 		self.tag_configure("class", foreground=Color.BLUE, font="Nunito 10")
 		self.tag_configure("editable")
 		self.tag_configure("argname", foreground=Color.DARK_ORANGE, font="Nunito 10")
 		self.tag_configure("kwargname", foreground=Color.ORANGE, font="Nunito 10")
-		
+
 		self.bind("<Button-1>", self._on_button_1)
 		self.bind("<Double-Button-1>", self._on_double_button_1)
 		self.bind(BUTTON_RIGHT, self._on_button_right)
 		self.bind(BUTTON_RELEASE_RIGHT, self._on_button_release_right)
-		
+
 	def setobj(self, name, value, create_new=False, coord=None, is_binop=False):
 		"""
 		The callback of app.objects, called whenever new objects are created, or the value
@@ -129,39 +129,39 @@ class ObjectTree(vdict, Treeview):
 		if is_output_item and not update_value:
 			self.app.node.output.disconnect(prev)
 			is_output_item = False
-		self.app.node.setitem(name, update_value=update_value, coord=coord, is_output_item=is_output_item) 
-		
+		self.app.node.setitem(name, update_value=update_value, coord=coord, is_output_item=is_output_item)
+
 		if update_value and self.exists(name + "<arg=<value>>"):
-			self.item(name + "<arg=<value>>", 
-				text=str(value), 
+			self.item(name + "<arg=<value>>",
+				text=str(value),
 				tags=("editable", fontcolor(value, as_string=True)))
 			return
-		
+
 		if self.exists(name):
 			super(Treeview, self).delete(name)
 
 		item = self.app.node[name]
 
-		self.insert("", "end", name, text=name, tags=("object", "doc"))			
+		self.insert("", "end", name, text=name, tags=("object", "doc"))
 		self.insert(name, "end", name + "<class>", text=item.classname, tags=("class", "no_hover"))
 		if not item.is_callable:
 			self.insert(name, "end", name + "<arg=<value>>", text=str(value), tags=("editable", fontcolor(value, as_string=True)))
 
 		if item.is_callable:
 			for j in item.args:
-				self.insert(name, "end", name + "<argname=" + j + ">", text=j, 
+				self.insert(name, "end", name + "<argname=" + j + ">", text=j,
 					tags=("argname", "no_hover"))
-				self.insert(name, "end", name + "<arg=" + j + ">", 
-					text=str(item.args[j]), 
+				self.insert(name, "end", name + "<arg=" + j + ">",
+					text=str(item.args[j]),
 					tags=("editable", fontcolor(item.args[j], as_string=True)))
-			
+
 			if len(item.kwargs) > 0:
 				kwargs = self.insert(name, "end", name + "<kwargs>", text="kwargs")
 				for k in item.kwargs:
-					self.insert(kwargs, "end", name + "<argname=" + k + ">", text=k, 
+					self.insert(kwargs, "end", name + "<argname=" + k + ">", text=k,
 						tags=("kwargname", "no_hover"))
-					self.insert(kwargs, "end", name + "<arg=" + k + ">", 
-						text=str(item.kwargs[k]), 
+					self.insert(kwargs, "end", name + "<arg=" + k + ">",
+						text=str(item.kwargs[k]),
 						tags=("editable", fontcolor(item.kwargs[k], as_string=True)))
 
 		for j in dir(value):
@@ -178,7 +178,7 @@ class ObjectTree(vdict, Treeview):
 
 		self.order(order)
 		self.expanded(expanded)
-		
+
 		if create_new:
 			return name
 		return False
@@ -193,7 +193,7 @@ class ObjectTree(vdict, Treeview):
 				item.kwargs["connection"][k].disconnect()
 		super(Treeview, self).delete(key)
 		self.app.node[key].destroy()
-	
+
 	def unique_name(self, name):
 	    i = 2
 	    temp = name
@@ -209,8 +209,8 @@ class ObjectTree(vdict, Treeview):
 
 		if self.entry.editing:
 			self.entry.finish(cancel=True)
-		
-		if self.has_tag(key, "editable"):			
+
+		if self.has_tag(key, "editable"):
 			self.entry.edit(key, event)
 			return "break"
 
@@ -227,7 +227,7 @@ class ObjectTree(vdict, Treeview):
 	def _on_button_right(self, event):
 		key = self.identify_row(event.y)
 		self.selection_set(key)
-	
+
 	def _on_button_release_right(self, event):
 		key = self.identify_row(event.y)
 		obj = help.getobj(key)
@@ -240,7 +240,7 @@ class ObjectTree(vdict, Treeview):
 				"label": "View Doc",
 				"command": lambda: help(key)
 			})
-		
+
 		try:
 			file = inspect.getsourcefile(self.app.objects[key])
 			items.append({
@@ -248,7 +248,7 @@ class ObjectTree(vdict, Treeview):
 				"command": lambda: open_editor(file)
 			})
 		except:
-			pass		
+			pass
 
 		if key in self.app.node and self.app.animate.can_animate(self.app.node[key]):
 			items.append({
@@ -260,16 +260,16 @@ class ObjectTree(vdict, Treeview):
 			name, fn = key.rsplit(".", 1)
 			items.append({
 				"label": "Run Method",
-				"command": lambda: self.app.node.run_method(fn, obj, self.app.node[name])	
+				"command": lambda: self.app.node.run_method(fn, obj, self.app.node[name])
 			})
 
 		if key in self:
 			items.extend([{
-				"separator": None	
+				"separator": None
 			},{
 				"label": "Delete " + key,
 				"command": lambda: self.delete(key)
 			}])
-		
+
 		self.menu.set_menu(items)
 		self.menu.show(event)

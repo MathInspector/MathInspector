@@ -66,7 +66,7 @@ To plot the grid, we transponse `Z` to get the lines to go in the other directio
 
 >>> plot(Z,transpose(Z))
     """
-	if (x_min < 0 and x_max > 0) or (y_min < 0 and y_max > 0):	
+	if (x_min < 0 and x_max > 0) or (y_min < 0 and y_max > 0):
 		return (*complex_grid(x_min, NEG_Z, y_min, NEG_Z, int(num/2)),
 			*complex_grid(POS_Z, x_max, y_min, NEG_Z, int(num/2)),
 			*complex_grid(x_min, NEG_Z, POS_Z, y_max, int(num/2)),
@@ -95,7 +95,7 @@ exponent: float
 Examples
 --------
 
->>> from examples import complex_grid
+>>> from mathinspector.examples import complex_grid
 >>> from numpy import power
 >>> t=1
 >>> plot(power(complex_grid(), 2))
@@ -128,11 +128,11 @@ If the grid passes through either the x or y axis, then this function returns a 
 References
 ----------
 Mathologer, Times Tables, Mandelbrot and the Heart of Mathematics,
-https://www.youtube.com/watch?v=qhbuKbxJsk8 
+https://www.youtube.com/watch?v=qhbuKbxJsk8
 
 Examples
 --------
->>> from examples import times_table
+>>> from mathinspector.examples import times_table
 >>> t=2
 >>> plot(times_table(t))
 
@@ -142,7 +142,7 @@ Animation
     """
 
 	result = []
-	
+
 	for value in range(start, end):
 		new_value = (value * factor) % end
 		result.append([
@@ -187,7 +187,7 @@ References
 Examples
 --------
 
->>> from examples import elliptic_curve
+>>> from mathinspector.examples import elliptic_curve
 >>> plot(elliptic_curve(0,0))
     """
 	x, y = np.ogrid[-12:12:100j, -12:12:100j]
@@ -213,7 +213,7 @@ This function is implemented by using the library skimage to find the set of poi
 Examples
 --------
 
->>> from examples import four_leaf_rose
+>>> from mathinspector.examples import four_leaf_rose
 >>> plot(four_leaf_rose())
     """
 	x, y = np.ogrid[-12:12:100j, -12:12:100j]
@@ -241,14 +241,14 @@ t : float
 
 Examples
 --------
->>> from examples import transform
+>>> from mathinspector.examples import transform
 >>> from numpy import exp, sqrt, linspace
 >>> transform(exp, sqrt, linspace(-3,3), 0.5)
 [ 0.5        -0.69980788  0.62129323 -0.29568233 -0.14752521]
 
 Graphical illustration:
 
->>> from examples import complex_grid
+>>> from mathinspector.examples import complex_grid
 >>> t = 0.5
 >>> plot(transform(exp, sqrt, complex_grid(), t))
 
@@ -282,7 +282,7 @@ This function uses the numpy `arange` and `meshgrid` functions to create a set o
 Examples
 --------
 
->>> from examples import complex_points
+>>> from mathinspector.examples import complex_points
 >>> complex_points((0,0),(2,2),0.5)
 [[-1. +1.j  -1. +0.5j -1. +0.j  -1. -0.5j]
  [-0.5+1.j  -0.5+0.5j -0.5+0.j  -0.5-0.5j]
@@ -298,7 +298,7 @@ Examples
 
 def domain_coloring(position, size, step, transform=None):
 	"""
-Domain coloring is a popular technique for visualizing the output of complex valued functions of a 
+Domain coloring is a popular technique for visualizing the output of complex valued functions of a
 complex variable.
 
 Parameters
@@ -314,7 +314,7 @@ step : float
 
 Examples
 --------
->>> from examples import domain_coloring
+>>> from mathinspector.examples import domain_coloring
 >>> plot(pixelmap=domain_coloring)
 
 References
@@ -370,7 +370,7 @@ https://tomroelandts.com/articles/how-to-compute-the-mandelbrot-set-using-numpy-
 
 Examples
 --------
->>> from examples import mandelbrot_set
+>>> from mathinspector.examples import mandelbrot_set
 >>> plot(pixelmap=mandelbrot_set)
 
 	"""
@@ -388,7 +388,7 @@ Examples
 	R[:,:,0] = 255 * M
 	R[:,:,1] = 255 * M
 	R[:,:,2] = 255 * M
-	return R	
+	return R
 
 def helix(t, as_points=False):
 	"""
@@ -403,7 +403,7 @@ t : float
 
 Examples
 --------
->>> from examples import helix
+>>> from mathinspector.examples import helix
 >>> from numpy import linspace
 >>> T = 10
 >>> plot(helix(linspace(0,T)))
@@ -435,12 +435,12 @@ fn : callable
 Examples
 --------
 >>> from numpy import linspace
->>> from examples import wireframe
+>>> from mathinspector.examples import wireframe
 >>> X = linspace(0,10)
 >>> Y = linspace(0,10)
 >>> plot(wireframe(X,Y, lambda x,y: (x,y,x**2 + y**2)))
     """
-	
+
 	x_lines, y_lines = [], []
 	for xval in x:
 		temp = []
@@ -475,12 +475,12 @@ fn : callable
 
 Examples
 --------
->>> from examples import surface
+>>> from mathinspector.examples import surface
 >>> X = linspace(0,10)
 >>> Y = linspace(0,10)
 >>> plot(surface(X,Y, lambda x,y: (x,y,x**2 + y**2)))
 	"""
-	
+
 	return wireframe(x,y,fn)[1]
 
 def cylinder(pos=(0,0,0),radius=1,num=25, as_wireframe=False):
@@ -502,7 +502,7 @@ num : int
 
 Examples
 --------
->>> from examples import cylinder
+>>> from mathinspector.examples import cylinder
 >>> plot(cylinder())
     """
 	result = wireframe(
@@ -536,7 +536,7 @@ There are some known issues with the way this function has been implemented rela
 
 Examples
 --------
->>> from examples import sphere
+>>> from mathinspector.examples import sphere
 >>> plot(sphere())
     """
 	result = wireframe(

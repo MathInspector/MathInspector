@@ -1,6 +1,6 @@
 """
 The math inspector console comes with a built-in function `plot` which is
-not available in a standard python environment.  As a simple example, let's 
+not available in a standard python environment.  As a simple example, let's
 plot the point (1,1) in a two-dimensional plane.
 
 >>> plot((1,1))
@@ -14,12 +14,12 @@ To draw a line in three dimensional space from the origin to the point (10,10,10
 >>> plot([(0,0,0), (10,10,10)])
 
 Holding down the left mouse button and moving the mouse will rotate the camera,
-and the WASD or arrow keys can be used for movement.  The mouse wheel is used for 
-scaling the entire scene. 
+and the WASD or arrow keys can be used for movement.  The mouse wheel is used for
+scaling the entire scene.
 
 Parameter data structure
 ---
-`plot` accepts an arbitrary number of arguments, and each argument will be plotted at the 
+`plot` accepts an arbitrary number of arguments, and each argument will be plotted at the
 same time, as long as all of the arguments are either two or three dimensional.
 
 Arguments which are integers, floats, complex numbers, or 2-tuples will be plotted
@@ -29,11 +29,11 @@ will be plotted as distinct lines.
 
 An example of a function which draws multiple lines is complex grid
 
->>> from examples import complex_grid
+>>> from mathinspector.examples import complex_grid
 >>> plot(complex_grid())
 
 Lists of lists of 3-tuples are plotted as solid surfaces, but
-you have to be careful how these lists are ordered to ensure all normal 
+you have to be careful how these lists are ordered to ensure all normal
 vectors are computed properly for the lighting.  To plot multiple distinct lines
 in three dimensions, pass each list of 3-tuples to `plot` as its own argument.
 
@@ -42,18 +42,18 @@ by using the pixelmap key word argument.
 
 An example of a pixelmap function is the Domain Coloring function
 
->>> from examples import domain_coloring
+>>> from mathinspector.examples import domain_coloring
 >>> plot(pixelmap=domain_coloring)
 
-Animating pixelmaps is very computationally expensive, and the 
-`multiprocess` module is used to try and do as much of the computation in the background 
+Animating pixelmaps is very computationally expensive, and the
+`multiprocess` module is used to try and do as much of the computation in the background
 as possible.  The plot window creates an offscreen surface for the purpose
 of panning and zooming, and after movement stops for 1 second, it recalculates
-the pixels for the current position, while also recomputing the pixels for the 
-offscreen surface in the background.  This system currently suffers from some flashing and 
-resolution artifacts which are hard to miss when moving very quickly.  
+the pixels for the current position, while also recomputing the pixels for the
+offscreen surface in the background.  This system currently suffers from some flashing and
+resolution artifacts which are hard to miss when moving very quickly.
 
-Look for video rendering functionality in an upcoming release to address the 
+Look for video rendering functionality in an upcoming release to address the
 performance issues associated with the most computationally expensive animations.
 """
 """
@@ -87,7 +87,7 @@ sdl_window = SDLWindow()
 
 def plot(*args, **kwargs):
 	global active_window
-	
+
 	window = get_window(*args, **kwargs)
 
 	if not window:
@@ -109,7 +109,7 @@ def get_window(*args, **kwargs):
 		if callable(arg):
 			return False
 		if instanceof(arg, (tuple,list)) and len(arg) == 3 and instanceof(arg[0], list) and instanceof(arg[0][0], (int,float)):
-			return opengl_window			
+			return opengl_window
 		if instanceof(arg, (int,float,complex)):
 			return sdl_window if len(args) > 1 else False
 		if instanceof(arg, tuple):
@@ -127,15 +127,15 @@ def get_window(*args, **kwargs):
 			return get_window(*arg)
 	return False
 
-def config(**kwargs):	
+def config(**kwargs):
 	if kwargs:
 		OPTIONS_2D.update(kwargs)
 		OPTIONS_3D.update(kwargs)
 		if active_window and pygame.get_init():
 			active_window.config(**kwargs)
 		return
-	
-	if not active_window: 
+
+	if not active_window:
 		return OPTIONS_2D
 	return OPTIONS_2D if active_window == sdl_window else OPTIONS_3D
 

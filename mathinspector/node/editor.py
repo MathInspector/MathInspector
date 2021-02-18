@@ -18,22 +18,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 import numpy as np
-import inspect, plot, platform
-from util import fontcolor, instanceof, classname, argspec, numargs, open_editor, vdict, instanceof
-from util.config import BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, BUTTON_RIGHT_MOTION, HITBOX, ZOOM_IN, ZOOM_OUT, FONTSIZE, FONT_SIZE
-from style import Color, getimage
+import inspect, platform
+from .. import plot
+from ..util import fontcolor, instanceof, classname, argspec, numargs, open_editor, vdict, instanceof
+from ..util.config import BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, BUTTON_RIGHT_MOTION, HITBOX, ZOOM_IN, ZOOM_OUT, FONTSIZE, FONT_SIZE
+from ..style import Color, getimage
 from .output import Output
 from .item import Item
-from widget import Popup, Menu, Text
+from ..widget import Popup, Menu, Text
 
 class NodeEditor(vdict, tk.Canvas):
 	def __init__(self, app):
-		self.app = app		
-		vdict.__init__(self)		
+		self.app = app
+		vdict.__init__(self)
 		self.frame = tk.Frame(app, background=Color.BLACK)
-		tk.Canvas.__init__(self, self.frame, 	
-			highlightthickness=4, 
-			highlightbackground=Color.BACKGROUND, 
+		tk.Canvas.__init__(self, self.frame,
+			highlightthickness=4,
+			highlightbackground=Color.BACKGROUND,
 			background=Color.BACKGROUND,
 			bd=0)
 		self.zoom = 1
@@ -45,11 +46,11 @@ class NodeEditor(vdict, tk.Canvas):
 			"items": [],
 			"box": self.create_rectangle(0,0,0,0, outline=Color.DARK_GREY, dash=(3,3), state="hidden")
 		}
-		
+
 		self.pack(side="left", fill="both", expand=True)
 		self.output = Output(self)
 		self.output.pack(side="right")
-		
+
 		self.selected = None
 		self.connect = None
 		self.hover = None
@@ -64,13 +65,13 @@ class NodeEditor(vdict, tk.Canvas):
 		self.bind("<B1-Motion>", self._on_multiselect)
 		self.bind("<ButtonRelease-1>", self._on_button_release_1)
 
-		self.bind("<MouseWheel>", self._on_mouse_wheel)		
+		self.bind("<MouseWheel>", self._on_mouse_wheel)
 		if platform.system() == "Linux":
-			self.bind("<Button-4>", lambda event: self._on_mouse_wheel(event, 1))		
-			self.bind("<Button-5>", lambda event: self._on_mouse_wheel(event, -1))		
+			self.bind("<Button-4>", lambda event: self._on_mouse_wheel(event, 1))
+			self.bind("<Button-5>", lambda event: self._on_mouse_wheel(event, -1))
 		self.bind(BUTTON_RELEASE_RIGHT, self._on_button_release_2)
 		self.bind(BUTTON_RIGHT_MOTION, self._on_b2_motion)
-		
+
 		self.tag_bind("draggable", "<Button-1>", self._on_drag_start)
 		self.tag_bind("draggable", "<ButtonRelease-1>", self._on_drag_stop)
 		self.tag_bind("draggable", "<B1-Motion>", self._on_drag)
@@ -107,7 +108,7 @@ class NodeEditor(vdict, tk.Canvas):
 			if len(self.store) == 1:
 				self.app.menu.setview("node_editor", True)
 			return
-		
+
 		item = self[name]
 		if update_value:
 			item.value(self.app.objects[name])
@@ -118,18 +119,18 @@ class NodeEditor(vdict, tk.Canvas):
 		self[name].destroy()
 		if not coord:
 			coord = self.get_pointer(random=True)
-		self[name] = Item(self, name, 
-			coord=coord, 
-			args=item.args, 
-			kwargs=item.kwargs, 
-			connection=connection, 
+		self[name] = Item(self, name,
+			coord=coord,
+			args=item.args,
+			kwargs=item.kwargs,
+			connection=connection,
 			opts=item.opts,
 			is_output_item=is_output_item
 		)
 		self.scale_font()
 
 	def select(self, name):
-		if name is None: 
+		if name is None:
 			self.selected = None
 			return
 		if self.selected == name: return
@@ -153,14 +154,14 @@ class NodeEditor(vdict, tk.Canvas):
 				name, argname = item.connection
 				self[name].config("arg="+argname, fill=Color.HOVER)
 			elif item in self.output.items:
-				self.output.hover()			
+				self.output.hover()
 			item.config("wire", "output", fill=Color.HOVER)
 
 	def _on_item_leave(self, event, tag):
 		if self.is_busy() or not self.hover: return
 		closest, item = self.hover
 		self.hover = None
-		
+
 		if tag == "draggable":
 			item.config("parent", fill=Color.BLACK if self.getname(closest) != self.selected else Color.VERY_LIGHT_PURPLE)
 		elif tag in ("output", "wire"):
@@ -168,12 +169,12 @@ class NodeEditor(vdict, tk.Canvas):
 				name, argname = item.connection
 				self[name].config("arg="+argname, fill=Color.PURPLE)
 				item.config("output", fill=Color.PURPLE)
-				item.config("wire", fill=Color.PURPLE)			
+				item.config("wire", fill=Color.PURPLE)
 			elif item in self.output.items:
 				self.output.hover(False)
 				item.config("output", fill=Color.PURPLE)
 				item.config("wire", fill=Color.PURPLE)
-			else:				
+			else:
 				item.config("output", fill=Color.EMPTY_NODE)
 
 	def _on_mouse_wheel(self, event, delta=None):
@@ -187,7 +188,7 @@ class NodeEditor(vdict, tk.Canvas):
 			self.zoom *= ZOOM_OUT
 		self.scale_font()
 		self.scale_width()
-		
+
 		if self.output.items:
 			for i in self.output.items:
 				i.move_wire()
@@ -216,18 +217,18 @@ class NodeEditor(vdict, tk.Canvas):
 
 	def _on_leave_input(self, event):
 		if not self.hover_input: return
-		
+
 		closest, item = self.hover_input
 		self.itemconfig(closest, fill=Color.PURPLE)
 		item.config("wire", "output", fill=Color.PURPLE)
 		self.hover_input = None
-		
+
 	def _on_b2_motion(self, event):
 		if self.pan_position is None:
 			self.pan_position = (event.x, event.y)
 
 		x, y = event.x - self.pan_position[0], event.y - self.pan_position[1]
-		self.move("all", x, y)		
+		self.move("all", x, y)
 		self.pan_position = (event.x, event.y)
 
 		if self.output.items:
@@ -264,22 +265,22 @@ class NodeEditor(vdict, tk.Canvas):
 		if not self.connect: return
 		item, output, argname, was_in_output = self.connect
 		item.move_wire(
-			self.winfo_pointerx() - self.winfo_rootx(), 
+			self.winfo_pointerx() - self.winfo_rootx(),
 			self.winfo_pointery() - self.winfo_rooty()
 		)
-	
+
 	def _on_output_button_release_1(self, event):
-		if not self.connect: return		
+		if not self.connect: return
 		item, output, argname, was_in_output = self.connect
 		item.hide_wire()
 
 	def _on_item_b1_motion(self, event, tag):
 		if not self.connect: return
-		
+
 		item, output, argname, was_in_output = self.connect
-		
+
 		input_id = self.get_closest(event.x, event.y, "input")
-		in_output = self.winfo_containing(event.x_root, event.y_root) in (self.frame, self.output.node)			
+		in_output = self.winfo_containing(event.x_root, event.y_root) in (self.frame, self.output.node)
 		in_items = (self.winfo_containing(event.x_root, event.y_root) == self)
 
 		if was_in_output and not in_items:
@@ -300,7 +301,7 @@ class NodeEditor(vdict, tk.Canvas):
 		else:
 			if item.connection:
 				item.disconnect()
-			
+
 			item.move_wire(event.x, event.y)
 			if output and argname:
 				if argname in output.args["connection"] or argname in output.kwargs["connection"]:
@@ -310,14 +311,14 @@ class NodeEditor(vdict, tk.Canvas):
 				output = argname = None
 
 		self.connect = item, output, argname, in_output
-		
+
 	def _on_item_button_release_1(self, event, tag):
 		if self.connect:
-			item, output, argname, in_output = self.connect			
-			
+			item, output, argname, in_output = self.connect
+
 			if in_output:
 				self.output.connect(item)
-			
+
 			if not output:
 				item.disconnect()
 			elif argname in output.args:
@@ -328,10 +329,10 @@ class NodeEditor(vdict, tk.Canvas):
 			self.connect = None
 
 	def is_busy(self):
-		return bool(self.dragitem 
-			or self.connect 
+		return bool(self.dragitem
+			or self.connect
 			or self.multiselect["items"])
-				
+
 	def _on_delete(self, key=None):
 		if self.multiselect["items"]:
 			for i in self.multiselect["items"]:
@@ -349,13 +350,13 @@ class NodeEditor(vdict, tk.Canvas):
 		if self.dragitem or not self.multiselect["position"]: return
 
 		x,y = self.multiselect["position"]
-		overlapping = self.find_overlapping(x,y,event.x,event.y)	
+		overlapping = self.find_overlapping(x,y,event.x,event.y)
 		self.itemconfig(self.multiselect["box"], state="normal")
 		self.coords(self.multiselect["box"], x, y, event.x, event.y)
 
 		self.multiselect["items"].clear()
 
-		for i in overlapping:			
+		for i in overlapping:
 			name = self.getname(i)
 			if name and name not in self.multiselect["items"]:
 				self.multiselect["items"].append(name)
@@ -377,7 +378,7 @@ class NodeEditor(vdict, tk.Canvas):
 		color = self.itemconfig(closest)["fill"][4]
 		self.itemconfig(closest, fill=Color.WHITE)
 		self.hover_edit = closest, item, color
-		
+
 	def _on_leave_editable(self, event):
 		if self.hover_edit:
 			closest, item, color = self.hover_edit
@@ -404,9 +405,9 @@ class NodeEditor(vdict, tk.Canvas):
 	def _on_drag(self, event):
 		name = self.getname(self.dragitem)
 		if name not in self: return
-		
+
 		item = self[name]
-		if "editable" in self.gettags(self.dragitem): 
+		if "editable" in self.gettags(self.dragitem):
 			delta_x = event.x - self.dragposition[0]
 			delta_y = event.y - self.dragposition[1]
 			self.dragposition = (event.x, event.y)
@@ -436,9 +437,9 @@ class NodeEditor(vdict, tk.Canvas):
 		else:
 			item.move(event.x - x, event.y - y)
 
-		self.dragposition = (event.x, event.y)	
-		
-	
+		self.dragposition = (event.x, event.y)
+
+
 	def _on_drag_stop(self, event):
 		if self.dragstart == self.dragposition:
 			self.select(self.getname(self.dragitem))
@@ -448,23 +449,23 @@ class NodeEditor(vdict, tk.Canvas):
 	def _on_button_1(self, event):
 		if self.edit_item:
 			self.edit_item.entry.finish()
-		
+
 		if self.dragitem or self.connect: return
-		if self.hover_edit:			
+		if self.hover_edit:
 			self[self.getname(self.hover_edit)].entry.finish()
 			self.hover_edit = None
 			return
 		for name in self.multiselect["items"]:
 			self[name].config("parent", fill=Color.BLACK)
 		self.select(None)
-		
+
 		# if self.dragitem: return
-		
+
 		self.multiselect["items"].clear()
 		self.multiselect["position"] = (event.x, event.y)
 		self.tag_raise(self.multiselect["box"])
 
-	def _on_button_release_1(self, event):		
+	def _on_button_release_1(self, event):
 		self.multiselect["position"] = None
 		self.itemconfig(self.multiselect["box"], state="hidden")
 
@@ -478,15 +479,15 @@ class NodeEditor(vdict, tk.Canvas):
 			}] + self.app.menu.object_menu)
 		self.has_menu = False
 		self.pan_position = None
-		
+
 	# REFACTOR: move the bulk of this into its own class with a __call__ attr so its super simple to call in here
 	def _on_item_menu(self, event):
 		self.has_menu = True
 		item = self[self.getname(self.find_closest(event.x, event.y))]
 		if self.multiselect["items"]:
-			self.menu.show(event, [{ 
-				"label": "Delete selected items...", 
-				"command": self._on_delete 
+			self.menu.show(event, [{
+				"label": "Delete selected items...",
+				"command": self._on_delete
 			}])
 			return
 
@@ -495,16 +496,16 @@ class NodeEditor(vdict, tk.Canvas):
 		extras = []
 		obj = self.app.objects[item.name]
 		value = item.value()
-		item_methods = [i for i in dir(obj) if i[:1] != "_" and callable(getattr(obj, i)) and isinstance(i, str)]			
+		item_methods = [i for i in dir(obj) if i[:1] != "_" and callable(getattr(obj, i)) and isinstance(i, str)]
 		if item_methods:
-			methods.append({ "separator": None })			
+			methods.append({ "separator": None })
 			for fn in item_methods:
-				attr = getattr(item.obj, fn)	
+				attr = getattr(item.obj, fn)
 				methods.append({
 					"label": fn,
-					"command": lambda fn=fn, attr=attr, item=item: self.run_method(fn, attr, item)	
+					"command": lambda fn=fn, attr=attr, item=item: self.run_method(fn, attr, item)
 				})
-		
+
 		window = plot.get_window(value)
 		if item in self.output.items:
 			extras.append({
@@ -514,7 +515,7 @@ class NodeEditor(vdict, tk.Canvas):
 		elif not window:
 			extras.append({
 				"label": "Show Output",
-				"command": lambda: self.output.connect(item)	
+				"command": lambda: self.output.connect(item)
 			})
 		else:
 			extras.append({
@@ -524,7 +525,7 @@ class NodeEditor(vdict, tk.Canvas):
 			})
 
 		extras.append({
-			"separator": None	
+			"separator": None
 		})
 
 		if self.app.animate.can_animate(item):
@@ -542,7 +543,7 @@ class NodeEditor(vdict, tk.Canvas):
 		if help.getobj(item.obj) is not None:
 			extras.append({
 				"label": "View Doc",
-				"command": lambda: help(item.obj)	
+				"command": lambda: help(item.obj)
 			})
 
 		try:
@@ -555,14 +556,14 @@ class NodeEditor(vdict, tk.Canvas):
 				"label": "View Source Code",
 				"command": lambda: open_editor(file)
 			})
-		
+
 		# graph.append({
 		# 	"label": "Set color     " + item.opts["line_color"] if item.opts["line_color"] != Color.BLUE else "Set color",
 		# 	"command": lambda: Popup(self.app, item.name + ".set_color", obj=lambda color: item.option("line_color", color), canvas_item=item)
-		# })	
+		# })
 
 		self.menu.show(event, extras + methods + [{
-			"separator": None 
+			"separator": None
 		},{
 			"label": "Delete " + item.name,
 			"command": lambda: self._on_delete(item.name)
@@ -573,11 +574,11 @@ class NodeEditor(vdict, tk.Canvas):
 		args = [i for i in args if i not in ("self")]
 		if len(args) + len(kwargs) > 0:
 			Popup(self.app, [{
-				"label": i	
+				"label": i
 			} for i in args] + [{
 				"label": k,
 				"value": kwargs[k]
-			} for k in kwargs], 
+			} for k in kwargs],
 			lambda params: self._method_result(name, attr, item, params),
 			title="Run Item Method",
 			header=name)
@@ -594,13 +595,13 @@ class NodeEditor(vdict, tk.Canvas):
 			args = [params[i] for i in params][:argcount]
 			kwargs = { i:params[i] for i in keys }
 			if kwargs:
-				result = attr(*args, **kwargs)		
+				result = attr(*args, **kwargs)
 			else:
-				result = attr(*[i for i in list(params.values()) if i != ""])		
+				result = attr(*[i for i in list(params.values()) if i != ""])
 		else:
 			result = attr()
 
-		item.value(self.app.objects[item.name])		
+		item.value(self.app.objects[item.name])
 		if instanceof(result, (int, float, complex, bool)):
 			self.output.show(result)
 		elif result:
@@ -611,7 +612,7 @@ class NodeEditor(vdict, tk.Canvas):
 			x = np.random.rand() * self.winfo_width()
 			y = np.random.rand() * self.winfo_height()
 		else:
-			x = self.canvasx(self.winfo_pointerx() - self.winfo_rootx()) 
+			x = self.canvasx(self.winfo_pointerx() - self.winfo_rootx())
 			y = self.canvasy(self.winfo_pointery() - self.winfo_rooty())
 		return x,y
 
@@ -664,10 +665,10 @@ class NodeEditor(vdict, tk.Canvas):
 			return result[0]
 
 		return result
-	
+
 	def get_closest(self, x,y, tag=None):
 		overlapping = self.find_overlapping(
-			x - HITBOX * self.zoom, y - HITBOX * self.zoom, 
+			x - HITBOX * self.zoom, y - HITBOX * self.zoom,
 			x + HITBOX * self.zoom, y + HITBOX * self.zoom
 		)
 

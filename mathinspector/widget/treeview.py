@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from tkinter import ttk
-from style import Color
+from ..style import Color
 from os.path import basename
 from .menu import Menu
 from .text import Text
@@ -26,16 +26,16 @@ class Treeview(ttk.Treeview):
 	def __init__(self, app, *args, drag=True, **kwargs):
 		if not args:
 			args = [app]
-		
+
 		ttk.Treeview.__init__(self, *args, **kwargs)
 
 		self.app = app
 		self.menu = Menu(app)
 		self.hover_item = None
-		
+
 		self.bind('<Motion>', self._on_motion)
 		self.bind('<Leave>', self._on_leave)
-		self.tag_configure("hover", background=Color.HIGHLIGHT_INACTIVE)			
+		self.tag_configure("hover", background=Color.HIGHLIGHT_INACTIVE)
 
 		if drag:
 			self.drag = None
@@ -58,7 +58,7 @@ class Treeview(ttk.Treeview):
 		tags = self.item(item)["tags"]
 		if isinstance(tags, list):
 			for t in tag:
-				if t not in tags: 
+				if t not in tags:
 					tags.append(t)
 		elif not tags:
 			tags = tag
@@ -66,19 +66,19 @@ class Treeview(ttk.Treeview):
 
 	def remove_tag(self, item, tag):
 		if not self.exists(item): return
-		
+
 		if not isinstance(tag, tuple):
 			tag = (tag,)
 
 		tags = self.item(item)["tags"]
 		for t in tag:
-			if t in tags: 
+			if t in tags:
 				del tags[tags.index(t)]
 		self.item(item, tags=tags)
 
 	def order(self, items=None):
 		if not items: return [{
-			"key": i, 
+			"key": i,
 			"index": self.index(i),
 			"filename": basename(i)
 		} for i in self.get_children()]
@@ -122,7 +122,7 @@ class Treeview(ttk.Treeview):
 
 		if self.hover_item and item != self.hover_item:
 			self.remove_tag(self.hover_item, "hover")
-		
+
 		self.add_tag(item, "hover")
 		self.hover_item = item
 
@@ -138,12 +138,12 @@ class Treeview(ttk.Treeview):
 		if not selection: return
 
 		row = self.item(selection[0])
-		if not selection: 
-			return		
+		if not selection:
+			return
 		elif "." in selection[0]:
 			obj_path = selection[0]
 		elif self.item(selection[0])["values"]:
-			obj_path = self.item(selection[0])["values"][0] 
+			obj_path = self.item(selection[0])["values"][0]
 		else:
 			obj_path = None
 
@@ -159,14 +159,15 @@ class Treeview(ttk.Treeview):
 				pass
 
 		self.drag = item, event.x, event.y
-		
+
 		if not item:
 			row = self.identify_row(event.y)
 			if row not in self.get_children(): return
-			
-			moveto = self.index(row)    
+
+			moveto = self.index(row)
 			for i in self.selection():
 				self.move(i, "", moveto)
+
 
 	def _on_button_release_1(self, event):
 		self.drag = None
@@ -200,10 +201,10 @@ class TreeEntry(Text):
 		x_off = 48 if in_args or not argname else 66
 
 		if isinstance(item.obj, str):
-			self.bind("<<Modify>>", lambda event: self.highlight(r"((.*))", "yellow"))	
+			self.bind("<<Modify>>", lambda event: self.highlight(r"((.*))", "yellow"))
 			self.insert("end", str(value if value is not None else ""))
 		else:
-			self.bind("<<Modify>>", lambda event: self.syntax_highlight())	
+			self.bind("<<Modify>>", lambda event: self.syntax_highlight())
 			self.insert("end", str(value if value is not None else ""))
 
 		# self.insert("end", str(value if value is not None else ""))
@@ -227,7 +228,7 @@ class TreeEntry(Text):
 				self.app.console.showtraceback()
 				self.hide()
 				return
-		
+
 		if not argname:
 			try:
 				result = self.app.console.eval(content)
@@ -245,8 +246,8 @@ class TreeEntry(Text):
 			item.args[argname] = value
 		else:
 			item.kwargs[argname] = value
-		
-		item.resize()		
+
+		item.resize()
 		self.hide()
 
 	def hide(self):
@@ -257,7 +258,7 @@ class TreeEntry(Text):
 	def _on_key(self, event):
 		if event.keysym == "Escape":
 			self.hide()
-			return "break"		
+			return "break"
 		elif event.keysym == "Return":
 			self.finish()
 			return "break"

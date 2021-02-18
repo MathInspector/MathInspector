@@ -15,30 +15,28 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
-import tkinter as tk
 from tkinter import ttk
 from ttkthemes import themed_tk
-# import multiprocessing as mp
-from console import Interpreter
-from node import NodeEditor
-from objects import ObjectTree
-from modules import ModuleTree
-from mainmenu import MainMenu
-from project import SaveData
-from animation import Animation
-from widget import Notebook
+from .console import Interpreter
+from .node import NodeEditor
+from .objects import ObjectTree
+from .modules import ModuleTree
+from .mainmenu import MainMenu
+from .project import SaveData
+from .animation import Animation
+from .widget import Notebook
+
 
 class App(themed_tk.ThemedTk):
 	def __init__(self):
 		themed_tk.ThemedTk.__init__(self)
-		self.set_theme("arc")		
-		ttk.Style(self)	
+		self.set_theme("arc")
+		ttk.Style(self)
 
 		self.horizontal_panel = ttk.PanedWindow(self, orient="horizontal")
-		self.vertical_panel = ttk.PanedWindow(self, orient="vertical")		
+		self.vertical_panel = ttk.PanedWindow(self, orient="vertical")
 		self.side_view = Notebook(self, has_labels=True)
-		
+
 		self.node = NodeEditor(self)
 		self.console = Interpreter(self)
 		self.modules = ModuleTree(self)
@@ -51,13 +49,14 @@ class App(themed_tk.ThemedTk):
 		self.horizontal_panel.add(self.side_view.frame)
 		self.horizontal_panel.add(self.vertical_panel)
 		self.horizontal_panel.pack(side="left", fill="both", expand=True)
-		
+
 		self.animate = Animation(self)
-		self.project = SaveData(self)						
+		self.project = SaveData(self)
 		self.menu = MainMenu(self)
 		self.config(menu=self.menu)
 		self.project.load(is_first_load=True)
 
-if __name__ == '__main__':
-	# mp.freeze_support() #required for windows
-	App().mainloop()
+
+def main():
+	app = App()
+	app.mainloop()

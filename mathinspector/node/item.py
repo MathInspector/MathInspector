@@ -16,12 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import numpy as np
-import inspect, traceback, plot
-from style import Color
-from util import vdict
-from util import classname, fontcolor, argspec
-from util.config import ITEM_FONTSIZE as FONTSIZE
+import inspect, traceback
+from .. import plot
+from ..style import Color
+from ..util import vdict
+from ..util import classname, fontcolor, argspec
+from ..util.config import ITEM_FONTSIZE as FONTSIZE
 from .entry import Entry
 from textwrap import fill
 from pprint import pformat
@@ -42,12 +42,12 @@ class Item:
         self.connection = connection
         self.argspec = argspec(self.obj)#, withself=inspect.isclass(self.obj))
 
-        self.args = vdict({}, 
-            getitem=lambda key: self.getarg(key, "args"), 
+        self.args = vdict({},
+            getitem=lambda key: self.getarg(key, "args"),
             setitem=self.setarg)
 
-        self.kwargs = vdict({}, 
-            getitem=lambda key: self.getarg(key, "kwargs"), 
+        self.kwargs = vdict({},
+            getitem=lambda key: self.getarg(key, "kwargs"),
             setitem=self.setarg)
 
         self.opts = vdict({
@@ -55,10 +55,10 @@ class Item:
             "sticky_graph": opts["sticky_graph"]  if "sticky_graph" in opts else  False,
             "line_color": opts["line_color"]  if "line_color" in opts else  Color.BLUE
         }, setitem=self.option)
-        
+
         self.entry = Entry(self)
         self.is_callable = callable(self.obj)
-        self.classname = class_name or classname(self.obj)     
+        self.classname = class_name or classname(self.obj)
         self.show_wire = False
         self.method = None
         self.cached_value = None
@@ -70,46 +70,46 @@ class Item:
         node = NODE_SIZE * self.canvas.zoom
         create_parent = getattr(self.canvas, "create_" + ("rectangle" if callable(self.obj) or isinstance(self.obj, (str, list, dict)) else "oval"))
 
-        self.ids["parent"] = create_parent(x - width/2, y - height/2, x + width/2, y + height/2, 
-            tags=("parent", "draggable", "name=" + self.name), 
-            outline=Color.INACTIVE, 
+        self.ids["parent"] = create_parent(x - width/2, y - height/2, x + width/2, y + height/2,
+            tags=("parent", "draggable", "name=" + self.name),
+            outline=Color.INACTIVE,
             fill=Color.BLACK)
-        
-        self.ids["name"] = canvas.create_text(0,0, 
-            tags=("name", "draggable", "name=" + self.name, "font", "fontsize="+FONTSIZE["name"], "stop_scaling"), 
-            text=name or '', 
-            fill=Color.WHITE, 
+
+        self.ids["name"] = canvas.create_text(0,0,
+            tags=("name", "draggable", "name=" + self.name, "font", "fontsize="+FONTSIZE["name"], "stop_scaling"),
+            text=name or '',
+            fill=Color.WHITE,
             font="Menlo 18")
-        
-        self.ids["class"] = canvas.create_text(0,0, 
-            tags=("class", "draggable", "name=" + self.name, "font", "fontsize="+FONTSIZE["argvalue"], "stop_scaling"), 
+
+        self.ids["class"] = canvas.create_text(0,0,
+            tags=("class", "draggable", "name=" + self.name, "font", "fontsize="+FONTSIZE["argvalue"], "stop_scaling"),
             width=0,
             text=self.classname,
             fill=Color.BLUE)
 
-        self.ids["output"] = canvas.create_oval(0,0,0,0, 
-            tags=("output", "name=" + self.name), 
-            outline=Color.INACTIVE, 
+        self.ids["output"] = canvas.create_oval(0,0,0,0,
+            tags=("output", "name=" + self.name),
+            outline=Color.INACTIVE,
             fill=Color.EMPTY_NODE)
-            
-        self.ids["wire"] = canvas.create_line(0,0,0,0, 
-            tags=("wire", "name=" + self.name, "scale_width"), 
-            fill=Color.INACTIVE, 
+
+        self.ids["wire"] = canvas.create_line(0,0,0,0,
+            tags=("wire", "name=" + self.name, "scale_width"),
+            fill=Color.INACTIVE,
             smooth=True,
             state="hidden",
             width=1)
-        
+
         if not self.is_callable:
-            self.ids["value"] = canvas.create_text(x,y, 
-                tags=("value", "draggable", "editable", "name=" + self.name, "argvalue=<value>", "font", "fontsize="+FONTSIZE["value"]), 
+            self.ids["value"] = canvas.create_text(x,y,
+                tags=("value", "draggable", "editable", "name=" + self.name, "argvalue=<value>", "font", "fontsize="+FONTSIZE["value"]),
                 text=self.content(),
                 fill=fontcolor(self.obj),
                 font="Menlo 16")
 
             self.args.store["<value>"] = args["<value>"] if "<value>" in args else self.obj
-            self.ids["arg=<value>"] = canvas.create_oval(0,0,0,0, 
-                tags=("input", "arg=<value>", "name=" + self.name), 
-                outline=Color.INACTIVE, 
+            self.ids["arg=<value>"] = canvas.create_oval(0,0,0,0,
+                tags=("input", "arg=<value>", "name=" + self.name),
+                outline=Color.INACTIVE,
                 fill=Color.EMPTY_NODE)
         else:
             num_args = len(self.argspec[0]) if not self.opts["show_kwargs"] else (len(self.argspec[0]) + len(self.argspec[1]))
@@ -118,44 +118,44 @@ class Item:
             for j in self.argspec[0]:
                 if j not in self.args:
                     self.args.store[j] = args[j] if j in args else None
-                self.ids["arg=" + j] = canvas.create_oval(0,0,0,0, 
-                    tags=("input", "arg=" + j, "name=" + self.name), 
-                    outline=Color.INACTIVE, 
+                self.ids["arg=" + j] = canvas.create_oval(0,0,0,0,
+                    tags=("input", "arg=" + j, "name=" + self.name),
+                    outline=Color.INACTIVE,
                     fill=Color.EMPTY_NODE)
-                
-                self.ids["argname=" + j] = canvas.create_text(0,0, 
-                    tags=("name=" + self.name, "draggable", "font", "fontsize="+FONTSIZE["argname"]), 
+
+                self.ids["argname=" + j] = canvas.create_text(0,0,
+                    tags=("name=" + self.name, "draggable", "font", "fontsize="+FONTSIZE["argname"]),
                     text=j,
                     fill=Color.DARK_ORANGE,
                     anchor="w")
-                
-                self.ids["argvalue=" + j] = canvas.create_text(0,0, 
+
+                self.ids["argvalue=" + j] = canvas.create_text(0,0,
                     tags=("argvalue=" + j, "draggable", "editable", "name=" + self.name, "font", "fontsize="+FONTSIZE["argvalue"]),
                     text="None",
                     fill=Color.RED,
                     anchor="w")
                 i += 2
-            
+
             for k in self.argspec[1]:
                 if k not in self.kwargs:
                     self.kwargs.store[k] = kwargs[k] if k in kwargs else self.argspec[1][k]
-                self.ids["arg=" + k] = canvas.create_oval(0,0,0,0, 
-                    tags=("arg=" + k, "input", "name=" + self.name), 
-                    state="normal" if self.opts["show_kwargs"] else "hidden", 
-                    outline=Color.INACTIVE, 
+                self.ids["arg=" + k] = canvas.create_oval(0,0,0,0,
+                    tags=("arg=" + k, "input", "name=" + self.name),
+                    state="normal" if self.opts["show_kwargs"] else "hidden",
+                    outline=Color.INACTIVE,
                     fill=Color.EMPTY_NODE)
-                
+
                 self.ids["argname=" + k] = canvas.create_text(0,0,
-                    text=k, 
-                    tags=("name=" + self.name, "argname="+k, "draggable", "font", "fontsize="+FONTSIZE["argname"]), 
-                    state="normal" if self.opts["show_kwargs"] else "hidden", 
+                    text=k,
+                    tags=("name=" + self.name, "argname="+k, "draggable", "font", "fontsize="+FONTSIZE["argname"]),
+                    state="normal" if self.opts["show_kwargs"] else "hidden",
                     fill=Color.ORANGE,
                     anchor="w")
-                
-                self.ids["argvalue=" + k] = canvas.create_text(0,0, 
-                    text=str(self.kwargs[k]), 
-                    tags=("argvalue=" + k, "draggable", "editable", "name=" + self.name, "font", "fontsize="+FONTSIZE["argvalue"]), 
-                    state="normal" if self.opts["show_kwargs"] else "hidden", 
+
+                self.ids["argvalue=" + k] = canvas.create_text(0,0,
+                    text=str(self.kwargs[k]),
+                    tags=("argvalue=" + k, "draggable", "editable", "name=" + self.name, "font", "fontsize="+FONTSIZE["argvalue"]),
+                    state="normal" if self.opts["show_kwargs"] else "hidden",
                     fill=fontcolor(self.kwargs[k]),
                     anchor="w")
                 i += 2
@@ -238,7 +238,7 @@ class Item:
 
     def getarg(self, key, attr):
         params = getattr(self, attr).store
-        if key == "connection": 
+        if key == "connection":
             return { i: params[i] for i in params if isinstance(params[i], Item) }
         return params[key].value() if isinstance(params[key], Item) else params[key]
 
@@ -286,8 +286,8 @@ class Item:
         else:
             self.config("argvalue="+key, text=str(result)[:MAX_NUMBER_WIDTH], fill=fontcolor(result))
 
-        self.app.objects.item(self.name + "<arg=" + key + ">", 
-            text=str(result), 
+        self.app.objects.item(self.name + "<arg=" + key + ">",
+            text=str(result),
             tags=("editable", fontcolor(result, as_string=True)))
 
         if self.connection:
@@ -305,7 +305,7 @@ class Item:
                 self.kwargs.store[key] = value
             self.canvas.output.update_value(self)
             return False
-        
+
 
     def disconnect(self):
         if self.connection:
@@ -338,8 +338,8 @@ class Item:
         if callable(obj): return str(self.value())
 
         if isinstance(obj, dict):
-            return pformat(obj, indent=4, width=MAX_NUMBER_WIDTH)        
-       
+            return pformat(obj, indent=4, width=MAX_NUMBER_WIDTH)
+
         result = fill(str(obj), width=TEXTWRAP_SIZE) if isinstance(obj, (str, list)) else str(obj)
         if not truncate:
             return result
@@ -355,10 +355,10 @@ class Item:
             return
         width, height = self.dimensions(content)
         node = NODE_SIZE * self.canvas.zoom
-        
+
         self.coords("parent", x - width/2, y - height/2, x + width/2, y + height/2)
         self.coords("output", x + width/2 - node, y - node, x + width/2 + node, y + node)
-        self.coords("name", x, y - height/2 - 20 * self.canvas.zoom)        
+        self.coords("name", x, y - height/2 - 20 * self.canvas.zoom)
         # self.canvas.scale_font()
         self.coords("class", x, y + height/2 + 20 * self.canvas.zoom)
         self.move_wire()
@@ -388,14 +388,14 @@ class Item:
 
         if self.connection or self in self.canvas.output.items:
             self.move_wire()
-        
+
         for j in self.args["connection"]:
             self.args.store[j].move_wire()
-        
-        for k in self.kwargs["connection"]:
-            self.kwargs.store[k].move_wire()        
 
-            
+        for k in self.kwargs["connection"]:
+            self.kwargs.store[k].move_wire()
+
+
     def move_wire(self, *coord):
         if not coord:
             if self in self.canvas.output.items or self == self.canvas.output.log_item:
@@ -420,7 +420,7 @@ class Item:
         node = NODE_SIZE * self.canvas.zoom
         self.coords("wire",
             x2, y1 + (y2 - y1)/2,
-            x2 + delta_x /3, (y1 + y2)/2, 
+            x2 + delta_x /3, (y1 + y2)/2,
             x - delta_x/3, y,
             x - node,y
         )
@@ -447,7 +447,7 @@ class Item:
         char = self.text_dimensions(obj)
         width = min(300, 80 if len(str(obj)) <= 4 else char["width"] * FONT_SIZE) * self.canvas.zoom
         height = (60 + char["height"] * FONT_SIZE) * self.canvas.zoom
-        
+
         return width, height
 
     def text_dimensions(self, obj, **kwargs):
@@ -459,8 +459,8 @@ class Item:
                 "height": 1 + content.count("\n")
             }
 
-        return { 
-            "width": min(20, 1 + len(content or "")), 
+        return {
+            "width": min(20, 1 + len(content or "")),
             "height": 1 + int(len(content or "") / 20)
         }
 

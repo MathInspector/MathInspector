@@ -18,18 +18,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import numpy as np
 import tkinter as tk
 import pygame
-from widget import Text
-from util import argspec, instanceof, MESSAGE_TIMEOUT
-from console.builtin_print import builtin_print
-from style import Color, getimage
-import plot
+from ..widget import Text
+from ..util import argspec, instanceof, MESSAGE_TIMEOUT
+from ..console.builtin_print import builtin_print
+from ..style import Color, getimage
+from .. import plot
 
 class Output(tk.Frame):
 	def __init__(self, canvas):
 		self.canvas = canvas
 		self.app = canvas.app
 		tk.Frame.__init__(self, canvas.frame, background=Color.BLACK)
-		self.log = Text(canvas.frame, 
+		self.log = Text(canvas.frame,
 			font="Nunito 24 bold",
 			foreground=Color.ORANGE,
 			background=Color.BLACK,
@@ -38,9 +38,9 @@ class Output(tk.Frame):
 		)
 
 		plot.config(on_update=self.app.update, on_close=self.disconnect)
-		
+
 		self.node = tk.Label(self, image=getimage("node"), foreground=Color.RED, padx=0, pady=0, bd=0)
-		self.node.pack()		
+		self.node.pack()
 		self.node.bind("<Enter>", self._on_enter_node)
 		self.node.bind("<Leave>", self._on_leave_node)
 		self.node.bind("<Configure>", self._on_configure)
@@ -82,7 +82,7 @@ class Output(tk.Frame):
 		window = plot.get_window(value)
 		if not window and not show_plot:
 			return
-		
+
 		if show_plot and window and plot.is_active() and window != plot.active_window:
 			item.move_wire()
 			print(Exception("Can't plot 2D and 3D at the same time."))
@@ -140,7 +140,7 @@ class Output(tk.Frame):
 		if not callable(obj):
 			return False
 		return argspec(obj)[0] == ["position", "size", "step"]
-		
+
 	def update_value(self, item):
 		if plot.is_active():
 			if self.is_pixelmap(item.obj):

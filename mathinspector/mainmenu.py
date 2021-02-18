@@ -16,15 +16,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import numpy as np
-import plot, __main__, scipy, math, builtins, os, sys, doc, examples, util.binop
-from widget import Popup, Menu
-from style import Color
-from tkinter import filedialog
-from util import BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
-from util.common import open_editor
-from util.config import CONTROL_KEY, BASEPATH, BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
-from console import builtin_print
+import scipy, math, builtins, os, sys
 from functools import partial
+from tkinter import filedialog
+
+from . import plot, doc, examples
+from .util import binop
+from .widget import Popup, Menu
+from .style import Color
+from .util import BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
+from .util.common import open_editor
+from .util.config import CONTROL_KEY, BASEPATH, BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
+from .console import builtin_print
 
 TRIG_FUNCTIONS = [i for i in ("acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "cos", "cosh", "degrees", "sin", "sinh", "tan", "tanh")]
 MATH_FUNCTIONS = [i for i in dir(math) if callable(getattr(math, i)) and i not in TRIG_FUNCTIONS + ["pow"] and i[:1] != "_"]
@@ -53,8 +56,8 @@ class MainMenu(Menu):
 			"label": "Operator",
 			"menu": [{
 				"label": i,
-				"command": lambda key=i: self.create_object(key, util.binop)
-			} for i in dir(util.binop) if i[0] != "_"]
+				"command": lambda key=i: self.create_object(key, binop)
+			} for i in dir(binop) if i[0] != "_"]
 		},{
 			"label": "Math",
 			"menu": [{
@@ -79,24 +82,24 @@ class MainMenu(Menu):
 			} for i in MATH_FUNCTIONS]
 		},{
 			"label": "Builtin Class",
-			"menu": [{	
+			"menu": [{
 				"label": str(i),
 				"command": lambda key=i: self.create_object(key, builtins)
 			} for i in BUILTIN_CLASS if i[:1] != "_" and not i[:1].isupper() and "Error" not in i and "Warning" not in i]
 		},{
 			"label": "Builtin Function",
-			"menu": [{	
+			"menu": [{
 				"label": str(i),
 				"command": lambda key=i: self.create_object(key, module=builtins)
 			} for i in BUILTIN_FUNCTION if i[:1] != "_" and not i[:1].isupper()]
 		},{
 			"label": "Examples",
-			"menu": [{	
+			"menu": [{
 				"label": str(i).replace("_", " ").capitalize(),
 				"command": lambda key=i: self.create_object(key, module=examples)
 			} for i in dir(examples) if i[:1] != "_" and not i[:1].isupper() and i != "np"]
 		}]
-	
+
 		Menu.__init__(self, app, [{
 			"label": "File",
 			"menu": [{
@@ -107,17 +110,17 @@ class MainMenu(Menu):
 				{
 					"label": "Open...            ",
 					"command": lambda event=None: app.project.load(None),
-					"accelerator": CONTROL_KEY + "+o"	
+					"accelerator": CONTROL_KEY + "+o"
 				},
 				{
 					"label": "Save            ",
 					"command": lambda event=None: app.project.save(app.modules.rootfolder),
-					"accelerator": CONTROL_KEY + "+s"	
+					"accelerator": CONTROL_KEY + "+s"
 				},
 				{
 					"label": "Save As...            ",
 					"command": lambda event=None: app.project.save(None),
-					"accelerator": CONTROL_KEY + "+Shift+s"	
+					"accelerator": CONTROL_KEY + "+Shift+s"
 				}]
 			},{
 				"label": "Project",
@@ -187,7 +190,7 @@ class MainMenu(Menu):
 		self.has_hidden_panel = False
 
 		if hasattr(sys, "_MEIPASS"):
-			app.createcommand('tkAboutDialog', lambda: help(os.path.join(BASEPATH, "assets/ABOUT.md"), "About Math Inspector"))
+			app.createcommand('tkAboutDialog', lambda: help(os.path.join(BASEPATH, "ABOUT.md"), "About Math Inspector"))
 
 		app.side_view.bind("<Configure>", self.on_config_sidebar)
 		app.node.output.bind("<Configure>", self.on_config_vertical_panel)
@@ -195,18 +198,18 @@ class MainMenu(Menu):
 	def on_config_sidebar(self, event):
 		sashpos = self.app.horizontal_panel.sashpos(0)
 		if self.is_sidebar_visible and sashpos > SASHPOS_MIN: return
-		
+
 		if sashpos <= SASHPOS_MIN:
 			self._["View"].entryconfig(0, label="Show Sidebar")
 			self.is_sidebar_visible = False
 		else:
 			self._["View"].entryconfig(0, label="Hide Sidebar")
 			self.is_sidebar_visible = True
-	
+
 	def on_config_vertical_panel(self, event):
 		sashpos = self.app.vertical_panel.sashpos(0)
 		height = self.app.winfo_height()
-		if SASHPOS_MIN < sashpos < height - SASHPOS_MIN: 
+		if SASHPOS_MIN < sashpos < height - SASHPOS_MIN:
 			if self.has_hidden_panel:
 				self.has_hidden_panel = False
 				self._["View"].entryconfig(1, label="Hide Node Editor")
@@ -227,7 +230,7 @@ class MainMenu(Menu):
 	def setview(self, key, force_open=False):
 		h_sashpos = self.app.horizontal_panel.sashpos(0)
 		v_sashpos = self.app.vertical_panel.sashpos(0)
-		
+
 		if key == "sidebar":
 			self.is_sidebar_visible = not self.is_sidebar_visible
 			if self.is_sidebar_visible:

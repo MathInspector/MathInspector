@@ -15,12 +15,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from style import Color
-from util.config import FONT, FONT_SIZE
+from ..style import Color
+from ..util.config import FONT, FONT_SIZE
 
 DOC_TAGS = {
     "name": {
-        "font": "Montserrat " + FONT_SIZE["extra-large"] + " bold", 
+        "font": "Montserrat " + FONT_SIZE["extra-large"] + " bold",
         "foreground": Color.WHITE
     },
 
@@ -39,29 +39,29 @@ DOC_TAGS = {
     },
 
     "section_title": {
-        "font": "Montserrat " + FONT_SIZE["large"] + " bold", 
+        "font": "Montserrat " + FONT_SIZE["large"] + " bold",
         "foreground": Color.YELLOW,
         "spacing1": 0,
         "spacing3": 8
     },
 
     "module_nav": {
-        "font": "Montserrat " + FONT_SIZE["medium"] + " bold", 
-        "foreground": Color.DARK_GREY, 
+        "font": "Montserrat " + FONT_SIZE["medium"] + " bold",
+        "foreground": Color.DARK_GREY,
         "spacing1": 12,
     },
 
     "module_nav_hover": {
-        "foreground": Color.WHITE, 
+        "foreground": Color.WHITE,
     },
 
     "root": {
-        "font": "Montserrat " + FONT_SIZE["medium"] + " bold", 
-        "foreground": Color.DARK_ORANGE, 
+        "font": "Montserrat " + FONT_SIZE["medium"] + " bold",
+        "foreground": Color.DARK_ORANGE,
     },
 
     "root_hover": {
-        "foreground": Color.ORANGE, 
+        "foreground": Color.ORANGE,
     },
 
     "bordered_box": {
@@ -116,8 +116,8 @@ DOC_TAGS = {
     },
 
     "underline_title": {
-        "font": "Montserrat " + FONT_SIZE["large"] + " bold", 
-        "foreground": Color.VERY_LIGHT_GREY, 
+        "font": "Montserrat " + FONT_SIZE["large"] + " bold",
+        "foreground": Color.VERY_LIGHT_GREY,
         "spacing1": 16
     },
 
@@ -141,33 +141,33 @@ DOC_TAGS = {
     },
 
     "doc_link": {
-        "foreground": Color.BLUE, 
+        "foreground": Color.BLUE,
     },
 
     "doc_link_hover": {
-        "foreground": Color.LINK_URL, 
+        "foreground": Color.LINK_URL,
     },
 
     "code_sample": {
-        "background": Color.CONSOLE_BACKGROUND, 
-        # "foreground": Color.WHITE, 
+        "background": Color.CONSOLE_BACKGROUND,
+        # "foreground": Color.WHITE,
         "font": FONT,
         "spacing1": 8,
         "spacing2": 0,
         "spacing3": 8,
         "lmargin1": 8,
         "lmargin2": 38
-    }, 
-    
+    },
+
     "code_sample_hover": {
         "background": Color.HIGHLIGHT_INACTIVE
     },
-    
+
     "code": {
         "foreground": Color.GREY,
         "font": FONT + " bold"
     },
-    
+
     "console_prompt": {
         "foreground": Color.PROMPT,
         "font": FONT + " bold",
@@ -177,31 +177,30 @@ DOC_TAGS = {
     "link_url": {
         "foreground": Color.BLUE
     },
-    
+
     "link_url_hover": {
         "foreground": Color.LINK_URL
     },
-    
+
     "section_heading": {
-        "font": "Monospace 20 bold", 
-        "foreground": Color.BLACK, 
+        "font": "Monospace 20 bold",
+        "foreground": Color.BLACK,
         "background": Color.LIGHTER_GREY
     },
-    
+
     "underline_heading": {
-        "font": "Lato " + FONT_SIZE["medium"], 
-        "foreground": Color.BLACK, 
+        "font": "Lato " + FONT_SIZE["medium"],
+        "foreground": Color.BLACK,
         "underline": "true"
     },
-    
+
     "bold": {
         "font": "Montserrat " + FONT_SIZE["default"] + " bold",
     },
-    
     "italic": {
         "font": FONT + " italic",
     },
-    
+
     "horizontal_rule": {
         "font": "Monospace 1",
         "background": Color.VERY_LIGHT_GREY,
@@ -233,3 +232,4 @@ DOC_TAGS = {
         "font": "Arial 16 Bold"
     }
 }
+

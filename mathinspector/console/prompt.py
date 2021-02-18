@@ -19,14 +19,14 @@ import keyword, platform
 from .history import History
 from .builtin_print import builtin_print
 from .autocomplete import AutoComplete
-from util.config import FONT, PROMPT_FONTSIZE as FONTSIZE
-from widget import Text
-from style import Color
+from ..util.config import FONT, PROMPT_FONTSIZE as FONTSIZE
+from ..widget import Text
+from ..style import Color
 
 class Prompt(Text):
 	def __init__(self, console, frame):
-		Text.__init__(self, frame, 
-			background=Color.DARK_BLACK, 
+		Text.__init__(self, frame,
+			background=Color.DARK_BLACK,
 			font=FONT,
 			padx=0,
 			pady=0,
@@ -39,7 +39,7 @@ class Prompt(Text):
 		self.history = History(self)
 		self.yscroll = 1.0
 
-		self.bind("<Key>", self._on_key)		
+		self.bind("<Key>", self._on_key)
 		self.bind("<<Modify>>", self.on_modify)
 		self.bind("<<MarkSet>>", self.on_mark_set)
 		self.bind("<<Selection>>", self.on_text_selection)
@@ -66,11 +66,11 @@ class Prompt(Text):
 
 		if event.keysym == "Tab" and self.get().strip():
 			self.autocomplete()
-			return "break"		
+			return "break"
 
 		if event.keysym in ("Up", "Down"):
-			self.history.toggle(-1 if event.keysym == "Up" else +1)	
-			return "break"		
+			self.history.toggle(-1 if event.keysym == "Up" else +1)
+			return "break"
 
 		line, col = self.index("insert").split(".")
 		if event.keysym in ("BackSpace", "Left"):
@@ -86,7 +86,7 @@ class Prompt(Text):
 		if tag_ranges and event.keysym in ("parenleft", "quotedbl", "quoteright", "bracketleft"):
 			content = self.get(*tag_ranges)
 			self.delete(*tag_ranges)
-			
+
 			if event.keysym == "parenleft":
 				self.insert(tag_ranges[0], "(" + content + ")")
 			elif event.keysym == "quotedbl":
@@ -101,10 +101,10 @@ class Prompt(Text):
 		meta = (event.state & 0x8) != 0
 		is_mod = (ctrl or meta) and platform.system() != "Windows"
 		if is_mod:
-			if event.char == "v": 
+			if event.char == "v":
 				return self._on_paste()
-			
-			if event.char == "d":		
+
+			if event.char == "d":
 				self.tag_add("sel", "insert wordstart", "insert wordend")
 				return "break"
 
@@ -134,7 +134,7 @@ class Prompt(Text):
 		self.console.config(height=self.console.frame.winfo_height() - 2*FONTSIZE)
 		if self.is_on_bottom and not self.on_bottom():
 			self.is_on_bottom = False
-		
+
 		if self.winfo_ismapped() and self.console.yview() != 1.0:
 			self.is_on_bottom = False
 		self.move()
@@ -154,7 +154,7 @@ class Prompt(Text):
 		if self.is_on_bottom:
 			return
 
-		if self.on_bottom(): 
+		if self.on_bottom():
 			self.is_on_bottom = True
 			self.pack(side="bottom", fill="x", expand=True, before=self.console)
 			self.config(height=2)
@@ -189,13 +189,13 @@ class Prompt(Text):
 	def on_text_selection(self, event):
 		selected = self.tag_ranges("sel")
 		if len(selected) == 0: return
-		
+
 		line, col = str(selected[0]).split(".")
-		endline = self.index("end-1c").split(".")[0]		
+		endline = self.index("end-1c").split(".")[0]
 		if line == endline and int(col) < 5:
 			self.tag_remove("sel", selected[0], str(line) + ".5")
 
-	def _on_paste(self, content=None):		
+	def _on_paste(self, content=None):
 		content = content or self.clipboard_get()
 		if not content or "\n" not in content: return
 
@@ -235,7 +235,7 @@ class Prompt(Text):
 			"command": clear
 		}, {
 			"label": "Keyword List",
-			"menu": [{	
+			"menu": [{
 				"label": str(i),
 				"command": lambda key=i: self.insert("insert", key)
 			} for i in keyword.kwlist]

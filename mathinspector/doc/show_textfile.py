@@ -136,7 +136,7 @@ class TextParser:
                 elif endline == -1:
                     result += text
                     self.index = len(self.content)
-                else:               
+                else:
                     result += text[:endline]
                     if not tag:
                         result += " "
@@ -150,7 +150,7 @@ class TextParser:
 
             return TextNode(result, tag)
         else:
-            raise StopIteration     
+            raise StopIteration
 
 
 class TextNode:

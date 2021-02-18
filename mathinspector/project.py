@@ -9,7 +9,7 @@ extension, otherwise, math inspector will create a new directory on your file sy
 of the project, and will copy any external files into this new directory, and place the .math
 file in the project folder.
 
-To open a saved project, select File > Open from the main menu, navigate to the 
+To open a saved project, select File > Open from the main menu, navigate to the
 project folder and choose the .math file
 
 Adding files to your project
@@ -17,7 +17,7 @@ Adding files to your project
 You can add an existing python script to a project by selecting Modules > Add File from the main menu.
 There are no restrictions on the type of python programs which are compatible.
 
-Whenever you save your changes to a file that has been added to the current project, the node editor 
+Whenever you save your changes to a file that has been added to the current project, the node editor
 is updated just as if the entire file was copy/pasted into the interpreter.  This can be very convinient for
 more complicated projects.
 
@@ -52,9 +52,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import pickle, os, atexit, shutil, traceback, cloudpickle, plot
+import pickle, os, atexit, shutil, traceback, cloudpickle
+from . import plot
 from tkinter import messagebox, filedialog
-from util import name_ext, AUTOSAVE_PATH
+from .util import name_ext, AUTOSAVE_PATH
 from importlib import import_module
 
 class SaveData:
@@ -66,7 +67,7 @@ class SaveData:
 
 	def new(self, event=None, with_dialog=True, title="Math Inspector"):
 		if with_dialog:
-			if not messagebox.askokcancel("MathInspector", 
+			if not messagebox.askokcancel("MathInspector",
 				"Are you sure you want to start a new file?  Any unsaved data will be lost."):
 				return
 
@@ -80,7 +81,7 @@ class SaveData:
 
 		for j in module_keys:
 			del self.app.modules[j]
-				
+
 		children = self.app.modules.get_children()
 		for k in children:
 			self.app.modules.delete(k)
@@ -99,15 +100,15 @@ class SaveData:
 		if file is None or file not in (AUTOSAVE_PATH, self.app.modules.rootfolder):
 			file = filedialog.asksaveasfilename(defaultextension="")
 			if not file: return
-		
+
 		files = self.app.modules.files("file")
 		folders = self.app.modules.files("folder")
-		
+
 		is_rootfolder = file != AUTOSAVE_PATH and len(files + folders) > 0
-		
+
 		if file != AUTOSAVE_PATH:
 			self.app.title(os.path.basename(file))
-		
+
 		if is_rootfolder:
 			# need to clear prev files
 			# check in modified
@@ -119,7 +120,7 @@ class SaveData:
 		for j in self.app.modules.store:
 			if not self.app.modules.has_tag(j, "local"):
 				modules.append({ "alias": j, "name": self.app.modules[j].__name__})
-		# modules = [{ "alias": j, "name": self.app.modules[j].__name__} for j in self.app.modules.store]	
+		# modules = [{ "alias": j, "name": self.app.modules[j].__name__} for j in self.app.modules.store]
 		functions = {}
 		methods = {}
 		custom_fn = {}
@@ -137,7 +138,7 @@ class SaveData:
 				"args": { j: item.args[j] for j in item.args if j != "<value>" },
 				"kwargs": { k: item.kwargs[k] for k in item.kwargs },
 				"opts": item.opts.store,
-			}	
+			}
 
 		plot_config = plot.config()
 
@@ -247,22 +248,22 @@ class SaveData:
 			file = filedialog.askopenfilename(filetypes=[('Math Inspector Files','*.math'), ('All Files','*.*')])
 			if not file:
 				return
-		
+
 		try:
 			with open(file, "rb") as i:
 				data = pickle.load(i)
 		except Exception:
 			self.new(with_dialog=False)
 			self.app.geometry("1280x720+140+100")
-			self.app.horizontal_panel.bind("<Configure>", 
+			self.app.horizontal_panel.bind("<Configure>",
 				lambda event: self.on_configure("horizontal_panel", 0))
-			self.app.vertical_panel.bind("<Configure>", 
+			self.app.vertical_panel.bind("<Configure>",
 				lambda event: self.on_configure("vertical_panel", 0))
 			self.new(with_dialog=False)
 			return
-		
+
 		data = { i["name"]:i["value"] for i in data }
-		
+
 		self.new(with_dialog=False, title=data["app_title"])
 
 		try:
@@ -271,10 +272,10 @@ class SaveData:
 			if "geometry" in data:
 				self.app.geometry(data["geometry"])
 			if "horizontal_panel_sash" in data:
-				self.app.horizontal_panel.bind("<Configure>", 
+				self.app.horizontal_panel.bind("<Configure>",
 					lambda event: self.on_configure("horizontal_panel", data["horizontal_panel_sash"]))
 			if "vertical_panel_sash" in data:
-				self.app.vertical_panel.bind("<Configure>", 
+				self.app.vertical_panel.bind("<Configure>",
 					lambda event: self.on_configure("vertical_panel", data["vertical_panel_sash"]))
 			if "modules" in data:
 				for i in data["modules"]:
@@ -362,15 +363,15 @@ class SaveData:
 
 		for i in files + folders:
 			self.app.modules.delete(i)
-		
+
 		if not os.path.isdir(rootfolder):
 			os.mkdir(rootfolder)
-		
+
 		self.app.modules.stop_observer()
 		for i in folders:
 			if os.path.dirname(i) != rootfolder:
 				shutil.copytree(i, os.path.join(rootfolder, os.path.basename(i)))
-		
+
 		for j in files:
 			if os.path.dirname(j) != rootfolder:
 				shutil.copy(j, rootfolder)

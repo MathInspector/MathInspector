@@ -16,8 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import numpy as np
-import math, builtins, examples, util.binop
-from util import BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
+import math, builtins
+from .. import examples
+from ..util import BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT, binop
 
 TRIG_FUNCTIONS = [i for i in ("acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "cos", "cosh", "degrees", "sin", "sinh", "tan", "tanh")]
 MATH_FUNCTIONS = [i for i in dir(math) if callable(getattr(math, i)) and i not in TRIG_FUNCTIONS and i[:1] != "_"]
@@ -28,8 +29,8 @@ def object_menu(app):
 		"label": "Operator",
 		"menu": [{
 			"label": i,
-			"command": lambda key=i: create_object(app, key, util.binop)
-		} for i in dir(util.binop) if i[0] != "_"]
+			"command": lambda key=i: create_object(app, key, binop)
+		} for i in dir(binop) if i[0] != "_"]
 	},{
 		"label": "Math",
 		"menu": [{
@@ -54,24 +55,24 @@ def object_menu(app):
 		} for i in MATH_FUNCTIONS]
 	},{
 		"label": "Builtin Class",
-		"menu": [{	
+		"menu": [{
 			"label": str(i),
 			"command": lambda key=i: create_object(app, key, builtins)
 		} for i in BUILTIN_CLASS if i[:1] != "_" and not i[:1].isupper() and "Error" not in i and "Warning" not in i]
 	},{
 		"label": "Builtin Function",
-		"menu": [{	
+		"menu": [{
 			"label": str(i),
 			"command": lambda key=i: create_object(app, key, module=builtins)
 		} for i in BUILTIN_FUNCTION if i[:1] != "_" and not i[:1].isupper()]
 	},{
 		"label": "Examples",
-		"menu": [{	
+		"menu": [{
 			"label": str(i).replace("_", " ").capitalize(),
 			"command": lambda key=i: create_object(app, key, module=examples)
 		} for i in dir(examples) if i[:1] != "_" and not i[:1].isupper() and i != "np"]
 	}]
 
 def create_object(app, name, module):
-	obj = getattr(module, name)		
+	obj = getattr(module, name)
 	app.objects.setobj(name, obj, create_new=True)

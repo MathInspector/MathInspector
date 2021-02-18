@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import numpy as np
 import inspect, os, platform
-from style import Color
+from ..style import Color
 
 def getrandom(min, max):
     N = 10
@@ -58,7 +58,7 @@ def open_editor(file):
 
 def instanceof(value, classes):
     if not isinstance(classes, tuple):
-        classes = classes, 
+        classes = classes,
 
     if isinstance(value, tuple) and tuple in classes:
         return True
@@ -73,6 +73,7 @@ def instanceof(value, classes):
         return True
 
     if np.dtype(value.__class__) == np.complex128 and complex in classes:
-        return True 
+        return True
 
-    return isinstance(value, classes)        
+
+    return isinstance(value, classes)

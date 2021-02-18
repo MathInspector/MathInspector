@@ -2,7 +2,7 @@
 The modules which are currently available in the global namespace
 are displayed in the left hand sidebar of the main window.  From this
 tab, you can explore the available functionality of any module, which
-can be very helpful for learning new parts of the python and numpy 
+can be very helpful for learning new parts of the python and numpy
 ecosystems.
 
 It's possible to drag and drop any object listed in the Modules tab
@@ -14,8 +14,8 @@ menu of available options.  When you add a file or folder, they
 will be available in the global namespace just like any other module.
 
 The difference between importing a module and adding a file, is that
-when a file is added to the Modules tab, each line of that file is 
-executed, and any changes that are saved to that file are updated 
+when a file is added to the Modules tab, each line of that file is
+executed, and any changes that are saved to that file are updated
 in the node editor, as well as across all the other views.
 
 To directly access the global object which stores the names and values
@@ -44,22 +44,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import re, os, inspect, uuid, importlib.util, sys, traceback
-from util import vdict
-from widget import Treeview
-from util import *
 from tkinter import filedialog
-from style import Color, getimage
 from importlib import reload
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
-from console.builtin_print import builtin_print
+from .util import vdict
+from .util import *
+from .widget import Treeview
+from .style import Color, getimage
+from .console.builtin_print import builtin_print
 
 class ModuleTree(vdict, Treeview):
 	"""
 	In order to synchronize the available modules across views,
 	math inspector stores the aliases and values of all modules in a vdict called the Module Tree.
 
-	When a file or folder is added to the Module Tree, the `watchdog` module 
+	When a file or folder is added to the Module Tree, the `watchdog` module
 	is used to monitor changes in those files and update
 	the values of variables across all views.
 
@@ -69,7 +69,7 @@ class ModuleTree(vdict, Treeview):
 	def __init__(self, app):
 		vdict.__init__(self, getitem=self.getmodule, setitem=self.setmodule, delitem=self.delete)
 		Treeview.__init__(self, app)
-		
+
 		self.drag = None
 		self.rootfolder = None
 		self.handler = None
@@ -92,13 +92,13 @@ class ModuleTree(vdict, Treeview):
 			if self.exists(module.__name__):
 				self.delete(module.__name__)
 			self.store[name] = module
-			parent = self.insert("", 'end', module.__name__, 
-				text="      " + name, 
-				values=name, 
+			parent = self.insert("", 'end', module.__name__,
+				text="      " + name,
+				values=name,
 				image=getimage(".py"),
 				open=True,
 				tags="file" if file else "module")
-			
+
 		if len(self.store) == 1:
 			self.app.menu.setview("modules", True)
 
@@ -112,7 +112,7 @@ class ModuleTree(vdict, Treeview):
 				attr = getattr(module, fn)
 			except:
 				fn = "_" + fn
-				
+
 			if fn[:1] != "_":
 				if inspect.isclass(attr):
 					classes.append(fn)
@@ -125,7 +125,7 @@ class ModuleTree(vdict, Treeview):
 						submodules.append((fn, attr))
 				else:
 					constants.append(fn)
-		
+
 		if builtin_fn:
 			folder = self.insert(parent, "end", text="builtins")
 			for i in builtin_fn:
@@ -180,7 +180,7 @@ class ModuleTree(vdict, Treeview):
 					except:
 						pass
 				del self.watchers[key]
-		
+
 		if key in self.store:
 			del self.store[key]
 		return False
@@ -189,21 +189,21 @@ class ModuleTree(vdict, Treeview):
 		file = file or filedialog.askopenfilename()
 		if not file: return
 
-		name, ext = name_ext(file)		
+		name, ext = name_ext(file)
 		if os.path.basename(file) in EXCLUDED_FILES or ext in EXCLUDED_EXT: return
 
 		if self.exists(name):
 			self.delete(name, del_objs=False)
-		
-		parent = self.insert(parent if (self.rootfolder and parent != self.rootfolder) else "", index, name, 
-			text="      " + name, 
-			image=getimage(ext), 
+
+		parent = self.insert(parent if (self.rootfolder and parent != self.rootfolder) else "", index, name,
+			text="      " + name,
+			image=getimage(ext),
 			tags="local" if parent else ("local", "file"),
 			open=is_open,
 			values=file)
-		
+
 		if ext != ".py": return
-		
+
 		if name in sys.modules:
 			del sys.modules[name]
 
@@ -211,8 +211,8 @@ class ModuleTree(vdict, Treeview):
 			if not self.observer:
 				self.observer = Observer()
 				self.observer.start()
-			
-			self.watchers[name] = self.observer.schedule(FileHandler(self, file=file), 
+
+			self.watchers[name] = self.observer.schedule(FileHandler(self, file=file),
 				path=os.path.dirname(file), recursive=False)
 
 		expanded = self.expanded()
@@ -232,14 +232,14 @@ class ModuleTree(vdict, Treeview):
 					self.disable_file(parent)
 					print (Exception("ImportError: object with name " + i + " already exists.\n  File \"" + file + "\", line 1, in <module>"))
 					builtin_print ("\a")
-					return	
+					return
 
 		if name not in self.store:
 			self.store[name] = module
 
 		self.setmodule(name, module, parent, file)
 		self.expanded(expanded)
-		
+
 		if exec_file:
 			prev = self.app.objects.store.copy()
 			source = open(file, "r").read()
@@ -279,19 +279,19 @@ class ModuleTree(vdict, Treeview):
 		if is_rootfolder:
 			self.rootfolder = dirpath
 		else:
-			parent = self.insert(parent, "end", dirpath, 
-				text="      " + name, 
-				open=(not parent), 
-				image=getimage("folder"), 
+			parent = self.insert(parent, "end", dirpath,
+				text="      " + name,
+				open=(not parent),
+				image=getimage("folder"),
 				tag="folder" if not parent else "",
-				values=dirpath)		
-		
+				values=dirpath)
+
 		items = [(i, os.path.isdir(os.path.join(dirpath, i))) for i in os.listdir(dirpath)]
 		items.sort()
 		for name, is_dir in items:
 			if is_dir and name not in EXCLUDED_DIR:
 				self.addfolder(os.path.join(dirpath, name), parent, watch=False, exec_file=exec_file)
-		
+
 		for name, is_dir in items:
 			if not is_dir and name not in EXCLUDED_FILES:
 				fullpath = os.path.join(dirpath, name)
@@ -301,8 +301,8 @@ class ModuleTree(vdict, Treeview):
 			if not self.observer:
 				self.observer = Observer()
 				self.observer.start()
-			
-			self.watchers[name] = self.observer.schedule(FileHandler(self, dirpath=dirpath), 
+
+			self.watchers[name] = self.observer.schedule(FileHandler(self, dirpath=dirpath),
 				path=dirpath, recursive=True)
 
 	def stop_observer(self):
@@ -316,11 +316,11 @@ class ModuleTree(vdict, Treeview):
 			result = []
 			if self.has_tag(key, tag):
 				result.append(key)
-			
+
 			for i in children:
 				result.extend(self.files(tag, True, i))
 			return result
-		
+
 		keys = [j for j in children if self.has_tag(j, tag)]
 		return [self.app.modules.item(i)["values"][0] for i in keys]
 
@@ -343,7 +343,7 @@ class ModuleTree(vdict, Treeview):
 			try:
 				sourcefile = inspect.getsourcefile(self[key])
 			except:
-				sourcefile = None	
+				sourcefile = None
 
 			if sourcefile:
 				open_editor(sourcefile)
@@ -353,13 +353,13 @@ class ModuleTree(vdict, Treeview):
 		if obj:
 			help(obj)
 			return "break"
-			
+
 	def _on_button_release_right(self, event):
 		key = self.identify_row(event.y)
 		if not key:
 			self.menu.set_menu(self.app.menu.project_menu)
 			return self.menu.show(event)
-		
+
 		value = self.item(key)["values"][0]
 		items = []
 		obj = help.getobj(value)
@@ -379,16 +379,16 @@ class ModuleTree(vdict, Treeview):
 				"label": "View Source Code",
 				"command": lambda: open_editor(inspect.getsourcefile(obj))
 			})
-		
+
 		# print ('v', value)
 		if key in self.get_children() and value != self.rootfolder:
-			items.extend([{ 
-				"separator": None 
+			items.extend([{
+				"separator": None
 			}, {
 				"label": "Remove " + key,
 				"command": lambda: self.delete(value)
-			}])	
-		
+			}])
+
 		self.menu.set_menu(items)
 		self.menu.show(event)
 
@@ -443,8 +443,8 @@ class FileHandler(FileSystemEventHandler):
 	def is_excluded(self, event):
 		name, ext = name_ext(event.src_path)
 		return (self.file and self.file != event.src_path
-			or event.is_directory 
+			or event.is_directory
 			or (name + ext) in EXCLUDED_FILES
-			or ext in EXCLUDED_EXT 
+			or ext in EXCLUDED_EXT
 			or name in EXCLUDED_DIR
 		)

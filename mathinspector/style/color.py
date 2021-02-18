@@ -1,4 +1,4 @@
-COLORS = {		
+COLORS = {
 	"WHITE": "#f8f8f2",
 	"PURE_WHITE": "#fff",
 	"NAV": "#f3f3f3",
@@ -13,7 +13,7 @@ COLORS = {
 	"DARKER_GREY": "#989898",
 	"HIGHLIGHT": "#48473d",
 	"HIGHLIGHT_INACTIVE": "#383830",
-	"QUALITY_GREY": "#90918b",		
+	"QUALITY_GREY": "#90918b",
 	"VERY_DARK_GREY": "#75715d",
 	"FADED_GREY": "#42433e",
 	"BACKGROUND": "#272822",

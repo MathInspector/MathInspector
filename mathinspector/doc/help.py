@@ -1,11 +1,11 @@
 """
 this class adds extra functionality to the builtin help function,
-and is used to override the the builtin help function by calling		
+and is used to override the the builtin help function by calling
 
 >>> __builtins__["help"] = Help(app)
 
 in console/interpreter.py
- 
+
 """
 """
 Copyright (C) 2021 Matt Calhoun
@@ -24,10 +24,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import builtins
-from util.config import INSTALLED_PKGS, BUILTIN_PKGS, BUILTIN_CLASS
-from util.common import name_ext
+from ..util.config import INSTALLED_PKGS, BUILTIN_PKGS, BUILTIN_CLASS
+from ..util.common import name_ext
 from os import path
-from console.builtin_print import builtin_print
+from ..console.builtin_print import builtin_print
 from .browser import Browser
 from . import manual
 
@@ -35,7 +35,7 @@ class Help:
 	def __init__(self, app):
 		self.app = app
 		self.geometry = None
-		self.browser = None		
+		self.browser = None
 
 	def __call__(self, key=None, title=None):
 		if not key:
@@ -66,7 +66,7 @@ class Help:
 				return obj
 			except:
 				pass
-		
+
 		if key in self.app.objects:
 			if isinstance(self.app.objects[key], tuple([getattr(builtins,i) for i in BUILTIN_CLASS])):
 				return self.app.objects[key].__class__
@@ -77,7 +77,7 @@ class Help:
 			name, ext = name_ext(key)
 			if name in self.app.modules:
 				return self.app.modules[name]
-			
+
 			if name in ("LICENSE") or ext in (".md", ".rst"):
 				return key
 		try:

@@ -1,18 +1,17 @@
-# -*- mode: python -*-
-
-import os
-VERSION = "0.9.1"
+# -*- mode: python ; coding: utf-8 -*-
 
 block_cipher = None
 
-added_files = [
-  ('assets', 'assets')
-]
+try:
+    from mathinspector.verison import VERSION
+except ImportError:
+    VERSION = "UNKNOWN"
 
-a = Analysis(['mathinspector/__main__.py'],
-             pathex=[os.path.join(os.path.abspath('.'), 'mathinspector')],
+a = Analysis(['../mathinspector/_run.py'],
+             pathex=[os.path.abspath('..')],
              binaries=[],
-             hiddenimports=['pywt._extensions._cwt'],
+             datas=[('../mathinspector/assets', 'assets')],
+             hiddenimports=['pywt._extensions._cwt', 'tcl8'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -32,7 +31,7 @@ exe = EXE(pyz,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=True )
+          console=True)
 
 coll = COLLECT(exe,
                a.binaries,
@@ -44,7 +43,7 @@ coll = COLLECT(exe,
 
 app = BUNDLE(coll,
             name='mathinspector.app',
-            icon='assets/icons_3.icns',
+            icon='../mathinspector/assets/icons_3.icns',
             bundle_identifier='com.math.inspector',
             info_plist={
               'CFBundleName': 'Math Inspector',
@@ -60,6 +59,6 @@ app = BUNDLE(coll,
                     'CFBundleTypeExtensions': ['math'],
                     'LSHandlerRank': 'Owner'
                     }
-                ]                                
+                ]
             }
 )

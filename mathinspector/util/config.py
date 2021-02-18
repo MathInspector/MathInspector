@@ -15,31 +15,27 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from pkg_resources import resource_filename
 import inspect, os, platform, sys, pkg_resources, builtins, keyword, math
 from sys import builtin_module_names
 from pkgutil import iter_modules
 
-BUTTON_RIGHT = '<Button-3>' if platform.system() in ("Windows", "Linux") else '<Button-2>'
-BUTTON_RELEASE_RIGHT = '<ButtonRelease-3>' if platform.system() in ("Windows", "Linux") else '<ButtonRelease-2>'
-BUTTON_RIGHT_MOTION = '<B3-Motion>' if platform.system() in ("Windows", "Linux") else '<B2-Motion>'
-CONTROL_KEY = 'Control' if platform.system() in ("Windows", "Linux") else 'Command'
-if platform.system() in ("Windows", "Linux"):
-    if hasattr(sys, "_MEIPASS"):
-        BASEPATH = os.path.join(sys._MEIPASS, "Resources")
-        if platform.system() == "Windows":
-            AUTOSAVE_PATH = os.path.join(os.path.join(os.getenv('LOCALAPPDATA'), "MathInspector"), "autosave.math")
-        else:
-            AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
+SYSTEM = platform.system()
+BUTTON_RIGHT = '<Button-3>' if SYSTEM in ("Windows", "Linux") else '<Button-2>'
+BUTTON_RELEASE_RIGHT = '<ButtonRelease-3>' if SYSTEM in ("Windows", "Linux") else '<ButtonRelease-2>'
+BUTTON_RIGHT_MOTION = '<B3-Motion>' if SYSTEM in ("Windows", "Linux") else '<B2-Motion>'
+CONTROL_KEY = 'Control' if SYSTEM in ("Windows", "Linux") else 'Command'
+if hasattr(sys, "_MEIPASS"):
+    BASEPATH = os.path.join(
+        sys._MEIPASS,
+        "assets" if SYSTEM in ("Windows", "Linux") else "../assets")
+    if SYSTEM == "Windows":
+        AUTOSAVE_PATH = os.path.join(os.path.join(os.getenv('LOCALAPPDATA'), "MathInspector"), "autosave.math")
     else:
-        BASEPATH = os.path.abspath(os.path.join(__file__, "../../../assets"))
         AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
-
 else:
-    BASEPATH = os.path.join(sys._MEIPASS, "../Resources") if hasattr(sys, "_MEIPASS") else os.path.abspath(os.path.join(__file__, "../../../assets"))
+    BASEPATH = resource_filename("mathinspector", "assets")
     AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
-
-
-
 
 MESSAGE_TIMEOUT = 4000
 
@@ -58,7 +54,7 @@ HITBOX = 32
 FONTSIZE = "12" # TODO - refactor this into the rest of the FONTSIZE stuff
 PROMPT_FONTSIZE = 18.5
 
-if platform.system() in ("Windows", "Linux"):
+if SYSTEM in ("Windows", "Linux"):
     FONT = "LucidaConsole 12"
     DOC_FONT = "Nunito-ExtraLight 12"
     FONT_SIZE = {
@@ -113,7 +109,7 @@ EXCLUDED_DIR = [
     "__pycache__",
     ".git"
 ]
-    
+
 EXCLUDED_FILES = [
     ".DS_Store",
     "__pycache__",

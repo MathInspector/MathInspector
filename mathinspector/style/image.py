@@ -19,9 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import os, sys
 from PIL import ImageTk, Image
-from util.config import BASEPATH
+from ..util.config import BASEPATH
 
-ASSET_PATH = os.path.join(BASEPATH, "assets/img" if hasattr(sys, "_MEIPASS") else "img")
+ASSET_PATH = os.path.join(BASEPATH, "img")
 
 IMAGE = {
 	".py": "pythonlogo-color.png",

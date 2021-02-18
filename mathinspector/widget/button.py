@@ -16,13 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import tkinter as tk
-from style import Color
+from ..style import Color
 
 class Button(tk.Label):
 	def __init__(self, parent, *args, command=None, **kwargs):
 		if "background" not in kwargs:
 			kwargs["background"] = Color.ALT_BACKGROUND
-		
+
 		if "foreground" not in kwargs:
 			kwargs["foreground"] = Color.WHITE
 

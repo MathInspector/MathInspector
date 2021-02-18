@@ -3,10 +3,10 @@
 block_cipher = None
 
 
-a = Analysis(['mathinspector/__main__.py'],
-             pathex=['/MathInspector/mathinspector'],
+a = Analysis(['../mathinspector/_run.py'],
+             pathex=[os.path.abspath('..')],
              binaries=[],
-             datas=[('assets', 'Resources/assets')],
+             datas=[('../mathinspector/assets', 'assets')],
              hiddenimports=['PIL._tkinter_finder'],
              hookspath=[],
              runtime_hooks=[],
@@ -15,10 +15,8 @@ a = Analysis(['mathinspector/__main__.py'],
              win_private_assemblies=False,
              cipher=block_cipher,
              noarchive=False)
-
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
-
 exe = EXE(pyz,
           a.scripts,
           [],
@@ -28,7 +26,7 @@ exe = EXE(pyz,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=True )
+          console=True)
 
 coll = COLLECT(exe,
                a.binaries,

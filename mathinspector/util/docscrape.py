@@ -20,9 +20,9 @@ def strip_blank_lines(l):
 
 
 class Reader(object):
-    
+
     def __init__(self, data):
-        
+
         if isinstance(data, list):
             self._str = data
         else:
@@ -96,7 +96,7 @@ class ParseError(Exception):
 
 
 class NumpyDocString(collections.Mapping):
-    
+
 
     sections = {
         'Signature': '',
@@ -219,11 +219,11 @@ class NumpyDocString(collections.Mapping):
                            r" (?P<name2>[a-zA-Z0-9_.-]+))\s*", re.X)
 
     def _parse_see_also(self, content):
-        
+
         items = []
 
         def parse_item_name(text):
-            
+
             m = self._name_rgx.match(text)
             if m:
                 g = m.groups()
@@ -269,7 +269,7 @@ class NumpyDocString(collections.Mapping):
         return items
 
     def _parse_index(self, section, content):
-        
+
         def strip_each_in(lst):
             return [s.strip() for s in lst]
 
@@ -284,7 +284,7 @@ class NumpyDocString(collections.Mapping):
         return out
 
     def _parse_summary(self):
-        
+
         if self._is_at_section():
             return
 
@@ -465,7 +465,7 @@ def indent(str, indent=4):
 
 
 def dedent_lines(lines):
-    
+
     return textwrap.dedent("\n".join(lines)).split("\n")
 
 
