@@ -1,0 +1,39 @@
+name: Test
+on: [push, pull_request]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v2
+    - run: pip install .
+    - id: dist
+      uses: casperdcl/deploy-pypi@v2
+      with:
+        build: true
+        password: ${{ secrets.PYPI_TOKEN }}
+        upload: ${{ github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags') }}
+    - name: Changes
+      run: |
+        git log --pretty='format:%d%n- %s%n%b---' $(git tag --sort=v:refname | tail -n2 | head -n1)..HEAD > _CHANGES.md
+    - if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Math Inspector ${{ github.ref }} (Beta)
+        body_path: _CHANGES.md
+        draft: true
+    - if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: dist/${{ steps.dist.outputs.whl }}
+        asset_name: ${{ steps.dist.outputs.whl }}
+        asset_content_type: application/zip
