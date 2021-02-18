@@ -22,7 +22,7 @@ class Button(tk.Label):
 	def __init__(self, parent, *args, command=None, **kwargs):
 		if "background" not in kwargs:
 			kwargs["background"] = Color.ALT_BACKGROUND
-		
+
 		if "foreground" not in kwargs:
 			kwargs["foreground"] = Color.WHITE
 

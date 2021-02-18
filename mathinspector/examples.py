@@ -66,7 +66,7 @@ To plot the grid, we transponse `Z` to get the lines to go in the other directio
 
 >>> plot(Z,transpose(Z))
     """
-	if (x_min < 0 and x_max > 0) or (y_min < 0 and y_max > 0):	
+	if (x_min < 0 and x_max > 0) or (y_min < 0 and y_max > 0):
 		return (*complex_grid(x_min, NEG_Z, y_min, NEG_Z, int(num/2)),
 			*complex_grid(POS_Z, x_max, y_min, NEG_Z, int(num/2)),
 			*complex_grid(x_min, NEG_Z, POS_Z, y_max, int(num/2)),
@@ -128,7 +128,7 @@ If the grid passes through either the x or y axis, then this function returns a 
 References
 ----------
 Mathologer, Times Tables, Mandelbrot and the Heart of Mathematics,
-https://www.youtube.com/watch?v=qhbuKbxJsk8 
+https://www.youtube.com/watch?v=qhbuKbxJsk8
 
 Examples
 --------
@@ -142,7 +142,7 @@ Animation
     """
 
 	result = []
-	
+
 	for value in range(start, end):
 		new_value = (value * factor) % end
 		result.append([
@@ -298,7 +298,7 @@ Examples
 
 def domain_coloring(position, size, step, transform=None):
 	"""
-Domain coloring is a popular technique for visualizing the output of complex valued functions of a 
+Domain coloring is a popular technique for visualizing the output of complex valued functions of a
 complex variable.
 
 Parameters
@@ -388,7 +388,7 @@ Examples
 	R[:,:,0] = 255 * M
 	R[:,:,1] = 255 * M
 	R[:,:,2] = 255 * M
-	return R	
+	return R
 
 def helix(t, as_points=False):
 	"""
@@ -440,7 +440,7 @@ Examples
 >>> Y = linspace(0,10)
 >>> plot(wireframe(X,Y, lambda x,y: (x,y,x**2 + y**2)))
     """
-	
+
 	x_lines, y_lines = [], []
 	for xval in x:
 		temp = []
@@ -480,7 +480,7 @@ Examples
 >>> Y = linspace(0,10)
 >>> plot(surface(X,Y, lambda x,y: (x,y,x**2 + y**2)))
 	"""
-	
+
 	return wireframe(x,y,fn)[1]
 
 def cylinder(pos=(0,0,0),radius=1,num=25, as_wireframe=False):

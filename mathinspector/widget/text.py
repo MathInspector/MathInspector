@@ -25,8 +25,8 @@ from widget.menu import Menu
 from console.builtin_print import builtin_print
 import io, re, tokenize, keyword, builtins, inspect
 
-RE_PY = {   
-	
+RE_PY = {
+
 	"orange_italic": r"^def (\w+)\s?\(((\w+(,\s?)?)+)\)",
 	#"orange_italic": r"(\w+)\s?\(((\w+(,\s?)?)+)\)",
 	# "orange_italic": r".([a-zA-Z0-9_]*)=(.*?)( |\n)*(,|\))",
@@ -44,8 +44,8 @@ DEFAULT_OPTS = {
 	"insertbackground": Color.WHITE,
 	"padx": 16,
 	"pady": 8,
-	"borderwidth": 0, 
-	"highlightthickness": 0, 			
+	"borderwidth": 0,
+	"highlightthickness": 0,
 	"selectbackground": Color.HIGHLIGHT,
 	"inactiveselectbackground": Color.HIGHLIGHT_INACTIVE,
 	"tabs": ("3c","4c", "5c"),
@@ -59,16 +59,16 @@ class Text(tk.Text):
 		opts = DEFAULT_OPTS.copy()
 		opts.update(kwargs)
 		tk.Text.__init__(self, parent, *args, **opts)
-		
+
 		if has_scrollbar:
 			self.scrollbar = tk.Scrollbar(parent, command=self.yview)
 			self.config(yscrollcommand=self.scrollbar.set)
 			self.scrollbar.config(command=self.yview)
 			# self.scrollbar.pack(side="right", fill="y")
 			# self.bind("<<Scroll>>", self._on_scroll)
-		
+
 		for i in TAGS:
-			self.tag_configure(i, **TAGS[i])		
+			self.tag_configure(i, **TAGS[i])
 
 		if readonly:
 			self.bind("<Key>", self._on_key)
@@ -78,7 +78,7 @@ class Text(tk.Text):
 
 		self._orig = self._w + "_orig"
 		self.tk.call("rename", self._w, self._orig)
-		self.tk.createcommand(self._w, self._proxy)						
+		self.tk.createcommand(self._w, self._proxy)
 		self.bind(BUTTON_RIGHT, self._on_button_right)
 		self.menu = Menu(self)
 
@@ -87,15 +87,15 @@ class Text(tk.Text):
 		meta = (event.state & 0x8) != 0
 		is_mod = ctrl or meta
 		return None if is_mod and event.char == "c" else False if is_mod else "break"
-	
-	def insert(self, *args, syntax_highlight=False, **kwargs):		
+
+	def insert(self, *args, syntax_highlight=False, **kwargs):
 		idx = self.index(self.index(args[0]) + "-1c")
 		linestart = self.index(idx + " linestart")
 		super(Text, self).insert(*args, **kwargs)
 		if syntax_highlight:
 			self.syntax_highlight(linestart, idx + "+" + str(len(args[1])) + "c")
 
-	
+
 	def replace(self, pattern, tag=None, newtext=None, start="1.0", end="end"):
 		current_index = "1.0"
 		while True:
@@ -104,7 +104,7 @@ class Text(tk.Text):
 			if not match:
 				break
 			start_index=match.start()
-			end_index=match.end()	
+			end_index=match.end()
 			ind1 = current_index + "+" + str(start_index) + "c"
 			ind2 = current_index + "+" + str(end_index) + "c"
 			self.delete(ind1, ind2)
@@ -120,18 +120,18 @@ class Text(tk.Text):
 			ind1 = self.index(self.index(start) + "+" + str(match.start(2)) + "c")
 			ind2 = self.index(self.index(start) + "+" + str(match.end(2)) + "c")
 			self.tag_add(tag, ind1, ind2)
-		
+
 	def syntax_highlight(self, start="1.0", end="end"):
 		for i in TAGS:
 			self.tag_remove(i, start, end)
 
 		content = self.get(start, end)
 		if not content: return
-		
+
 		try:
 			for i in RE_PY:
 				self.highlight(RE_PY[i], i, start, self.index(end))
-			
+
 			for typ, string, start_index, end_index, line in tokenize.generate_tokens(io.StringIO(content).readline):
 				token = tokenize.tok_name[typ]
 
@@ -175,12 +175,12 @@ class Text(tk.Text):
 			self.event_generate("<<Modify>>")
 
 		if args[0:2] == ("yview", "scroll"):
-			self.event_generate("<<Scroll>>")	
-		
-		if args[0:3] == ("mark", "set", "insert"):
-			self.event_generate("<<MarkSet>>")	
+			self.event_generate("<<Scroll>>")
 
-		return result             
+		if args[0:3] == ("mark", "set", "insert"):
+			self.event_generate("<<MarkSet>>")
+
+		return result
 
 	def _on_button_right(self, event):
 		tag_ranges = self.tag_ranges("sel")
@@ -191,7 +191,7 @@ class Text(tk.Text):
 					"command": lambda: self.clipboard_append(self.get(*tag_ranges))
 				}])
 			return
-		
+
 		if tag_ranges:
 			self.menu.show(event, [{
 				"label": "Copy",
@@ -205,7 +205,7 @@ class Text(tk.Text):
 				"label": "Paste",
 				"command": lambda: self.insert("insert", self.clipboard_get())
 			}])
-	
+
 	def _motion(self, event, tag):
 		self.config(cursor="pointinghand")
 		hover_range = self.tag_prevrange(tag, "@" + str(event.x) + "," + str(event.y))

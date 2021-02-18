@@ -34,7 +34,7 @@ class Browser(tk.Toplevel):
         tk.Toplevel.__init__(self, app, background=Color.BLACK)
         if geometry:
             self.geometry(geometry)
-        
+
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
         if obj:
@@ -42,7 +42,7 @@ class Browser(tk.Toplevel):
             self.doc = Doc(self, obj, run_code=app.console.prompt.push)
             self.doc.pack(fill="both", expand=True)
             return
-        
+
         self.app = app
         self.on_import = on_import
         self.menu = Menu(self)
@@ -70,10 +70,10 @@ class Browser(tk.Toplevel):
 
         for i in INSTALLED_PKGS:
             self.installed_pkgs.insert("", "end", i, text=str(i).split(" ")[0])
-        
+
         for j in BUILTIN_PKGS:
             self.builtin_pkgs.insert("", "end", j, text=j)
-        
+
         if on_import:
             self.notebook.frame.pack(fill="both", expand=True)
             frame.pack(side="left", fill="both", expand=True)
@@ -90,11 +90,11 @@ class Browser(tk.Toplevel):
 
             input_area_2.pack(side="bottom", fill="both")
             as_label.pack(side="left")
-            self.as_entry.pack(side="left", expand=True)        
+            self.as_entry.pack(side="left", expand=True)
 
             input_area.pack(side="bottom", fill="both")
             name_label.pack(side="left")
-            self.name_entry.pack(side="left", expand=True)      
+            self.name_entry.pack(side="left", expand=True)
 
             self.bind("<Return>", self._on_ok)
             self.bind("<Escape>", lambda event: self.destroy())
@@ -103,7 +103,7 @@ class Browser(tk.Toplevel):
 
         for i in ("installed_pkgs", "builtin_pkgs"):
             getattr(self, i).bind("<<TreeviewSelect>>", lambda event, key=i: self._on_selection(event, key))
-            getattr(self, i).bind(BUTTON_RIGHT, lambda event, key=i: self._on_button_right(event, key))        
+            getattr(self, i).bind(BUTTON_RIGHT, lambda event, key=i: self._on_button_right(event, key))
 
     def _on_configure_doc(self, event):
         self.doc.paned_window.sashpos(0,0)
@@ -117,7 +117,7 @@ class Browser(tk.Toplevel):
             self.name_entry.delete(0, "end")
             self.name_entry.insert("end", key)
             return
-        
+
         try:
             module = __import__(key)
         except:
@@ -137,13 +137,13 @@ class Browser(tk.Toplevel):
 
         if self.on_import:
             self.on_import(self.name_entry.get(), self.as_entry.get())
-        self.destroy()        
+        self.destroy()
 
     def _on_button_right(self, event, name):
         attr = getattr(self, name)
         key = attr.identify_row(event.y)
         attr.selection_set(key)
-        
+
         if self.on_import:
             try:
                 module = __import__(key)

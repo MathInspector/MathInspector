@@ -54,24 +54,24 @@ def object_menu(app):
 		} for i in MATH_FUNCTIONS]
 	},{
 		"label": "Builtin Class",
-		"menu": [{	
+		"menu": [{
 			"label": str(i),
 			"command": lambda key=i: create_object(app, key, builtins)
 		} for i in BUILTIN_CLASS if i[:1] != "_" and not i[:1].isupper() and "Error" not in i and "Warning" not in i]
 	},{
 		"label": "Builtin Function",
-		"menu": [{	
+		"menu": [{
 			"label": str(i),
 			"command": lambda key=i: create_object(app, key, module=builtins)
 		} for i in BUILTIN_FUNCTION if i[:1] != "_" and not i[:1].isupper()]
 	},{
 		"label": "Examples",
-		"menu": [{	
+		"menu": [{
 			"label": str(i).replace("_", " ").capitalize(),
 			"command": lambda key=i: create_object(app, key, module=examples)
 		} for i in dir(examples) if i[:1] != "_" and not i[:1].isupper() and i != "np"]
 	}]
 
 def create_object(app, name, module):
-	obj = getattr(module, name)		
+	obj = getattr(module, name)
 	app.objects.setobj(name, obj, create_new=True)

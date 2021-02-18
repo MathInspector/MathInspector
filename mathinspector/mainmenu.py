@@ -79,24 +79,24 @@ class MainMenu(Menu):
 			} for i in MATH_FUNCTIONS]
 		},{
 			"label": "Builtin Class",
-			"menu": [{	
+			"menu": [{
 				"label": str(i),
 				"command": lambda key=i: self.create_object(key, builtins)
 			} for i in BUILTIN_CLASS if i[:1] != "_" and not i[:1].isupper() and "Error" not in i and "Warning" not in i]
 		},{
 			"label": "Builtin Function",
-			"menu": [{	
+			"menu": [{
 				"label": str(i),
 				"command": lambda key=i: self.create_object(key, module=builtins)
 			} for i in BUILTIN_FUNCTION if i[:1] != "_" and not i[:1].isupper()]
 		},{
 			"label": "Examples",
-			"menu": [{	
+			"menu": [{
 				"label": str(i).replace("_", " ").capitalize(),
 				"command": lambda key=i: self.create_object(key, module=examples)
 			} for i in dir(examples) if i[:1] != "_" and not i[:1].isupper() and i != "np"]
 		}]
-	
+
 		Menu.__init__(self, app, [{
 			"label": "File",
 			"menu": [{
@@ -107,17 +107,17 @@ class MainMenu(Menu):
 				{
 					"label": "Open...            ",
 					"command": lambda event=None: app.project.load(None),
-					"accelerator": CONTROL_KEY + "+o"	
+					"accelerator": CONTROL_KEY + "+o"
 				},
 				{
 					"label": "Save            ",
 					"command": lambda event=None: app.project.save(app.modules.rootfolder),
-					"accelerator": CONTROL_KEY + "+s"	
+					"accelerator": CONTROL_KEY + "+s"
 				},
 				{
 					"label": "Save As...            ",
 					"command": lambda event=None: app.project.save(None),
-					"accelerator": CONTROL_KEY + "+Shift+s"	
+					"accelerator": CONTROL_KEY + "+Shift+s"
 				}]
 			},{
 				"label": "Project",
@@ -195,18 +195,18 @@ class MainMenu(Menu):
 	def on_config_sidebar(self, event):
 		sashpos = self.app.horizontal_panel.sashpos(0)
 		if self.is_sidebar_visible and sashpos > SASHPOS_MIN: return
-		
+
 		if sashpos <= SASHPOS_MIN:
 			self._["View"].entryconfig(0, label="Show Sidebar")
 			self.is_sidebar_visible = False
 		else:
 			self._["View"].entryconfig(0, label="Hide Sidebar")
 			self.is_sidebar_visible = True
-	
+
 	def on_config_vertical_panel(self, event):
 		sashpos = self.app.vertical_panel.sashpos(0)
 		height = self.app.winfo_height()
-		if SASHPOS_MIN < sashpos < height - SASHPOS_MIN: 
+		if SASHPOS_MIN < sashpos < height - SASHPOS_MIN:
 			if self.has_hidden_panel:
 				self.has_hidden_panel = False
 				self._["View"].entryconfig(1, label="Hide Node Editor")
@@ -227,7 +227,7 @@ class MainMenu(Menu):
 	def setview(self, key, force_open=False):
 		h_sashpos = self.app.horizontal_panel.sashpos(0)
 		v_sashpos = self.app.vertical_panel.sashpos(0)
-		
+
 		if key == "sidebar":
 			self.is_sidebar_visible = not self.is_sidebar_visible
 			if self.is_sidebar_visible:

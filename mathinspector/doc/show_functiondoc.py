@@ -22,7 +22,7 @@ from .regex import RE_DOC
 
 def show_functiondoc(text, doc, name):
     text.insert("1.0", name + "\n", ("h1", "name"))
-    for i in doc:            
+    for i in doc:
         if len(doc[i]) > 0:
             text.insert("end", "\n")
             if i == "Signature":

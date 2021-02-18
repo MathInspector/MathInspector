@@ -43,26 +43,26 @@ class OpenGLWindow:
 		self.camera_pos = glm.vec3(0,10,7)
 		self.camera_front = glm.normalize(glm.vec3(0,-1,-1))
 		self.camera_up = glm.vec3(0,1,0)
-		
+
 		self.view = glm.lookAt(self.camera_pos, self.camera_pos * self.camera_front, self.camera_up)
 		self.projection = glm.perspective(glm.radians(45), OPTIONS["size"][0]/OPTIONS["size"][1], 0.1, 1000)
 		self.model = glm.rotate(self.model, glm.radians(-90.0), glm.vec3(0,1,0))
 		self.light_pos = glm.vec3(10,10,10)
 		self.is_running = False
 		self.is_animation_running = False
-		# self.points = [] 
-		# self.lines = [] 
-		# self.quads = [] 
-		# self.line_offset = [] 
+		# self.points = []
+		# self.lines = []
+		# self.quads = []
+		# self.line_offset = []
 		# self.quad_offset = []
 
 	def plot(self, *args, **kwargs):
 		OPTIONS.update(kwargs)
-		self.projection = glm.perspective(glm.radians(45), OPTIONS["size"][0]/OPTIONS["size"][1], 0.1, 1000)		
+		self.projection = glm.perspective(glm.radians(45), OPTIONS["size"][0]/OPTIONS["size"][1], 0.1, 1000)
 		pygame.init()
 		pygame.display.gl_set_attribute(GL_CONTEXT_MAJOR_VERSION, 4)
 		pygame.display.gl_set_attribute(GL_CONTEXT_MINOR_VERSION, 1)
-		pygame.display.gl_set_attribute(pygame.GL_CONTEXT_PROFILE_MASK, pygame.GL_CONTEXT_PROFILE_CORE)        
+		pygame.display.gl_set_attribute(pygame.GL_CONTEXT_PROFILE_MASK, pygame.GL_CONTEXT_PROFILE_CORE)
 		self.screen = pygame.display.set_mode(OPTIONS["size"], DOUBLEBUF | OPENGL | RESIZABLE | HWSURFACE)
 
 		glClearColor(39/255,40/255,44/255,1)
@@ -73,7 +73,7 @@ class OpenGLWindow:
 		# glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST)
 
 		self.generate_vertices(*args)
-		pygame.display.set_caption(OPTIONS["title"])        
+		pygame.display.set_caption(OPTIONS["title"])
 
 		last_tick = 0
 		animation_timer = 0
@@ -81,7 +81,7 @@ class OpenGLWindow:
 		self.is_running = True
 		is_focused = False
 		keypress = pygame.key.get_pressed()
-		
+
 		if OPTIONS["on_update"]:
 			OPTIONS["on_update"]()
 
@@ -91,7 +91,7 @@ class OpenGLWindow:
 			last_tick = tick
 			speed = 10 * delta_time
 			camera_right = glm.normalize(glm.cross(self.camera_front, self.camera_up))
-			
+
 			for event in pygame.event.get():
 				if event.type == MOUSEWHEEL:
 					delta = 1 + event.y/100
@@ -121,21 +121,21 @@ class OpenGLWindow:
 						delay = event.animate[0]
 						callback = event.animate[1]
 						self.is_animation_running = True
-					did_change = True				
+					did_change = True
 				elif event.type == VIDEORESIZE:
 					did_change = True
 					OPTIONS["size"] = event.size
 					self.projection = glm.perspective(glm.radians(45), event.size[0]/event.size[1], 0.1, 1000)
 				elif event.type == ACTIVEEVENT:
-					is_focused = bool(event.gain)					
-				elif (event.type == pygame.QUIT 
-					or (event.type == KEYUP and event.key == K_ESCAPE) 
+					is_focused = bool(event.gain)
+				elif (event.type == pygame.QUIT
+					or (event.type == KEYUP and event.key == K_ESCAPE)
 					or (event.type == KEYUP and event.key == K_w and keypress[K_LMETA])
 				):
 					self.is_running = False
-					if OPTIONS["on_close"]:					
+					if OPTIONS["on_close"]:
 						OPTIONS["on_close"]()
-	
+
 			if self.is_animation_running:
 				if animation_timer >= delay:
 					animation_timer = 0
@@ -150,7 +150,7 @@ class OpenGLWindow:
 
 			if not is_focused and OPTIONS["on_update"]:
 				OPTIONS["on_update"]()
-			
+
 			keypress = pygame.key.get_pressed()
 			if is_focused:
 				if keypress[K_w] or keypress[K_UP]:
@@ -204,7 +204,7 @@ class OpenGLWindow:
 					glUniform3f(self.shader["grid"]["cameraPos"], *self.camera_pos.xyz)
 					glBindVertexArray(self.grid_vao)
 					glDrawArrays(GL_TRIANGLE_STRIP, 0, 4)
-				
+
 				pygame.display.flip()
 				did_change = False
 
@@ -217,7 +217,7 @@ class OpenGLWindow:
 		# TODO - run the loop over args here, that way i can use recursion in self.get_vertices easily
 		self.points, self.lines, self.quads, self.line_offset, self.quad_offset = self.get_vertices(*args)
 
-		self.grid = np.array([-1,-1, 0,								
+		self.grid = np.array([-1,-1, 0,
 							-1, 1, 0,
 							 1,-1, 0,
 							 1, 1, 0 ], dtype='float32')
@@ -319,11 +319,11 @@ class OpenGLWindow:
 							quads.extend(list(arg[i+1][j+1]) + [(i+1)/x_len, (j+1)/y_len] + list(normal))
 							quad_num += 4
 					quad_offset.append((quad_start, quad_num))
-		
+
 		return (
-			np.array(points, dtype="float32"), 
-			np.array(lines, dtype="float32"), 
-			np.array(quads, dtype="float32"), 
+			np.array(points, dtype="float32"),
+			np.array(lines, dtype="float32"),
+			np.array(quads, dtype="float32"),
 			line_offset,
 			quad_offset
 		)
@@ -336,8 +336,8 @@ class OpenGLWindow:
 
 	def animate(self, delay, callback):
 		pygame.event.post(pygame.event.Event(pygame.USEREVENT, animate=(delay,callback)))
-		
+
 	def close(self):
 		pygame.event.post(pygame.event.Event(pygame.QUIT))
 
-		
+

@@ -30,7 +30,7 @@ def show_markdown(text, content):
             text.highlight(RE_MARKDOWN[tag], tag)
 
     for tag in RE_DOC:
-        text.highlight(RE_DOC[tag], tag)     
+        text.highlight(RE_DOC[tag], tag)
 
     text.replace(r"^(---{1,})$", "horizontal_rule", "\n")
     text.replace(r"^(==={1,})$", "horizontal_rule", "\n")

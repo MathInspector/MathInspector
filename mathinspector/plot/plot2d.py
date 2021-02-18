@@ -84,9 +84,9 @@ class SDLWindow:
 		self.args = args
 		OPTIONS.update(kwargs)
 		w, h = OPTIONS["size"]
-	
+
 		pygame.init()
-		pygame.display.set_caption(OPTIONS["title"])	
+		pygame.display.set_caption(OPTIONS["title"])
 		self.screen = pygame.display.set_mode((w,h), pygame.RESIZABLE)
 
 		# TODO - get position from OPTIONS
@@ -112,7 +112,7 @@ class SDLWindow:
 		if OPTIONS["on_update"]:
 			OPTIONS["on_update"]()
 
-		if OPTIONS["pixelmap"]:		
+		if OPTIONS["pixelmap"]:
 			offscreen_surf = pygame.Surface((0,0))
 			offscreen_size = offscreen_surf.get_size()
 			try:
@@ -125,7 +125,7 @@ class SDLWindow:
 				return
 			self.update_offscreen()
 			did_change = False
-			
+
 		while is_running:
 			tick = pygame.time.get_ticks()/1000
 			delta_time = tick - last_tick
@@ -156,12 +156,12 @@ class SDLWindow:
 					x, y = pygame.mouse.get_pos()
 					x0 += delta*(x0 - x)
 					y0 += delta*(y0 - y)
-					
+
 					for i, val in enumerate(self.coords):
 						self.coords[i][2] *= 1 + delta
 						self.coords[i][0] += x*delta/val[2]
 						self.coords[i][1] += y*delta/val[2]
-					
+
 					if self.scale * self.zoom > 1:
 						self.scale /= 2
 					elif self.scale * self.zoom < 1/2:
@@ -175,21 +175,21 @@ class SDLWindow:
 						if "pixelmap" in kwargs:
 							self.draw_pixels()
 							offscreen_surf.fill(BACKGROUND)
-							self.update_offscreen()							
+							self.update_offscreen()
 					elif hasattr(event, "animate"):
 						delay = event.animate[0]
 						callback = event.animate[1]
 						self.is_animation_running = True
 					did_change = True
-				elif (event.type == pygame.QUIT 
-					or (event.type == KEYUP and event.key == K_ESCAPE) 
+				elif (event.type == pygame.QUIT
+					or (event.type == KEYUP and event.key == K_ESCAPE)
 					or (event.type == KEYUP and event.key == K_w and keypress[K_LMETA])
 					or (event.type == KEYUP and event.key == K_q and keypress[K_LMETA])
 				):
 					request_quit = True
 
 			if OPTIONS["on_update"] and not is_focused:
-				OPTIONS["on_update"]()				
+				OPTIONS["on_update"]()
 
 			if self.is_animation_running:
 				if animation_timer >= delay:
@@ -202,11 +202,11 @@ class SDLWindow:
 						self.is_animation_running = False
 				else:
 					animation_timer += delta_time
-								
+
 			if platform.system() not in ("Windows", "Linux"):
 				if not self.queue.empty():
 					pixels = self.queue.get()
-				
+
 					if offscreen_size != (pixels.shape[0], pixels.shape[1]):
 						offscreen_surf = pygame.Surface((pixels.shape[0], pixels.shape[1]))
 						offscreen_size = offscreen_surf.get_size()
@@ -230,59 +230,59 @@ class SDLWindow:
 			# if keypress[K_a] or keypress[K_LEFT]:
 			# 	x0 += 5
 			# 	did_change = True
-			
+
 			if did_change:
 				timer = 0
 				OPTIONS["position"] = x0, y0
-				OPTIONS["step"] = step = self.scale / self.spacing			
+				OPTIONS["step"] = step = self.scale / self.spacing
 				if OPTIONS["pixelmap"] is not None and platform.system() not in ("Windows", "Linux"):
 					self.screen.fill(BACKGROUND)
 					x1, y1, zoom2 = self.coords[0]
 					if len(self.coords) == 1 and not self.is_processing and (
 						zoom2 > 2
 						or zoom2 < 0.5
-						or not w/(2*zoom2) < x1 < pixels.shape[0] - w/(2*zoom2) 
+						or not w/(2*zoom2) < x1 < pixels.shape[0] - w/(2*zoom2)
 						or not h/(2*zoom2) < y1 < pixels.shape[1] - h/(2*zoom2)
 					):
 						self.update_offscreen()
 
 					if 0 < x1 < offscreen_size[0] - w/zoom2 and 0 < y1 < offscreen_size[1] - h/zoom2:
 						s1 = offscreen_surf.subsurface((x1,y1),(w/zoom2, h/zoom2))
-						pygame.transform.scale(s1, (w,h), self.screen)				
+						pygame.transform.scale(s1, (w,h), self.screen)
 					else:
-						self.screen.fill(BACKGROUND)			
-				
+						self.screen.fill(BACKGROUND)
+
 				else:
 					self.screen.fill(BACKGROUND)
-				
+
 				if OPTIONS["show_grid"]:
 					self.draw_grid()
-				
+
 				for values in self.args:
 					self.draw_values(values)
-				
+
 				if OPTIONS["show_range"]:
 					self.draw_range()
 				pygame.display.flip()
 				did_change = False
 			elif OPTIONS["pixelmap"] and 0 <= timer < OPTIONS["timeout"]:
 				timer += delta_time
-			
+
 				if timer >= OPTIONS["timeout"]:
 					self.draw_pixels()
-			
+
 			if not request_quit:
 				pygame.event.pump()
-		
+
 		self.is_animation_running = False
 		win_w, win_h = Window.from_display_module().position
 		OPTIONS["window_pos"] = str(win_w) + ", " + str(win_h)
 		os.environ["SDL_VIDEO_WINDOW_POS"] = OPTIONS["window_pos"]
 		pygame.display.quit()
 
-		if OPTIONS["on_close"]:					
-			OPTIONS["on_close"]()		
-			
+		if OPTIONS["on_close"]:
+			OPTIONS["on_close"]()
+
 	def draw_values(self, obj):
 		if instanceof(obj, (int, float, complex)):
 			pygame.draw.circle(self.screen, BLUE, self.get_points(obj), RADIUS)
@@ -313,27 +313,27 @@ class SDLWindow:
 		_black = pygame.Color(51,51,51,alpha)
 		x = x0 % self.spacing + self.spacing/2
 		while x < w:
-			pygame.draw.line(s1, _black, [x, 0], [x, h], 1)		
+			pygame.draw.line(s1, _black, [x, 0], [x, h], 1)
 			x += self.spacing
 
 		y = y0 % self.spacing + self.spacing/2
 		while y < h:
-			pygame.draw.line(s1, _black, [0, y], [w, y], 1)		
+			pygame.draw.line(s1, _black, [0, y], [w, y], 1)
 			y += self.spacing
 
 		self.screen.blit(s1, (0,0))
-		
+
 		# main grid lines
 		x = x0 % self.spacing
 		while x < w:
-			pygame.draw.line(self.screen, BLACK, [x, 0], [x, h], 1)		
+			pygame.draw.line(self.screen, BLACK, [x, 0], [x, h], 1)
 			x += self.spacing
 
 		y = y0 % self.spacing
 		while y < h:
-			pygame.draw.line(self.screen, BLACK, [0, y], [w, y], 1)		
+			pygame.draw.line(self.screen, BLACK, [0, y], [w, y], 1)
 			y += self.spacing
-		
+
 		# axis
 		pygame.draw.line(self.screen, PALE_BLUE, [x0, 0], [x0, h], 1)
 		pygame.draw.line(self.screen, PALE_BLUE, [0, y0], [w, y0], 1)
@@ -345,7 +345,7 @@ class SDLWindow:
 	def draw_range(self):
 		x0, y0 = OPTIONS["position"]
 		w, h = OPTIONS["size"]
-		
+
 		if not self.font:
 			self.font = pygame.font.SysFont("Monospace", 12)
 
@@ -353,7 +353,7 @@ class SDLWindow:
 		pygame.draw.rect(self.screen, BLACK, (0,h-MARGIN, w, h))
 		pygame.draw.rect(self.screen, BLACK, (0,0, MARGIN, h))
 
-		# range number		
+		# range number
 		x = self.spacing + x0 % self.spacing
 		while x < w - MARGIN:
 			x_mark = str(round((x - x0) * self.scale/self.spacing, 2))

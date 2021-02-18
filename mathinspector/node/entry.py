@@ -25,7 +25,7 @@ from widget.text import Text
 
 class Entry(Text):
 	def __init__(self, item):
-		Text.__init__(self, item.canvas, 
+		Text.__init__(self, item.canvas,
 			foreground=Color.VERY_LIGHT_GREY,
 			# background=Color.GREEN,
 			background=Color.VERY_LIGHT_PURPLE,
@@ -33,40 +33,40 @@ class Entry(Text):
 			pady=0)
 
 		self.item = item
-		self.canvas = item.canvas		
+		self.canvas = item.canvas
 		self.app = item.canvas.app
 		self.argname = None
 		self.window = None
 		self.edit_id = None
 		self.font = None
 		self.tag_configure("center", justify="center")
-		self.bind("<Key>", self._on_key)	
-		self.bind("<<Modify>>", self._on_edit_change)	
+		self.bind("<Key>", self._on_key)
+		self.bind("<<Modify>>", self._on_edit_change)
 
 	def edit(self, canvas_id, color=Color.VERY_LIGHT_GREY):
 		self.edit_id = canvas_id
 		self.argname = self.canvas.getname(canvas_id, "argvalue")
-		self.canvas.itemconfig(canvas_id, text="")		
+		self.canvas.itemconfig(canvas_id, text="")
 		self.delete("1.0", "end")
 		# REFACTOR - way too busy with these nested if's
 		arg = None if self.argname == "<value>" else self.item.args[self.argname] if self.argname in self.item.args else self.item.kwargs[self.argname]
 		self.insert("end", self.item.content(truncate=False) if self.argname == "<value>" else "" if arg is None else self.item.content(arg, truncate=False))
-		
+
 		font = self.canvas.itemconfig(canvas_id)["font"][4]
 		params = font.split(" ")
 		fontsize = 12 if len(params) < 2 else int(int(params[1]) / self.canvas.zoom)
-		
+
 		self.font = params[0] + " " + str(int(fontsize)) + ("" if len(params) < 3 else (" " + " ".join(params[2:])))
 		if self.argname == "<value>":
 			self.config(font=font, **self.item.text_dimensions(self.item.obj))
 		else:
 			self.config(font=font, **self.item.text_dimensions(arg))
-		
+
 		if isinstance(self.item.obj, str):
 			self.config(foreground=Color.YELLOW)
 
 		opts = { "window": self }
-				
+
 		self.window = self.canvas.create_window(*self.canvas.coords(canvas_id), **opts)
 		self.focus()
 
@@ -76,18 +76,18 @@ class Entry(Text):
 			content = self.item.obj.__class__(self.get("1.0", "end"))
 		except:
 			content = self.get("1.0", "end")
-		
+
 		self.config(**self.item.text_dimensions(content, truncate=False))
 		self.item.resize(content)
-		
+
 		if not isinstance(self.item.obj, str):
 			self.syntax_highlight()
 
 	def zoom(self):
 		params = self.font.split(" ")
 		fontsize = int(12 if len(params) < 2 else int(params[1]))
-		self.config(font=params[0] + " " + str(int(fontsize * self.canvas.zoom)) + ("" if len(params) < 3 else (" " + params[2])))		
-	
+		self.config(font=params[0] + " " + str(int(fontsize * self.canvas.zoom)) + ("" if len(params) < 3 else (" " + params[2])))
+
 	def finish(self, cancel=False):
 		if cancel:
 			if self.argname == "<value>":
@@ -95,7 +95,7 @@ class Entry(Text):
 			else:
 				arg = self.item.args[self.argname] if self.argname in self.item.args else self.item.kwargs[self.argname]
 				content = self.item.content(arg)
-			
+
 			self.canvas.itemconfig(self.edit_id, text=content)
 			self.item.resize()
 			self.hide()
@@ -122,12 +122,12 @@ class Entry(Text):
 			self.item.args[self.argname] = self.app.console.eval(content)
 		else:
 			self.item.kwargs[self.argname] = self.app.console.eval(content)
-		
+
 		self.hide()
-		
+
 	def hide(self):
 		self.canvas.delete(self.window)
-		self.window = None    	
+		self.window = None
 		self.edit_id = None
 		self.font = None
 		self.canvas.edit_item = False
