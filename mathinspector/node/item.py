@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import numpy as np
 import inspect, traceback
 from .. import plot
 from ..style import Color
@@ -196,6 +197,7 @@ class Item:
         """
         if obj is None:
             if self.is_callable and self.hasargs():
+
                 try:
                     result = self.obj(*[self.args[i] for i in self.args], **{ k: self.kwargs[k] for k in self.kwargs if self.kwargs.store[k] is not None })
                 except Exception as err:
@@ -210,7 +212,8 @@ class Item:
                     try:
                         arg = self.args[list(self.args.keys())[0]]
                         result = np.array([(arg[i],result[i]) for i in range(0,len(result))])
-                    except:
+                    except Exception as err:
+                        # print ("error", err)
                         pass
 
                 return result
