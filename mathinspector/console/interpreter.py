@@ -30,10 +30,7 @@ from ..widget import Text, Menu
 from .builtin_print import builtin_print
 from .codeparser import CodeParser
 from .prompt import Prompt, FONTSIZE
-try:
-	from ..version import VERSION
-except ImportError:
-	VERSION = "UNKNOWN"
+from ..version import VERSION
 
 RE_TRACEBACK = r"^()(Traceback \(most recent call last\))"
 RE_FILEPATH = r"(File (\"(?!<).*\"))"
