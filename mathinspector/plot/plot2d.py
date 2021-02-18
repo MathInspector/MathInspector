@@ -258,7 +258,7 @@ class SDLWindow:
 				if OPTIONS["show_grid"]:
 					self.draw_grid()
 				
-				for values in self.args:
+				for k, values in enumerate(self.args):
 					self.draw_values(values)
 				
 				if OPTIONS["show_range"]:

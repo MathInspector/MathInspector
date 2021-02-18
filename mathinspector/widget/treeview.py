@@ -156,18 +156,17 @@ class Treeview(ttk.Treeview):
 				key = self.app.objects.setobj(attr, obj, create_new=True, coord=self.app.node.get_pointer())
 				item = self.app.node[key]
 			except Exception as err:
-				self.app.console.showtraceback(err)
-				return
-				# pass
+				pass
+
 		self.drag = item, event.x, event.y
 		
 		if not item:
-		    row = self.identify_row(event.y)
-		    if row not in self.get_children(): return
-		    
-		    moveto = self.index(row)    
-		    for i in self.selection():
-		        self.move(i, "", moveto)
+			row = self.identify_row(event.y)
+			if row not in self.get_children(): return
+			
+			moveto = self.index(row)    
+			for i in self.selection():
+				self.move(i, "", moveto)
 
 	def _on_button_release_1(self, event):
 		self.drag = None

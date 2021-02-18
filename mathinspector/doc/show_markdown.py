@@ -17,23 +17,27 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from .regex import RE_MARKDOWN, RE_DOC
+# from .textparser import TextParser
+
+RE_MARKDOWN = {
+    "section_title": r"^#(.*)$",
+}
 
 def show_markdown(text, content):
-    text.delete("1.0", "end")
-    text.insert("1.0", content)
-    for tag in RE_MARKDOWN:
-        if isinstance(RE_MARKDOWN[tag], tuple):
-            for i in RE_MARKDOWN[tag]:
-                text.highlight(i, tag)
-        else:
-            text.highlight(RE_MARKDOWN[tag], tag)
+    parse = TextParser(content.strip() if content else "", RE_MARKDOWN, group_index=0)
+    is_title = True
 
-    for tag in RE_DOC:
-        text.highlight(RE_DOC[tag], tag)     
+    for i in parse:
+        text.insert("end", i.text, i.tag)
+    
+        if i.tag in ("", "section_title"):
+            text.insert("end", " \n")
+            if i.tag == "section_title":
+                text.insert("end", " \n", "horizontal_rule")
+                text.insert("end", " \n")
 
-    text.replace(r"^(---{1,})$", "horizontal_rule", "\n")
-    text.replace(r"^(==={1,})$", "horizontal_rule", "\n")
-
-    # text.replace(r"^([-\*+])", "unordered-list", "•")
-    # text.replace(r"^(\t[-\*+])", "unordered-list", "\t◦")
+    ranges = text.tag_ranges("code_sample")
+    for i in range(0, len(ranges), 2):
+        start = ranges[i]
+        stop = ranges[i+1]
+        text.syntax_highlight(start, stop)

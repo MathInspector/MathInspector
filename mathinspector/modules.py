@@ -144,10 +144,10 @@ class ModuleTree(vdict, Treeview):
 		if constants:
 			folder = self.insert(parent, "end", text="objects")
 			for k in constants:
-				if not re.match(r"^[A-Z_]*$", k):
+				if k[0] != "_":
 					self.insert(folder, "end", text=k, values=module.__name__ + "." + k)
 
-		if submodules:
+		if submodules and file is None:
 			for fn, attr in submodules:
 				if not self.exists(attr.__name__):
 					folder = self.insert(parent, "end", attr.__name__, text="      " + fn, values=attr.__name__, image=getimage(".py"))

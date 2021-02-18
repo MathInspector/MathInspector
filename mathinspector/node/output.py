@@ -77,7 +77,7 @@ class Output(tk.Frame):
 		self.node.config(image=getimage(img))
 
 	def connect(self, item, show_plot=True):
-
+		self.items.append(item)
 		value = item.value()
 		window = plot.get_window(value)
 		if not window and not show_plot:
@@ -88,7 +88,6 @@ class Output(tk.Frame):
 			print(Exception("Can't plot 2D and 3D at the same time."))
 			return
 
-		self.items.append(item)
 		item.move_wire()		
 		self.hover()
 		if not show_plot: return

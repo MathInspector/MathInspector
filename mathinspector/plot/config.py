@@ -9,6 +9,7 @@ PALE_BLUE = color("c7cbd1")
 BLACK = color("333333")
 WHITE = color("f8f8f2")
 BLUE = color("60d9f1")
+VERY_DARK_GREY = color("75715d")
 RADIUS = 4
 
 if platform.system() in ("Windows", "Linux"):

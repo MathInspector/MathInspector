@@ -41,6 +41,7 @@ COLORS = {
 	"WIRE_ACTIVE": "#308bb5",
 	"SELECTED": "#308bb5",
 	"PALE_BLUE": "#c7cbd1",
+	"COOL_BLUE": "#f6f8fa",
 	"LIGHT_BLACK": "#555555",
 	"DARK_BLACK": "#000000",
 	"EMPTY_NODE": "#000",

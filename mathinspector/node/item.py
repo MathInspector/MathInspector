@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import numpy as np
 import inspect, traceback, plot
 from style import Color
 from util import vdict
@@ -173,13 +174,46 @@ class Item:
             self.app.node.output.connect(self)
 
     # REFACTOR - not crazy about this function having two purposes, should use .setvalue instead
+    # TODO - indicate the error more clearly when the item.hasargs() is true but it raises an exception
     def value(self, obj=None):
+        """
+        item.value can be called in the following two ways, and has these two different purposes
+            - (no args) returning the computed value of the item based on what it has plugged in
+            - (has a single arg) changing the value of the underlying self.obj the item references
+
+        If the item has arguments, but the function raises an exception, then it will fall back to 
+        returning the __repr__ of that function.
+
+        item.value is also responsible for detecting when the output needs to be transformed
+        in whatever way is required by the plotting system, and in a way which is the most intuitive
+        in the node editor for how it "should" work when you plug items together and try to plot them.
+        
+        For example, to plot sin(x) using x=linspace(0,1), this method will transform the value recieved
+        by app.output, without affecting the underlying environment in the interpreter in any way.
+
+        This ability of the item.value function to transform output can be used as a general purpose
+        system for optimizing the layout of items in the node editor when plotting things.
+        """
         if obj is None:
             if self.is_callable and self.hasargs():
                 try:
-                    return self.obj(*[self.args[i] for i in self.args], **{ k: self.kwargs[k] for k in self.kwargs if self.kwargs.store[k] is not None })
+                    result = self.obj(*[self.args[i] for i in self.args], **{ k: self.kwargs[k] for k in self.kwargs if self.kwargs.store[k] is not None })
                 except Exception as err:
-                    pass
+                    return self.obj
+
+                # TODO - use a better system for detecting functions that are trying to be plotted
+                if (self in self.canvas.output.items
+                    and not isinstance(result, (int,float,complex))
+                    and isinstance(result[0], (int,float))
+                    and len(self.args) > 0
+                ):
+                    try:
+                        arg = self.args[list(self.args.keys())[0]]
+                        result = np.array([(arg[i],result[i]) for i in range(0,len(result))])
+                    except:
+                        pass
+
+                return result
             return self.obj
 
         # if "<value>" in self.args["connection"]:

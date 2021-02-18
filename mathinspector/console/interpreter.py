@@ -127,7 +127,11 @@ class Interpreter(Text, InteractiveInterpreter):
 			if not self.prevent_module_import:
 				self.app.modules[key] = value
 		else:
-			self.app.objects[key] = value
+			if self.prevent_module_import:
+				if len(key) == 1 or key[:2] != "__":
+					self.app.objects[key] = value
+			else:
+				self.app.objects[key] = value
 
 	def delitem(self, key, value):
 		if inspect.ismodule(value):

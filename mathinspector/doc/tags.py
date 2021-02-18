@@ -198,13 +198,38 @@ DOC_TAGS = {
         "font": "Montserrat " + FONT_SIZE["default"] + " bold",
     },
     
-    "menlo_italic": {
+    "italic": {
         "font": FONT + " italic",
     },
     
     "horizontal_rule": {
         "font": "Monospace 1",
-        "background": Color.VERY_LIGHT_GREY
-    }
+        "background": Color.VERY_LIGHT_GREY,
+    },
 
+    "h1": {
+        "font": "Monospace 32 bold", 
+        "foreground": Color.WHITE, 
+    },
+    "h2": {
+        "font": "Monospace 24 bold", 
+        "foreground": Color.ORANGE
+    },
+    "h3": {
+        "font": "Monospace 20 bold", 
+        "foreground": Color.DARK_ORANGE
+    },
+
+    "code_block": {
+        "font": "Monospace 18", 
+        "foreground": Color.BLACK,
+        "background": Color.COOL_BLUE,
+        "lmargin1": 8,
+        "spacing1": 8,
+        "spacing3": 8,
+    },
+
+    "list_number": {
+        "font": "Arial 16 Bold"
+    }
 }

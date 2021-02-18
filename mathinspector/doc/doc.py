@@ -23,10 +23,11 @@ from widget import Notebook, Treeview, Menu, Text
 from style import Color, getimage
 from util.argspec import argspec
 from util.docscrape import FunctionDoc
-from util.common import open_editor, classname
+from util.common import open_editor, classname, name_ext
 from util.config import EXCLUDED_MODULES, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, INSTALLED_PKGS, BUILTIN_PKGS, DOC_FONT
 from .show_functiondoc import show_functiondoc
 from .show_textfile import show_textfile
+from .show_markdown import show_markdown
 from numpy import ufunc
 
 class Doc(tk.Frame):
@@ -118,7 +119,12 @@ class Doc(tk.Frame):
 
 		if isinstance(obj, str) and os.path.isfile(obj):
 			content = open(obj).read()
-			show_textfile(self.text, content)
+			name, ext = name_ext(obj)
+			if ext == ".md":
+				# TODO - use `show_markdown(self.text, content)` instead
+				show_textfile(self.text, content)
+			else:
+				show_textfile(self.text, content)
 			return
 
 		for i in dir(self.obj):
