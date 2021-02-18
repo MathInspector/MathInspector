@@ -8,6 +8,8 @@ jobs:
       with:
         fetch-depth: 0
     - uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
     - run: pip install .
     - id: dist
       uses: casperdcl/deploy-pypi@v2
