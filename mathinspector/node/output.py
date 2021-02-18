@@ -18,11 +18,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import numpy as np
 import tkinter as tk
 import pygame
-from widget import Text
-from util import argspec, instanceof, MESSAGE_TIMEOUT
-from console.builtin_print import builtin_print
-from style import Color, getimage
-import plot
+from ..widget import Text
+from ..util import argspec, instanceof, MESSAGE_TIMEOUT
+from ..console.builtin_print import builtin_print
+from ..style import Color, getimage
+from .. import plot
 
 class Output(tk.Frame):
 	def __init__(self, canvas):

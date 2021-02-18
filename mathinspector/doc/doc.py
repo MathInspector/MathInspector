@@ -19,12 +19,12 @@ import tkinter as tk
 from tkinter import ttk
 import inspect, re, os, webbrowser
 from .tags import DOC_TAGS
-from widget import Notebook, Treeview, Menu, Text
-from style import Color, getimage
-from util.argspec import argspec
-from util.docscrape import FunctionDoc
-from util.common import open_editor, classname
-from util.config import EXCLUDED_MODULES, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, INSTALLED_PKGS, BUILTIN_PKGS, DOC_FONT
+from ..widget import Notebook, Treeview, Menu, Text
+from ..style import Color, getimage
+from ..util.argspec import argspec
+from ..util.docscrape import FunctionDoc
+from ..util.common import open_editor, classname
+from ..util.config import EXCLUDED_MODULES, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, INSTALLED_PKGS, BUILTIN_PKGS, DOC_FONT
 from .show_functiondoc import show_functiondoc
 from .show_textfile import show_textfile
 from numpy import ufunc
@@ -209,7 +209,10 @@ class Doc(tk.Frame):
 			self.tree.delete(i)
 
 	def _on_select(self, event):
-		key = self.tree.selection()[0]
+		try:
+			key = self.tree.selection()[0]
+		except IndexError:
+			return
 		if not hasattr(self.obj, key): return
 
 		obj = getattr(self.obj, key)
@@ -276,5 +279,3 @@ class Doc(tk.Frame):
 		if is_mod and event.char == "w":
 			return self.parent.destroy()
 		return self.text._on_key(event)
-
-

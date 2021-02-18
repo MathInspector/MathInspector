@@ -19,9 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import tkinter as tk
 import textwrap, traceback
 from pprint import pformat
-from util import fontcolor
-from style import Color
-from widget.text import Text
+from ..util import fontcolor
+from ..style import Color
+from ..widget.text import Text
 
 class Entry(Text):
 	def __init__(self, item):
@@ -139,4 +139,3 @@ class Entry(Text):
 		elif event.keysym == 'Return':
 			self.finish()
 			return "break"
-

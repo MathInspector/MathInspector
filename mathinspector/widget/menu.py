@@ -16,8 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import tkinter as tk
-from util import vdict
-from console.builtin_print import builtin_print
+from ..util import vdict
+from ..console.builtin_print import builtin_print
 
 
 class Menu(tk.Menu):
@@ -54,4 +54,3 @@ class Menu(tk.Menu):
 		if items:
 			self.set_menu(items)
 		self.post(event.x_root, event.y_root)
-

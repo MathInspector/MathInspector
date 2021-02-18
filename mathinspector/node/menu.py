@@ -16,8 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import numpy as np
-import math, builtins, examples, util.binop
-from util import BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
+import math, builtins
+from .. import examples
+from ..util import BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT, binop
 
 TRIG_FUNCTIONS = [i for i in ("acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "cos", "cosh", "degrees", "sin", "sinh", "tan", "tanh")]
 MATH_FUNCTIONS = [i for i in dir(math) if callable(getattr(math, i)) and i not in TRIG_FUNCTIONS and i[:1] != "_"]
@@ -28,8 +29,8 @@ def object_menu(app):
 		"label": "Operator",
 		"menu": [{
 			"label": i,
-			"command": lambda key=i: create_object(app, key, util.binop)
-		} for i in dir(util.binop) if i[0] != "_"]
+			"command": lambda key=i: create_object(app, key, binop)
+		} for i in dir(binop) if i[0] != "_"]
 	},{
 		"label": "Math",
 		"menu": [{

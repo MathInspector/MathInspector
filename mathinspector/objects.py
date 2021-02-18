@@ -38,11 +38,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import doc, inspect
-from util import vdict
-from widget import Treeview, TreeEntry
-from util import Color, argspec, classname, fontcolor, open_editor, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT
-from style import TREE_TAGS
+import inspect
+from . import doc
+from .util import vdict, Color, argspec, classname, fontcolor, open_editor, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT
+from .style import TREE_TAGS
+from .widget import Treeview, TreeEntry
 
 class ObjectTree(vdict, Treeview):
 	"""

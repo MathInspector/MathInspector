@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import tkinter as tk
 from collections import OrderedDict
-from style import Color
+from ..style import Color
 from .button import Button
 
 OPTIONS = {

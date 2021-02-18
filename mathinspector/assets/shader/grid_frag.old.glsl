@@ -30,10 +30,10 @@ vec4 grid(vec3 R, float scale) {
 
     float x = smoothstep(delta, 0, gv.x) + smoothstep(1-delta, 1, gv.x);
     float y = smoothstep(delta, 0, gv.z) + smoothstep(1-delta, 1, gv.z);
-    
+
     float xx = smoothstep(delta/5, 0, ggv.x);
     float yy = smoothstep(delta/5, 0, ggv.z);
-    
+
     if (X > 0) {
 	    // color = vec3(1,0,0);
 	    color = vec3(0.6431372549019608, 0.8941176470588236, 0.0196078431372549);
@@ -47,7 +47,7 @@ vec4 grid(vec3 R, float scale) {
 	    opacity = 1;
     } else if (xx > 0 || yy > 0) {
 	    color = vec3(0.4);
-	    opacity = 1;      
+	    opacity = 1;
     }
 
 
@@ -83,10 +83,10 @@ void main()
 	vec3 R = nearPoint + t * (farPoint-nearPoint);
 
 	vec4 color = grid(R,1);
-	
+
 	float linearDepth = computeLinearDepth(R);
     float fading = max(0, (0.8 - linearDepth));
-	
+
 	gl_FragDepth = computeDepth(R);
 
 	fragColor = color * float(t > 0);

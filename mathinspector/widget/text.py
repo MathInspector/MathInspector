@@ -18,11 +18,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 from tkinter import ttk
-from style import Color
-from style import TAGS
-from util.config import BUTTON_RIGHT, BUILTIN_FUNCTION, BUILTIN_CLASS
-from widget.menu import Menu
-from console.builtin_print import builtin_print
+from ..style import TAGS, Color
+from ..util.config import BUTTON_RIGHT, BUILTIN_FUNCTION, BUILTIN_CLASS
+from ..widget.menu import Menu
+from ..console.builtin_print import builtin_print
 import io, re, tokenize, keyword, builtins, inspect
 
 RE_PY = {

@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import builtins, re
 from functools import reduce
-from util import BUILTIN_PKGS, BUILTIN_FUNCTION, BUILTIN_CLASS, INSTALLED_PKGS, KEYWORD_LIST
+from ..util import BUILTIN_PKGS, BUILTIN_FUNCTION, BUILTIN_CLASS, INSTALLED_PKGS, KEYWORD_LIST
 from .builtin_print import builtin_print
 
 RE_WORD = re.compile(r"[() ]")

@@ -90,7 +90,7 @@ Math inspector comes with a number of examples to demonstrate some of the availa
 functionality.  Let's import the examples module, and view the 3D plot for the cylinder
 example
 
->>> import examples
+>>> from mathinspector import examples
 >>> cylinder = examples.cylinder
 >>> plot(cylinder())
 
@@ -124,7 +124,7 @@ along with this program.  If not, see https://www.gnu.org/licenses/.
 
 """
 
-import console, plot, node, objects, modules, examples, animation, project
+from .. import console, plot, node, objects, modules, examples, animation, project
 
 class GettingStarted:
 	"""To learn about the various features provided by math inspector, lets create

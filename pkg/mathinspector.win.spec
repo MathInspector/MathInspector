@@ -3,10 +3,10 @@
 block_cipher = None
 
 
-a = Analysis(["mathinspector\\__main__.py"],
-             pathex=[os.path.join(os.path.abspath("."), "mathinspector")],
+a = Analysis(["..\\mathinspector\\_run.py"],
+             pathex=[os.path.abspath("..")],
              binaries=[],
-             datas=[(".\\assets", ".\\Resources\\assets\\")],
+             datas=[("..\\mathinspector\\assets", ".\\assets\\")],
              hiddenimports=["scipy.spatial.transform._rotation_groups", "scipy.special.cython_special"],
              hookspath=[],
              runtime_hooks=[],
@@ -15,10 +15,8 @@ a = Analysis(["mathinspector\\__main__.py"],
              win_private_assemblies=False,
              cipher=block_cipher,
              noarchive=False)
-
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
-
 exe = EXE(pyz,
           a.scripts,
           [],
@@ -29,7 +27,7 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           console=False,
-          icon="assets\\logo_2.ico")
+          icon="..\\mathinspector\\assets\\logo_2.ico")
 
 coll = COLLECT(exe,
                a.binaries,

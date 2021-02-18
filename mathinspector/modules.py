@@ -44,15 +44,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import re, os, inspect, uuid, importlib.util, sys, traceback
-from util import vdict
-from widget import Treeview
-from util import *
 from tkinter import filedialog
-from style import Color, getimage
 from importlib import reload
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
-from console.builtin_print import builtin_print
+from .util import vdict
+from .util import *
+from .widget import Treeview
+from .style import Color, getimage
+from .console.builtin_print import builtin_print
 
 class ModuleTree(vdict, Treeview):
 	"""
