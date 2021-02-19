@@ -28,7 +28,7 @@ CONTROL_KEY = 'Control' if SYSTEM in ("Windows", "Linux") else 'Command'
 if hasattr(sys, "_MEIPASS"):
     BASEPATH = os.path.join(
         sys._MEIPASS,
-        "assets" if SYSTEM in ("Windows", "Linux") else "../assets")
+        "assets" if SYSTEM in ("Windows", "Linux") else "../Resources/assets")
     if SYSTEM == "Windows":
         AUTOSAVE_PATH = os.path.join(os.path.join(os.getenv('LOCALAPPDATA'), "MathInspector"), "autosave.math")
     else:

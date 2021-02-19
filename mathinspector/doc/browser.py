@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 from tkinter import ttk
+import os
 import inspect
 from ..util.argspec import argspec
 from ..util.common import classname
