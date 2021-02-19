@@ -3,7 +3,7 @@
 block_cipher = None
 
 try:
-    from mathinspector.verison import VERSION
+    from mathinspector.version import VERSION
 except ImportError:
     VERSION = "UNKNOWN"
 

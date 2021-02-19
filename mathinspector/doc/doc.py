@@ -23,7 +23,7 @@ from ..widget import Notebook, Treeview, Menu, Text
 from ..style import Color, getimage
 from ..util.argspec import argspec
 from ..util.docscrape import FunctionDoc
-from ..util.common import open_editor, classname
+from ..util.common import open_editor, classname, name_ext
 from ..util.config import EXCLUDED_MODULES, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, INSTALLED_PKGS, BUILTIN_PKGS, DOC_FONT
 from .show_functiondoc import show_functiondoc
 from .show_textfile import show_textfile
