@@ -93,9 +93,10 @@ class Interpreter(Text, InteractiveInterpreter):
 
 		sys.displayhook = self.write
 		sys.excepthook = self.showtraceback
-		__builtins__["print"] = self.write
 		sys.stdout = self
 		sys.stderr = self
+
+		__builtins__["print"] = self.write
 		__builtins__["help"] = Help(app)
 		__builtins__["clear"] = Clear(self)
 		__builtins__["copyright"] = "Copyright (c) 2018-2021 Matt Calhoun.\nAll Rights Reserved."
