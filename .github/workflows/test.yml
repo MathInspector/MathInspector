@@ -14,10 +14,10 @@ jobs:
     - id: dist
       uses: casperdcl/deploy-pypi@v2
       with:
-        build: true
+        pip: true
         password: ${{ secrets.PYPI_TOKEN }}
         upload: ${{ github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags') }}
-    - name: Changes
+    - name: Changelog
       run: |
         git log --pretty='format:%d%n- %s%n%b---' $(git tag --sort=v:refname | tail -n2 | head -n1)..HEAD > _CHANGES.md
     - if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
