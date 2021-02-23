@@ -1,6 +1,6 @@
 """version detector. Precedence: installed dist, git, 'UNKNOWN'."""
 try:
-    from ._dist_ver import VERSION
+    from ._dist_version import VERSION
 except ImportError:
     try:
         from setuptools_scm import get_version
