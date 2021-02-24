@@ -273,22 +273,22 @@ class Interpreter(Text, InteractiveInterpreter):
 
 class StdOut:
 	def __init__(self, write):
-		self.buffer = []
+		self.buf = []
 		self.write = write
 
 	def buffer(self, *args, **kwargs):
 		if len(args) == 0: return
-		self.buffer.extend(args)
+		self.buf.extend(args)
 
 	def flush(self, *args, **kwargs):
-		content = "".join(self.buffer)
+		content = "".join(self.buf)
 		if "\r" in content:
 			content = content.rsplit("\r", 1)[1]
 		self.write(content)
-		self.buffer.clear()
+		self.buf.clear()
 
 	def write(self, *args, **kwargs):
-		self.buffer.extend(args)
+		self.buf.extend(args)
 
 class License:
 	def __call__(self):
