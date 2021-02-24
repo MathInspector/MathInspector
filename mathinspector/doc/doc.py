@@ -146,7 +146,7 @@ class Doc(tk.Frame):
 				self.builtins[i] = attr
 			else:
 				pass
-		
+
 		if self.classes:
 			classes = self.tree.insert("", "end", text="classes", open=True)
 			for k in self.classes:
