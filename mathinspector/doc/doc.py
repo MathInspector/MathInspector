@@ -64,8 +64,9 @@ class Doc(tk.Frame):
 		self.classes = {}
 		self.submodules = {}
 
-		self.parent.bind("<Escape>", lambda event: parent.destroy())
-		self.text.bind("<Escape>", lambda event: parent.destroy())
+		if parent.app:
+			self.parent.bind("<Escape>", lambda event: parent.destroy())
+			self.text.bind("<Escape>", lambda event: parent.destroy())
 
 		self.parent.bind("<Key>", self._on_key)
 		self.text.bind("<Key>", self._on_key)
@@ -91,11 +92,11 @@ class Doc(tk.Frame):
 			self.text.tag_configure(i, **DOC_TAGS[i])
 
 		self.objects = []
-		if obj:
+		if obj is not None:
 			self.show(obj)
 
 	def show(self, obj, clear_nav=True, display_only=False):
-		self.obj = obj
+		self.obj = obj if (inspect.getdoc(obj) or not hasattr(obj, "__class__")) else obj.__class__
 
 		if display_only:
 			pass
@@ -117,15 +118,19 @@ class Doc(tk.Frame):
 
 		self.clear()
 
-		if isinstance(obj, str) and os.path.isfile(obj):
-			content = open(obj).read()
-			name, ext = name_ext(obj)
-			if ext == ".md":
-				# TODO - use `show_markdown(self.text, content)` instead
-				show_textfile(self.text, content)
+
+		if isinstance(obj, str):
+			if os.path.isfile(obj):
+				content = open(obj).read()
+				name, ext = name_ext(obj)
+				if ext == ".md":
+					# TODO - use `show_markdown(self.text, content)` instead
+					show_textfile(self.text, content)
+				else:
+					show_textfile(self.text, content)
+				return
 			else:
-				show_textfile(self.text, content)
-			return
+				show_textfile(self.text, obj)
 
 		for i in dir(self.obj):
 			attr = getattr(self.obj, i)
@@ -141,7 +146,7 @@ class Doc(tk.Frame):
 				self.builtins[i] = attr
 			else:
 				pass
-
+		
 		if self.classes:
 			classes = self.tree.insert("", "end", text="classes", open=True)
 			for k in self.classes:

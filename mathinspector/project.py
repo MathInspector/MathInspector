@@ -53,17 +53,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle, os, atexit, shutil, traceback, cloudpickle
-from . import plot
+from .plot import plot
 from tkinter import messagebox, filedialog
 from .util import name_ext, AUTOSAVE_PATH
 from importlib import import_module
+from .console.builtin_print import builtin_print
 
 class SaveData:
 	def __init__(self, app):
 		self.app = app
 		self.is_first_load = True
-		atexit.register(self.save)
-		app.protocol("WM_DELETE_WINDOW", lambda: self.save(quit_app=True)) # save autosavefile on macos when close button in the tkinter window is clicked
+		self.file = None
+		self.did_save = False
+		atexit.register(self._on_close)
+		app.protocol("WM_DELETE_WINDOW", self._on_click_close_app)
 
 	def new(self, event=None, with_dialog=True, title="Math Inspector"):
 		if with_dialog:
@@ -94,10 +97,11 @@ class SaveData:
 		self.app.console.prompt.history.clear()
 		self.app.horizontal_panel.sashpos(0,0)
 		self.app.vertical_panel.sashpos(0,0)
+		self.app.menu.restore_defaults()
 		self.app.console.do_greet()
 
-	def save(self, file=AUTOSAVE_PATH, quit_app=False):
-		if file is None or file not in (AUTOSAVE_PATH, self.app.modules.rootfolder):
+	def save(self, file=None, quit_app=False):
+		if file is None or file not in (AUTOSAVE_PATH, self.app.modules.rootfolder, self.file):
 			file = filedialog.asksaveasfilename(defaultextension="")
 			if not file: return
 
@@ -231,8 +235,11 @@ class SaveData:
 			filepath = os.path.join(file, os.path.basename(file) + ".math")
 		else:
 			filepath = os.path.join(os.path.dirname(file), name + ".math")
-		with open(filepath, "wb") as output:
-			cloudpickle.dump(data, output)
+		try:
+			with open(filepath, "wb") as output:
+				cloudpickle.dump(data, output)
+		except Exception as err:
+			builtin_print ("\nThe autosave file failed to save, " + str(type(err).__name__) + ": " + str(err))
 
 		if quit_app:
 			plot.close()
@@ -243,11 +250,13 @@ class SaveData:
 		widget.sashpos(0, sashpos)
 		widget.unbind("<Configure>")
 
-	def load(self, file=AUTOSAVE_PATH, is_first_load=False):
-		if file != AUTOSAVE_PATH:
+	def load(self, file=None, is_first_load=False, sashpos=0):
+		if not is_first_load and file is None:
 			file = filedialog.askopenfilename(filetypes=[('Math Inspector Files','*.math'), ('All Files','*.*')])
 			if not file:
 				return
+		elif is_first_load and file != AUTOSAVE_PATH:
+			self.file = file
 
 		try:
 			with open(file, "rb") as i:
@@ -256,7 +265,7 @@ class SaveData:
 			self.new(with_dialog=False)
 			self.app.geometry("1280x720+140+100")
 			self.app.horizontal_panel.bind("<Configure>",
-				lambda event: self.on_configure("horizontal_panel", 0))
+				lambda event: self.on_configure("horizontal_panel", sashpos))
 			self.app.vertical_panel.bind("<Configure>",
 				lambda event: self.on_configure("vertical_panel", 0))
 			self.new(with_dialog=False)
@@ -271,9 +280,11 @@ class SaveData:
 				self.app.node.zoom = data["zoom"]
 			if "geometry" in data:
 				self.app.geometry(data["geometry"])
+
 			if "horizontal_panel_sash" in data:
 				self.app.horizontal_panel.bind("<Configure>",
 					lambda event: self.on_configure("horizontal_panel", data["horizontal_panel_sash"]))
+
 			if "vertical_panel_sash" in data:
 				self.app.vertical_panel.bind("<Configure>",
 					lambda event: self.on_configure("vertical_panel", data["vertical_panel_sash"]))
@@ -352,8 +363,8 @@ class SaveData:
 			self.app.node.scale_font()
 			self.app.node.scale_width()
 
-		except:
-			traceback.print_exc()
+		except Exception as err:
+			print ("\nThe autosave file failed to load, " + str(type(err).__name__) + ": " + str(err), tags="red")
 
 	def _copy_project_files(self, file):
 		rootfolder = os.path.splitext(file)[0]
@@ -378,3 +389,30 @@ class SaveData:
 
 		self.app.modules.addfolder(rootfolder, is_rootfolder=True)
 		self.app.modules.order(order)
+
+	def _on_click_close_app(self):
+		if self.did_save: return
+		
+		self.did_save = True
+		if self.file is None:
+			self.save(AUTOSAVE_PATH, quit_app=True)
+		else:
+			if messagebox.askyesno("MathInspector",
+				"Would you like to save your changes before exiting?"
+			):
+				self.save(self.file)
+			
+			plot.close()
+			self.app.quit()			
+
+	def _on_close(self):
+		if self.did_save: return
+		self.did_save = True
+
+		if self.file is not None:
+			if messagebox.askyesno("MathInspector",
+				"Would you like to save your changes before exiting?"
+			):
+				self.save(self.file or None)
+		else:
+			self.save(AUTOSAVE_PATH)

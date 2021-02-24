@@ -22,15 +22,14 @@ import tkinter as tk
 from code import InteractiveInterpreter
 from types import CodeType
 
-from .. import plot
+from ..plot import plot
 from ..doc import Help
 from ..style import Color, TAGS
-from ..util import vdict, open_editor, BUTTON_RIGHT, BASEPATH, FONT
+from ..util import vdict, open_editor, BUTTON_RIGHT, BASEPATH, FONT, version
 from ..widget import Text, Menu
 from .builtin_print import builtin_print
 from .codeparser import CodeParser
 from .prompt import Prompt, FONTSIZE
-from ..version import VERSION
 
 RE_TRACEBACK = r"^()(Traceback \(most recent call last\))"
 RE_FILEPATH = r"(File (\"(?!<).*\"))"
@@ -69,9 +68,10 @@ class Interpreter(Text, InteractiveInterpreter):
 	"""
 	def __init__(self, app):
 		InteractiveInterpreter.__init__(self, vdict({
+			"__builtins__": __builtins__,
 			"app": app,
-			"plot": plot.plot
-		}, setitem=self.setitem, delitem=self.delitem))
+			"plot": plot
+		}, setitem=self.setitem, delitem=self.delitem, name="locals"))
 
 		self.frame = tk.Frame(app,
 			padx=16,
@@ -90,8 +90,8 @@ class Interpreter(Text, InteractiveInterpreter):
 
 		sys.displayhook = self.write
 		sys.excepthook = self.showtraceback
-		sys.stdout = self
-		sys.stderr = self
+		sys.stdout = StdOut(self.write)
+		sys.stderr = StdOut(self.write)
 
 		__builtins__["print"] = self.write
 		__builtins__["help"] = Help(app)
@@ -105,6 +105,7 @@ class Interpreter(Text, InteractiveInterpreter):
 		self.parse = CodeParser(app)
 		self.buffer = []
 		self.prevent_module_import = False
+		self.cursor_position = self.index("end")
 
 		self.bind("<Key>", self._on_key_log)
 		self.bind("<Configure>", self.prompt.on_configure_log)
@@ -124,7 +125,7 @@ class Interpreter(Text, InteractiveInterpreter):
 			self.bind("<Configure>", self.prompt.on_configure_log)
 
 	def do_greet(self):
-		self.write("Math Inspector " + VERSION + " (Beta)\nType \"help\", \"copyright\", \"credits\", \"license\" for more information")
+		self.write("Math Inspector " + version() + " (Beta)\nType \"help\", \"copyright\", \"credits\", \"license\" for more information")
 		self.prompt()
 
 	def setitem(self, key, value):
@@ -133,7 +134,7 @@ class Interpreter(Text, InteractiveInterpreter):
 				self.app.modules[key] = value
 		else:
 			if self.prevent_module_import:
-				if len(key) == 1 or key[:2] != "__":
+				if len(key) == 1:# or key[:2] != "__":
 					self.app.objects[key] = value
 			else:
 				self.app.objects[key] = value
@@ -161,10 +162,17 @@ class Interpreter(Text, InteractiveInterpreter):
 		self.prevent_module_import = False
 
 	def push(self, s, filename="<input>", log=True, symbol="single"):
+		self.cursor_position = self.index("end-1l linestart")
+
 		self.synclocals()
 		source = "".join(self.buffer + [s])
 		self.parse.preprocess(source)
-		if source[:4] == "plot":
+		if source[:3] == "del" and source[4:] in self.app.objects:
+			# NOTE - there is a strange issue with exec where it can't delete things from self.locals
+			del self.app.objects[source[4:]]
+			self.prompt()
+			return
+		elif source[:4] == "plot":
 			self.prompt()
 		did_compile = self.runsource(source, filename, symbol)
 
@@ -178,14 +186,27 @@ class Interpreter(Text, InteractiveInterpreter):
 		self.prompt()
 
 	def write(self, *args, syntax_highlight=False, tags=(), **kwargs):
+		if self.prevent_module_import:
+			return
+		elif len(args) == 1:
+			if isinstance(args[0], np.ndarray):
+				if not args[0].any():
+					return
+			elif args[0] in ("\a", "\n", " ", "", None):
+				return
+
 		idx = self.index("insert")
 		for r in args:
+			if isinstance(r, str) and "\r" in r:
+				r = r.rsplit("\r", 1)[1]
+				self.delete(self.cursor_position, "end")
+				self.insert("end", "\n")
+
 			if re.match(RE_TRACEBACK, str(r)):
 				tags = ("red", *tags)
 
 			if r is not None:
 				if isinstance(r, Exception):
-					builtin_print("\a")
 					tags = tuple(list(tags) + ["red"])
 				self.insert("end", str(r), tags, syntax_highlight=syntax_highlight)
 				if len(args) > 1:
@@ -201,6 +222,7 @@ class Interpreter(Text, InteractiveInterpreter):
 
 		if self.get("1.0", "end").strip():
 			self.insert("end", "\n")
+
 		self.see("end")
 		self.prompt.move()
 
@@ -211,7 +233,6 @@ class Interpreter(Text, InteractiveInterpreter):
 		try:
 			lines = traceback.format_exception(ei[0], ei[1], last_tb.tb_next)
 			self.write(''.join(lines).rstrip(), tags="red")
-			builtin_print ("\a")
 			self.app.menu.setview("console", True)
 		finally:
 			last_tb = ei = None
@@ -236,7 +257,7 @@ class Interpreter(Text, InteractiveInterpreter):
 		if tag_ranges:
 			option.extend([{
 				"label": "Copy",
-				"command": lambda: self.clipboard_append(self.get(*tag_ranges))
+				"command": lambda: self.copy_to_clipboard(self.get(*tag_ranges))
 			}])
 
 		self.menu.show(event, option + [{
@@ -244,12 +265,31 @@ class Interpreter(Text, InteractiveInterpreter):
 			"command": clear
 		}])
 
-
 	def _click(self, event, tag):
 		if not self.hover_range: return
 		content = self.get(*self.hover_range)
 		if tag == "error_file":
 			open_editor(os.path.abspath(content[1:-1]))
+
+class StdOut:
+	def __init__(self, write):
+		self.buffer = []
+		self.write = write
+
+	def buffer(self, *args, **kwargs):
+		if len(args) == 0: return
+		self.buffer.extend(args)
+
+	def flush(self, *args, **kwargs):
+		# self.write("flush called dawg")
+		content = "".join(self.buffer)
+		if "\r" in content:
+			content = content.rsplit("\r", 1)[1]
+		self.write(content)
+		self.buffer.clear()
+
+	def write(self, *args, **kwargs):
+		self.buffer.extend(args)
 
 class License:
 	def __call__(self):

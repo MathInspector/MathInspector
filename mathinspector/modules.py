@@ -380,7 +380,6 @@ class ModuleTree(vdict, Treeview):
 				"command": lambda: open_editor(inspect.getsourcefile(obj))
 			})
 
-		# print ('v', value)
 		if key in self.get_children() and value != self.rootfolder:
 			items.extend([{
 				"separator": None

@@ -219,7 +219,7 @@ class Prompt(Text):
 		if tag_ranges:
 			items.extend([{
 				"label": "Copy",
-				"command": lambda: self.clipboard_append(self.get(*tag_ranges))
+				"command": lambda: self.copy_to_clipboard(self.get(*tag_ranges))
 			}, {
 				"label": "Paste",
 				"command": self._on_paste

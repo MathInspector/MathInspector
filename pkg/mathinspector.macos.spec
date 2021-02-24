@@ -7,7 +7,7 @@ try:
 except ImportError:
     VERSION = "UNKNOWN"
 
-a = Analysis(['../mathinspector/_run.py'],
+a = Analysis(['../mathinspector/__main__.py'],
              pathex=[os.path.abspath('..')],
              binaries=[],
              datas=[('../mathinspector/assets', 'assets')],

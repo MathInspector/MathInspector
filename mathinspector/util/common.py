@@ -17,7 +17,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import numpy as np
 import inspect, os, platform
-from ..style import Color
+from ..style.color import Color
+
+def version():
+    """version detector. Precedence: installed dist, git, 'UNKNOWN'."""
+    try:
+        from ._dist_version import VERSION
+    except ImportError:
+        try:
+            from setuptools_scm import get_version
+            VERSION = get_version(root='..', relative_to=__file__)
+        except (ImportError, LookupError):
+            # VERSION = "UNKNOWN"
+            VERSION = "0.9.4"
+    return VERSION
 
 def getrandom(min, max):
     N = 10
@@ -50,8 +63,17 @@ def name_ext(file):
     return os.path.splitext(os.path.basename(file))
 
 def open_editor(file):
-    if platform.system() in ("Windows", "Linux"):
+    if platform.system() == "Windows":
         command = "start " + file
+    elif platform.system() == "Linux":
+        editor = os.environ["EDITOR"] if "EDITOR" in os.environ else "vi"
+        command = editor + " " + file
+        ###
+        ## NOTE - It would be nice to be able to launch the system editor as a background task
+        ##      but this seems to be causing strange issues for vi when the mathinspector app quits
+        #
+        # if editor == "vi":
+        #     command += " &"
     elif platform.system() == "Darwin":
         command = "open " + file
     os.system(command)
