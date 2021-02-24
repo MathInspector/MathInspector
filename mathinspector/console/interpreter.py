@@ -134,7 +134,7 @@ class Interpreter(Text, InteractiveInterpreter):
 				self.app.modules[key] = value
 		else:
 			if self.prevent_module_import:
-				if len(key) == 1:# or key[:2] != "__":
+				if len(key) == 1 or key[:2] != "__":
 					self.app.objects[key] = value
 			else:
 				self.app.objects[key] = value
@@ -281,7 +281,6 @@ class StdOut:
 		self.buffer.extend(args)
 
 	def flush(self, *args, **kwargs):
-		# self.write("flush called dawg")
 		content = "".join(self.buffer)
 		if "\r" in content:
 			content = content.rsplit("\r", 1)[1]
