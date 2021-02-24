@@ -71,7 +71,7 @@ class Interpreter(Text, InteractiveInterpreter):
 			"__builtins__": __builtins__,
 			"app": app,
 			"plot": plot
-		}, setitem=self.setitem, delitem=self.delitem, name="locals"))
+		}, setitem=self.setitem, delitem=self.delitem))
 
 		self.frame = tk.Frame(app,
 			padx=16,
