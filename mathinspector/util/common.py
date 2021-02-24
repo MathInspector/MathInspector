@@ -28,8 +28,8 @@ def version():
             from setuptools_scm import get_version
             VERSION = get_version(root='..', relative_to=__file__)
         except (ImportError, LookupError):
-            # VERSION = "UNKNOWN"
-            VERSION = "0.9.4"
+            VERSION = "UNKNOWN"
+            # VERSION = "0.9.4"
     return VERSION
 
 def getrandom(min, max):

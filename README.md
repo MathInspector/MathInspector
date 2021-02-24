@@ -23,7 +23,7 @@ or
 `python -m mathinspector`
 
 
-![BetaVersionAnimation](mathinspector/assets/img/beta-scene-full.gif)
+![BetaVersionAnimation](https://mathinspector.com/img/beta-scene-full.gif)
 
 Overview
 ---
