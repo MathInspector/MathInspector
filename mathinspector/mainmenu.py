@@ -20,13 +20,14 @@ import scipy, math, builtins, os, sys
 from functools import partial
 from tkinter import filedialog
 
-from . import plot, doc, examples
+from . import doc, examples
+from .plot import plot
 from .util import binop
 from .widget import Popup, Menu
 from .style import Color
 from .util import BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
 from .util.common import open_editor
-from .util.config import CONTROL_KEY, BASEPATH, BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
+from .util.config import CONTROL_KEY, BASEPATH, BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT, AUTOSAVE_PATH
 from .console import builtin_print
 
 TRIG_FUNCTIONS = [i for i in ("acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "cos", "cosh", "degrees", "sin", "sinh", "tan", "tanh")]
@@ -114,7 +115,7 @@ class MainMenu(Menu):
 				},
 				{
 					"label": "Save            ",
-					"command": lambda event=None: app.project.save(app.modules.rootfolder),
+					"command": lambda event=None: app.project.save(app.project.file or app.modules.rootfolder),
 					"accelerator": CONTROL_KEY + "+s"
 				},
 				{
@@ -262,6 +263,11 @@ class MainMenu(Menu):
 				self.app.horizontal_panel.sashpos(0,240)
 			# else:
 			# 	self.app.vertical_panel.sashpos(0, 0)
+
+	def restore_defaults(self):
+		self._["View"].entryconfig(0, label="Show Sidebar")
+		self._["View"].entryconfig(1, label="Show Node Editor")
+		self._["View"].entryconfig(2, label="Hide Console")	
 
 	def new_file(self):
 		file = filedialog.asksaveasfilename(defaultextension=".py")

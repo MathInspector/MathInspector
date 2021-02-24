@@ -18,8 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import tkinter as tk
 from tkinter import ttk
-import os
-import inspect
+from ttkthemes import themed_tk
+import os, inspect
 from ..util.argspec import argspec
 from ..util.common import classname
 from ..util.config import BUTTON_RIGHT, EXCLUDED_MODULES, INSTALLED_PKGS, BUILTIN_PKGS
@@ -29,24 +29,30 @@ from .show_textfile import show_textfile
 from .doc import Doc
 from ..style import Color
 
-class Browser(tk.Toplevel):
+class Browser(themed_tk.ThemedTk, tk.Toplevel):
 
     def __init__(self, app, obj=None, title=None, browse=False, on_import=None, geometry=None):
-        tk.Toplevel.__init__(self, app, background=Color.BLACK)
+        if app:
+            tk.Toplevel.__init__(self, app, background=Color.BLACK)
+            self.protocol("WM_DELETE_WINDOW", self._on_close)
+        else:
+            themed_tk.ThemedTk.__init__(self)
+            self.set_theme("arc")
+            ttk.Style(self)
+        
+        self.app = app
+        
         if geometry:
             self.geometry(geometry)
 
-        self.protocol("WM_DELETE_WINDOW", self._on_close)
-
-        if obj:
+        if obj is not None:
             if isinstance(obj, str) and os.path.isfile(obj):
                 title = os.path.basename(obj)
             self.title(title or classname(obj))
-            self.doc = Doc(self, obj, run_code=app.console.prompt.push)
+            self.doc = Doc(self, obj, run_code=app.console.prompt.push if app else self.runcode)
             self.doc.pack(fill="both", expand=True)
             return
 
-        self.app = app
         self.on_import = on_import
         self.menu = Menu(self)
 
@@ -108,6 +114,9 @@ class Browser(tk.Toplevel):
             getattr(self, i).bind("<<TreeviewSelect>>", lambda event, key=i: self._on_selection(event, key))
             getattr(self, i).bind(BUTTON_RIGHT, lambda event, key=i: self._on_button_right(event, key))
 
+    def runcode(self, source):
+        os.system("python -c " + source)
+
     def _on_configure_doc(self, event):
         self.doc.paned_window.sashpos(0,0)
         self.doc.paned_window.unbind("<Configure>")
@@ -143,6 +152,10 @@ class Browser(tk.Toplevel):
         self.destroy()
 
     def _on_button_right(self, event, name):
+        if not self.app:
+            # TODO - add functionality for docbrowser without app being instantiated
+            return
+
         attr = getattr(self, name)
         key = attr.identify_row(event.y)
         attr.selection_set(key)

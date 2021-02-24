@@ -200,7 +200,7 @@ class ObjectTree(vdict, Treeview):
 	    while True:
 	        if temp not in self:
 	            return temp
-	        temp = name + "_" + str(i)
+	        temp = name + str(i)
 	        i += 1
 
 	def _on_button_1(self, event):

@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import tkinter as tk
 import numpy as np
 import inspect, platform
-from .. import plot
+from ..plot import plot
 from ..util import fontcolor, instanceof, classname, argspec, numargs, open_editor, vdict, instanceof
 from ..util.config import BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, BUTTON_RIGHT_MOTION, HITBOX, ZOOM_IN, ZOOM_OUT, FONTSIZE, FONT_SIZE
 from ..style import Color, getimage
@@ -64,11 +64,14 @@ class NodeEditor(vdict, tk.Canvas):
 		self.bind("<Button-1>", self._on_button_1)
 		self.bind("<B1-Motion>", self._on_multiselect)
 		self.bind("<ButtonRelease-1>", self._on_button_release_1)
+		self.bind("<Escape>", lambda event: self.menu.unpost())
 
-		self.bind("<MouseWheel>", self._on_mouse_wheel)
 		if platform.system() == "Linux":
 			self.bind("<Button-4>", lambda event: self._on_mouse_wheel(event, 1))
 			self.bind("<Button-5>", lambda event: self._on_mouse_wheel(event, -1))
+		else:
+			self.bind("<MouseWheel>", self._on_mouse_wheel)
+		
 		self.bind(BUTTON_RELEASE_RIGHT, self._on_button_release_2)
 		self.bind(BUTTON_RIGHT_MOTION, self._on_b2_motion)
 
@@ -100,7 +103,6 @@ class NodeEditor(vdict, tk.Canvas):
 		self.output.node.bind("<B1-Motion>", self._on_output_b1_motion)
 		self.output.node.bind("<ButtonRelease-1>", self._on_output_button_release_1)
 
-
 	def setitem(self, name, update_value=False, coord=None, is_output_item=False):
 		if name not in self:
 			self[name] = Item(self, name, coord=coord or self.get_pointer(random=True))
@@ -119,6 +121,7 @@ class NodeEditor(vdict, tk.Canvas):
 		self[name].destroy()
 		if not coord:
 			coord = self.get_pointer(random=True)
+		
 		self[name] = Item(self, name,
 			coord=coord,
 			args=item.args,
@@ -447,6 +450,8 @@ class NodeEditor(vdict, tk.Canvas):
 		self.dragposition = (0,0)
 
 	def _on_button_1(self, event):
+		self.menu.unpost() # fix for menu not closing properly on linux
+		
 		if self.edit_item:
 			self.edit_item.entry.finish()
 

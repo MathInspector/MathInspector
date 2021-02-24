@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import numpy as np
 import inspect, traceback
-from .. import plot
+from ..plot import plot
 from ..style import Color
 from ..util import vdict
 from ..util import classname, fontcolor, argspec
@@ -251,7 +251,7 @@ class Item:
         if isinstance(value, Item):
             if value == self: return False
 
-            if key == "<value>":
+            if key == "<value>" and not isinstance(self.obj, np.ndarray):
                 try:
                     result = self.obj.__class__(value.value())
                 except Exception as err:

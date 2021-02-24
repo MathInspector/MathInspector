@@ -22,7 +22,7 @@ from ..widget import Text
 from ..util import argspec, instanceof, MESSAGE_TIMEOUT
 from ..console.builtin_print import builtin_print
 from ..style import Color, getimage
-from .. import plot
+from ..plot import plot
 
 class Output(tk.Frame):
 	def __init__(self, canvas):
@@ -99,13 +99,13 @@ class Output(tk.Frame):
 			if plot.is_active():
 				plot.config(pixelmap=pixelmap_fn)
 			else:
-				plot.plot(pixelmap=pixelmap_fn, title=name)
+				plot(pixelmap=pixelmap_fn, title=name)
 		elif window:
 			self.values[item.name] = value
 			if plot.is_active():
 				plot.update(*list(self.values.values()))
 			else:
-				plot.plot(value, title=name)
+				plot(value, title=name)
 		else:
 			if self.log_item:
 				self.disconnect(self.log_item)

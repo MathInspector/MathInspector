@@ -60,4 +60,4 @@ class vdict(dict): # need to extend dict so it can be passed as an argument to e
 		return len(self.store)
 
 	def __repr__(self):
-		return repr(self.store)
+		return repr(list(self.store))

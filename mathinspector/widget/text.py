@@ -187,14 +187,14 @@ class Text(tk.Text):
 			if tag_ranges:
 				self.menu.show(event, [{
 					"label": "Copy",
-					"command": lambda: self.clipboard_append(self.get(*tag_ranges))
+					"command": lambda: self.copy_to_clipboard(self.get(*tag_ranges))
 				}])
 			return
 
 		if tag_ranges:
 			self.menu.show(event, [{
 				"label": "Copy",
-				"command": lambda: self.clipboard_append(self.get(*tag_ranges))
+				"command": lambda: self.copy_to_clipboard(self.get(*tag_ranges))
 			}, {
 				"label": "Paste",
 				"command": lambda: self._on_paste(tag_ranges)
@@ -223,6 +223,10 @@ class Text(tk.Text):
 		self.config(cursor="")
 		if self.hover_range:
 			self.tag_remove(tag + "_hover", *self.hover_range)
+
+	def copy_to_clipboard(self, content):
+		self.clipboard_clear()
+		self.clipboard_append(content)
 
 	def get_tags(self, start, end):
 	    index = start
