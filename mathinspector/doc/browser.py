@@ -22,7 +22,8 @@ from ttkthemes import themed_tk
 import os, inspect
 from ..util.argspec import argspec
 from ..util.common import classname
-from ..util.config import BUTTON_RIGHT, EXCLUDED_MODULES, INSTALLED_PKGS, BUILTIN_PKGS
+from ..config import BUTTON_RIGHT
+from ..util import EXCLUDED_MODULES, INSTALLED_PKGS, BUILTIN_PKGS
 from ..console.builtin_print import builtin_print
 from ..widget import Notebook, Treeview, Button, Menu
 from .show_textfile import show_textfile
@@ -49,7 +50,7 @@ class Browser(themed_tk.ThemedTk, tk.Toplevel):
             if isinstance(obj, str) and os.path.isfile(obj):
                 title = os.path.basename(obj)
             self.title(title or classname(obj))
-            self.doc = Doc(self, obj, run_code=app.console.prompt.push if app else self.runcode)
+            self.doc = Doc(self, obj, run_code=app.console.prompt.push if app else None)
             self.doc.pack(fill="both", expand=True)
             return
 
@@ -113,9 +114,6 @@ class Browser(themed_tk.ThemedTk, tk.Toplevel):
         for i in ("installed_pkgs", "builtin_pkgs"):
             getattr(self, i).bind("<<TreeviewSelect>>", lambda event, key=i: self._on_selection(event, key))
             getattr(self, i).bind(BUTTON_RIGHT, lambda event, key=i: self._on_button_right(event, key))
-
-    def runcode(self, source):
-        os.system("python -c " + source)
 
     def _on_configure_doc(self, event):
         self.doc.paned_window.sashpos(0,0)

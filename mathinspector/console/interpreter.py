@@ -21,11 +21,13 @@ import numpy as np
 import tkinter as tk
 from code import InteractiveInterpreter
 from types import CodeType
+from io import TextIOWrapper
 
 from ..plot import plot
 from ..doc import Help
 from ..style import Color, TAGS
-from ..util import vdict, open_editor, BUTTON_RIGHT, BASEPATH, FONT, version
+from ..util import vdict
+from ..config import open_editor, BUTTON_RIGHT, BASEPATH, FONT, version
 from ..widget import Text, Menu
 from .builtin_print import builtin_print
 from .codeparser import CodeParser
@@ -46,7 +48,7 @@ class Interpreter(Text, InteractiveInterpreter):
 	is stored in a vdict called `self.locals`.  A vdict is key-value pair, just like a regular
 	dictionary, except it also has callbacks for events such as setting and deleting items.
 
-	When running commands, `self.locals` is passed to the builtin `exec` function as the third parameter.
+	When running commands, `self.locals` is passed to the builtin `exec` function as the second parameter.
 	This parameter determines the local namespace exec runs in.  You can display the current
 	contents of the local namespace by running the command
 
@@ -88,17 +90,15 @@ class Interpreter(Text, InteractiveInterpreter):
 			cursor="arrow",
 			insertbackground=Color.DARK_BLACK)
 
-		sys.displayhook = self.write
+		sys.stdout = StdOut(sys.stdin, self.write)
+		sys.stderr = StdOut(sys.stdin, self.write)
 		sys.excepthook = self.showtraceback
-		sys.stdout = StdOut(self.write)
-		sys.stderr = StdOut(self.write)
 
-		__builtins__["print"] = self.write
 		__builtins__["help"] = Help(app)
 		__builtins__["clear"] = Clear(self)
-		__builtins__["copyright"] = "Copyright (c) 2018-2021 Matt Calhoun.\nAll Rights Reserved."
-		__builtins__["credits"] = "Created by Matt Calhoun.\nSee https://mathinspector.com for more information."
 		__builtins__["license"] = License()
+		__builtins__["copyright"] = Copyright()
+		__builtins__["credits"] = Credits()
 
 		self.app = app
 		self.prompt = Prompt(self, self.frame)
@@ -186,14 +186,15 @@ class Interpreter(Text, InteractiveInterpreter):
 		self.prompt()
 
 	def write(self, *args, syntax_highlight=False, tags=(), **kwargs):
-		if self.prevent_module_import:
-			return
-		elif len(args) == 1:
+		if self.prevent_module_import: return
+		
+		if len(args) == 1:
 			if isinstance(args[0], np.ndarray):
 				if not args[0].any():
 					return
 			elif args[0] in ("\a", "\n", " ", "", None):
 				return
+
 
 		idx = self.index("insert")
 		for r in args:
@@ -226,7 +227,7 @@ class Interpreter(Text, InteractiveInterpreter):
 		self.see("end")
 		self.prompt.move()
 
-	def showtraceback(self, *args):
+	def showtraceback(self, *args):		
 		sys.last_type, sys.last_value, last_tb = ei = sys.exc_info()
 		sys.last_traceback = last_tb
 
@@ -269,26 +270,23 @@ class Interpreter(Text, InteractiveInterpreter):
 		if not self.hover_range: return
 		content = self.get(*self.hover_range)
 		if tag == "error_file":
-			open_editor(os.path.abspath(content[1:-1]))
+			open_editor(self.app, os.path.abspath(content[1:-1]))
 
-class StdOut:
-	def __init__(self, write):
-		self.buf = []
-		self.write = write
 
-	def buffer(self, *args, **kwargs):
-		if len(args) == 0: return
-		self.buf.extend(args)
+class StdOut(TextIOWrapper):
+    def __init__(self, buffer, write, **kwargs):
+        super(StdOut, self).__init__(buffer, **kwargs)
+        self.write = write
 
-	def flush(self, *args, **kwargs):
-		content = "".join(self.buf)
-		if "\r" in content:
-			content = content.rsplit("\r", 1)[1]
-		self.write(content)
-		self.buf.clear()
+class Copyright:
+	def __repr__(self):
+		return "Copyright (c) 2018-2021 Matt Calhoun.\nAll Rights Reserved."
 
-	def write(self, *args, **kwargs):
-		self.buf.extend(args)
+class Credits:
+	def __repr__(self):
+		return """Created by Matt Calhoun.  Thanks to Casper da Costa-Luis for supporting 
+Math Inspector development, and to the contributors on GitHub.  
+See www.mathinspector.com for more information."""
 
 class License:
 	def __call__(self):

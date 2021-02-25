@@ -23,10 +23,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import builtins
-from ..util.config import INSTALLED_PKGS, BUILTIN_PKGS, BUILTIN_CLASS
-from ..util.common import name_ext
-from os import path
+import builtins, os
+from ..util import name_ext, INSTALLED_PKGS, BUILTIN_PKGS, BUILTIN_CLASS
 from ..console.builtin_print import builtin_print
 from .browser import Browser
 from . import manual
@@ -73,7 +71,7 @@ class Help:
 					return self.app.objects[key]
 				elif key in self.app.modules:
 					return self.app.modules[key]
-				elif path.isfile(key):
+				elif os.path.isfile(key):
 					name, ext = name_ext(key)
 					if name in self.app.modules:
 						return self.app.modules[name]

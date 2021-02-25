@@ -40,7 +40,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import inspect
 from . import doc
-from .util import vdict, Color, argspec, classname, fontcolor, open_editor, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT
+from .util import vdict, Color, argspec, classname, fontcolor
+from .config import open_editor, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT
 from .style import TREE_TAGS
 from .widget import Treeview, TreeEntry
 
@@ -245,7 +246,7 @@ class ObjectTree(vdict, Treeview):
 			file = inspect.getsourcefile(self.app.objects[key])
 			items.append({
 				"label": "View Source Code",
-				"command": lambda: open_editor(file)
+				"command": lambda: open_editor(self.app, file)
 			})
 		except:
 			pass

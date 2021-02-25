@@ -17,7 +17,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import sys
 from . import main
-from .util import AUTOSAVE_PATH
 
 if __name__ == "__main__":
 	args = []

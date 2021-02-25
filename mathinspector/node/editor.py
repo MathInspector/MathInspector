@@ -20,12 +20,17 @@ import tkinter as tk
 import numpy as np
 import inspect, platform
 from ..plot import plot
-from ..util import fontcolor, instanceof, classname, argspec, numargs, open_editor, vdict, instanceof
-from ..util.config import BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, BUTTON_RIGHT_MOTION, HITBOX, ZOOM_IN, ZOOM_OUT, FONTSIZE, FONT_SIZE
+from ..util import fontcolor, instanceof, classname, argspec, numargs, vdict, instanceof
+from ..config import open_editor, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, BUTTON_RIGHT_MOTION, FONT_SIZE
 from ..style import Color, getimage
 from .output import Output
 from .item import Item
 from ..widget import Popup, Menu, Text
+
+ZOOM_IN = 1.1
+ZOOM_OUT = 0.9
+HITBOX = 32 # used for detecting when to trigger wire connections in the node editor while dragging wires
+FONTSIZE = "12" # TODO - refactor how FONTSIZE and PROMPT_FONTSIZE works
 
 class NodeEditor(vdict, tk.Canvas):
 	def __init__(self, app):
@@ -559,7 +564,7 @@ class NodeEditor(vdict, tk.Canvas):
 		if file:
 			extras.append({
 				"label": "View Source Code",
-				"command": lambda: open_editor(file)
+				"command": lambda: open_editor(self.app, file)
 			})
 
 		# graph.append({

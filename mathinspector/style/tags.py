@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from .color import Color
-from ..util.config import FONT
+from ..config import FONT
 
 TAGS = {
     "red": {

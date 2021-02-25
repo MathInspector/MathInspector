@@ -22,7 +22,7 @@ from ..plot import plot
 from ..style import Color
 from ..util import vdict
 from ..util import classname, fontcolor, argspec
-from ..util.config import ITEM_FONTSIZE as FONTSIZE
+from ..config import ITEM_FONTSIZE as FONTSIZE
 from .entry import Entry
 from textwrap import fill
 from pprint import pformat

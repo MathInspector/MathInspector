@@ -26,8 +26,7 @@ from .util import binop
 from .widget import Popup, Menu
 from .style import Color
 from .util import BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
-from .util.common import open_editor
-from .util.config import CONTROL_KEY, BASEPATH, BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT, AUTOSAVE_PATH
+from .config import open_editor, CONTROL_KEY, BASEPATH
 from .console import builtin_print
 
 TRIG_FUNCTIONS = [i for i in ("acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "cos", "cosh", "degrees", "sin", "sinh", "tan", "tanh")]
@@ -276,7 +275,7 @@ class MainMenu(Menu):
 		f.write("")
 		f.close()
 		self.app.modules.addfile(file)
-		open_editor(file)
+		open_editor(self.app, file)
 
 	def import_module(self, module, alias="", open_folders=False):
 		self.app.modules[alias or module] = __import__(module)
