@@ -48,7 +48,7 @@ from tkinter import filedialog
 from importlib import reload
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
-from .util import vdict
+from .util import vdict, name_ext
 from .util.excluded import *
 from .widget import Treeview
 from .style import Color, getimage

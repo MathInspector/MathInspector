@@ -567,6 +567,14 @@ class NodeEditor(vdict, tk.Canvas):
 				"command": lambda: open_editor(self.app, file)
 			})
 
+		extras.extend([{
+			"label": "Create Copy",
+			"command": lambda: self.app.objects.setobj(item.name, item.obj, create_new=True)
+		},{
+			"label": "Rename",
+			"command": lambda: self.rename(item.name)
+		}])
+
 		# graph.append({
 		# 	"label": "Set color     " + item.opts["line_color"] if item.opts["line_color"] != Color.BLUE else "Set color",
 		# 	"command": lambda: Popup(self.app, item.name + ".set_color", obj=lambda color: item.option("line_color", color), canvas_item=item)
@@ -594,6 +602,21 @@ class NodeEditor(vdict, tk.Canvas):
 			header=name)
 		else:
 			self._method_result(name, attr, item)
+
+	# def _copy_item(self, name):
+	# 	self.setitem(name, self[name], create_new=True)
+
+	def rename(self, name):
+		Popup(self.app, [{
+			"label": "new name",
+			"value": name
+		}],
+		lambda params: self._rename_item(name, params["new name"]),
+		title="Rename Item",
+		header=name)
+
+	def _rename_item(self, old, new):
+		self.app.objects[new] = self.app.objects.pop(old)
 
 	def _method_result(self, name, attr, item, params={}):
 		if params:
