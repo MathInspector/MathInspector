@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import numpy as np
-import inspect, os, platform, subprocess
+import inspect, os, platform
 from ..style.color import Color
 
 def getrandom(min, max):

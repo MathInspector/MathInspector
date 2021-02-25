@@ -39,14 +39,14 @@ SYSTEM = platform.system()
 
 def open_editor(app, file):
     if SYSTEM == "Windows":
-        subprocess.run(["start", file])
+        subprocess.Popen(["start", file])
     elif SYSTEM == "Linux":
         if "EDITOR" not in os.environ:         
             app.console.write("Could not open editor.  You must set the $EDITOR environment variable to use this feature.", tags="red")
             return
         subprocess.Popen([os.environ["EDITOR"], file])
     elif SYSTEM == "Darwin":
-        subprocess.run(["open", file])
+        subprocess.Popen(["open", file])
 
 BUTTON_RIGHT = '<Button-3>' if SYSTEM in ("Windows", "Linux") else '<Button-2>'
 BUTTON_RELEASE_RIGHT = '<ButtonRelease-3>' if SYSTEM in ("Windows", "Linux") else '<ButtonRelease-2>'
