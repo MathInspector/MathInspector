@@ -365,7 +365,7 @@ class SaveData:
 			self.app.node.scale_width()
 
 		except Exception as err:
-			print ("\nThe autosave file failed to load, " + str(type(err).__name__) + ": " + str(err), tags="red")
+			self.app.console.write("\nThe autosave file failed to load, " + str(type(err).__name__) + ": " + str(err), tags="red")
 
 	def _copy_project_files(self, file):
 		rootfolder = os.path.splitext(file)[0]
