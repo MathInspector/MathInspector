@@ -19,10 +19,12 @@ import numpy as np
 import tkinter as tk
 import pygame
 from ..widget import Text
-from ..util import argspec, instanceof, MESSAGE_TIMEOUT
+from ..util import argspec, instanceof
 from ..console.builtin_print import builtin_print
 from ..style import Color, getimage
 from ..plot import plot
+
+MESSAGE_TIMEOUT = 4000
 
 class Output(tk.Frame):
 	def __init__(self, canvas):

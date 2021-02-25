@@ -17,8 +17,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from .vdict import vdict
-from .config import *
 from .common import *
+from .excluded import *
+from .builtin_lists import *
 from .argspec import argspec
 from .numargs import numargs
 from .docscrape import FunctionDoc

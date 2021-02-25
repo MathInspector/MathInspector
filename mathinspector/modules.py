@@ -49,10 +49,10 @@ from importlib import reload
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from .util import vdict
-from .util import *
 from .widget import Treeview
 from .style import Color, getimage
 from .console.builtin_print import builtin_print
+from .config import *
 
 class ModuleTree(vdict, Treeview):
 	"""
@@ -346,7 +346,7 @@ class ModuleTree(vdict, Treeview):
 				sourcefile = None
 
 			if sourcefile:
-				open_editor(sourcefile)
+				open_editor(self.app, sourcefile)
 				return "break"
 
 		obj = help.getobj(value)
@@ -377,7 +377,7 @@ class ModuleTree(vdict, Treeview):
 		if file:
 			items.append({
 				"label": "View Source Code",
-				"command": lambda: open_editor(inspect.getsourcefile(obj))
+				"command": lambda: open_editor(self.app, inspect.getsourcefile(obj))
 			})
 
 		if key in self.get_children() and value != self.rootfolder:

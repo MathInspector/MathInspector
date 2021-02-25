@@ -19,9 +19,11 @@ import keyword, platform
 from .history import History
 from .builtin_print import builtin_print
 from .autocomplete import AutoComplete
-from ..util.config import FONT, PROMPT_FONTSIZE as FONTSIZE
+from ..config import FONT
 from ..widget import Text
 from ..style import Color
+
+FONTSIZE = 18.5
 
 class Prompt(Text):
 	def __init__(self, console, frame):

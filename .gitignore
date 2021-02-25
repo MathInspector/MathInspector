@@ -1,8 +1,6 @@
 autosave.math
 .DS_Store
-Vagrantfile
-.vagrant
-install.sh
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

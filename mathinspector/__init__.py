@@ -1,56 +1,5 @@
 """
 Math Inspector: a visual programming environment for scientific computing
-https://mathinspector.com
-
-You can use the mathinspector components from your own source code files without launching the mathinspector app.  
-
-All of the examples that follow assume that you have already imported mathinspector
-
->>> import mathinspector
-
-viewdoc
----
-The viewdoc function lets you use the mathinspector documentation system from your own source code files.
-
-For example, to view the documentation for the inspect module
-
->>> import inspect
->>> mathinspector.viewdoc(inspect)
-
-For more information about any of the items which follow, see the corresponding docstrings for that item.
-These can be viewed using the viewdoc function.  For example, to view this documentation in the mathinspector doc system, use the command 
-
->>> mathinspector.viewdoc(mathinspector)
-
-main
----
-This will launch the mathinspector app
-
->>> mathinspector.main()
-
-See the documentation for the main function to understand the structure of the arguments it accepts
-
-plot
----
-The mathinspector plotting library was designed to update and replace the functionality in matplotlib.
-
-This will launch the mathinspector plotting window.  
-
->>> mathinspector.plot(1,2,3)
-
-The way you format data you pass as arguments to the plot function will determine what is plotted.  It will automatically detect when the input is 2-dimensional or 3-dimensional, and treats tuple's as points and lists & arrays as lines.  See the documentation for the plot function for a complete list of accepted argument types.
-
-vdict
----
-This module also has the class vdict, which stands for virtual dictionary.  It's a class which extends dict
-and has callbacks for getting, setting, and deleting items.
-
->>> A = mathinspector.vdict(setitem=lambda key, value: print(key))
->>> A["x"] = 1
-x
-
-"""
-"""
 Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify
@@ -79,11 +28,59 @@ from .project import SaveData
 from .animation import Animation
 from .widget import Notebook
 
-from .util import vdict, version, name_ext, AUTOSAVE_PATH
+from .util import vdict, name_ext
+from .config import version, AUTOSAVE_PATH
 from .plot import plot
 from .doc import Help
 
-class ImportInterface:
+class mathinspector:
+	"""
+	Math Inspector: a visual programming environment for scientific computing
+	https://mathinspector.com
+
+	help
+	---
+	The mathinspector `help` function has been designed to override the builtin python `help` function.  This makes it easy to write code that displays documentation for your own projects with the mathinspector doc browser.  
+
+	These can be viewed using the help function.  For example, to view this documentation in the mathinspector doc browser, use the command
+
+	>>> import mathinspector
+	>>> from mathinspector import help
+	>>> help(mathinspector)
+
+	For more information about any of the items which follow, see the corresponding docstrings for that item.  If you are using the doc browser to view this documentation, the sidebar contains a list of everything this module contains, and you can click on those items to learn more.  All code examples can be clicked on, and they will be executed and the output printed to the command line.
+
+	main
+	---
+	This will launch the mathinspector app
+
+	>>> import mathinspector
+	>>> mathinspector.main()
+
+	See the documentation for the main function to understand the structure of the arguments it accepts
+
+	plot
+	---
+	The mathinspector plotting library was designed to update and replace the functionality in matplotlib.
+
+	This will launch the mathinspector plotting window.  
+
+	>>> import mathinspector
+	>>> mathinspector.plot(1,2,3)
+
+	The way you format data you pass as arguments to the plot function will determine what is plotted.  It will automatically detect when the input is 2-dimensional or 3-dimensional, and treats tuple's as points and lists & arrays as lines.  See the documentation for the plot function for a complete list of accepted argument types.
+
+	vdict
+	---
+	This module also has the class vdict, which stands for virtual dictionary.  It's a class which extends dict
+	and has callbacks for getting, setting, and deleting items.
+
+	>>> import mathinspector
+	>>> A = mathinspector.vdict(setitem=lambda key, value: print(key))
+	>>> A["x"] = 1
+	    x
+
+	"""
 	def __dir__(self):
 		return ALLOWED_NAMES
 
@@ -107,12 +104,12 @@ ALLOWED_NAMES = [
 	"main",
 	"plot",
 	"vdict",
-	"viewdoc",
+	"help",
 ]
 
 __version__ = version()
-viewdoc = Help()
-sys.modules[__name__] = ImportInterface()
+help = Help()
+sys.modules[__name__] = mathinspector()
 
 class App(themed_tk.ThemedTk):
 	def __init__(self, *args):
@@ -193,7 +190,7 @@ def main(*args, **kwargs):
 	
 	"""
 	if "help" in kwargs:
-		return viewdoc(kwargs["help"])
+		return help(kwargs["help"])
 
 	if "new" in kwargs and kwargs["new"] is True:
 		with open(AUTOSAVE_PATH, "w") as f:

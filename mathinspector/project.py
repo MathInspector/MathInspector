@@ -53,10 +53,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle, os, atexit, shutil, traceback, cloudpickle
-from .plot import plot
-from tkinter import messagebox, filedialog
-from .util import name_ext, AUTOSAVE_PATH
 from importlib import import_module
+from tkinter import messagebox, filedialog
+from .plot import plot
+from .util import name_ext
+from .config import AUTOSAVE_PATH
 from .console.builtin_print import builtin_print
 
 class SaveData:

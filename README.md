@@ -65,10 +65,10 @@ Options and arguments:
 ```
 
 ### Explore
-When you import a module in Math Inspector, it automatically imports all submodules at the same time and provides a file explorer style interface, enabling anyone to be able to see everything numpy & scipy are capable of at a glance.
+When you import a module in Math Inspector, it automatically imports all submodules at the same time and provides a file explorer style interface, enabling anyone to be able to see everything numpy is capable of at a glance.
 
 ### Learn
-Whatever object you are interacting with in Math Inspector, you can always learn more by reading the documentation in the doc viewer, which has been designed to make finding and interacting with the extensive documentation of numpy & scipy as easily as possible.  See a code example in the doc string you want to run?  Just click on it and see what happens.
+Whatever object you are interacting with in Math Inspector, you can always learn more by reading the documentation in the doc viewer, which has been designed to make finding and interacting with the extensive documentation of numpy as easily as possible.  See a code example in the doc string you want to run?  Just click on it and see what happens.
 
 ### Play
 Math inspector's plotting library updates and modernizes the functionality available in matplotlib.  It provides high performance interactive 2D and 3D plots.  Capable of plotting parametric curves, algebraic varieties, fractals, curved surfaces, and much more. The animation system has been designed to render production quality animations for educational content creators.  A lot of care has been put into optimizing the performance of animations to enable a smooth 60 frames per second while panning and zooming during animations.

@@ -17,14 +17,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import tkinter as tk
 from tkinter import ttk
-import inspect, re, os, webbrowser
+import inspect, re, os, webbrowser, subprocess
 from .tags import DOC_TAGS
 from ..widget import Notebook, Treeview, Menu, Text
 from ..style import Color, getimage
 from ..util.argspec import argspec
 from ..util.docscrape import FunctionDoc
-from ..util.common import open_editor, classname, name_ext
-from ..util.config import EXCLUDED_MODULES, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, INSTALLED_PKGS, BUILTIN_PKGS, DOC_FONT
+from ..util.common import classname, name_ext
+from ..config import open_editor, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, DOC_FONT
+from ..util import EXCLUDED_MODULES, INSTALLED_PKGS, BUILTIN_PKGS
 from .show_functiondoc import show_functiondoc
 from .show_textfile import show_textfile
 from .show_markdown import show_markdown
@@ -48,6 +49,9 @@ class Doc(tk.Frame):
 
 		self.has_sidebar = (has_sidebar or inspect.ismodule(obj) or inspect.isclass(obj))
 		self.run_code = run_code
+		if not run_code:
+			self.buffer = []
+
 		if self.has_sidebar:
 			self.notebook.add("tree", self.tree)
 			self.paned_window.add(self.notebook.frame)
@@ -96,7 +100,8 @@ class Doc(tk.Frame):
 			self.show(obj)
 
 	def show(self, obj, clear_nav=True, display_only=False):
-		self.obj = obj if (inspect.getdoc(obj) or not hasattr(obj, "__class__")) else obj.__class__
+		self.obj = obj
+		# self.obj = obj if (inspect.getdoc(obj) or not hasattr(obj, "__class__")) else obj.__class__
 
 		if display_only:
 			pass
@@ -133,7 +138,11 @@ class Doc(tk.Frame):
 				show_textfile(self.text, obj)
 
 		for i in dir(self.obj):
-			attr = getattr(self.obj, i)
+			try:
+				attr = getattr(self.obj, i)
+			except:
+				attr = "_"
+
 			if i[0] == "_":
 				pass
 			elif inspect.isclass(attr):
@@ -251,7 +260,7 @@ class Doc(tk.Frame):
 		if file:
 			self.menu.show(event, [{
 				"label": "View Source Code",
-				"command": lambda: open_editor(file)
+				"command": lambda: open_editor(self.app, file)
 			}])
 
 	def _click(self, event, tag):
@@ -261,11 +270,18 @@ class Doc(tk.Frame):
 			doc_link = self.text.get(*self.text.hover_range)
 			obj = getattr(__import__(self.obj.__class__.__module__), doc_link)
 			self.show(obj)
-		elif tag == "code_sample" and self.run_code:
+		elif tag == "code_sample":
 			match = re.findall(r"(>>>|\.\.\.) {0,2}(\t{0,}.*\n)", self.text.get(*self.text.hover_range))
 			if not match: return
+			self.buffer.clear()
 			for command in match:
-				self.run_code(command[1])
+				if self.run_code:
+					self.run_code(command[1])
+				else:
+					self.buffer.append(command[1])
+
+			if self.buffer:
+				self._runcode("\n".join(self.buffer))
 
 	def _click_nav(self, event, tag):
 		if tag == "root":
@@ -290,3 +306,7 @@ class Doc(tk.Frame):
 		if is_mod and event.char == "w":
 			return self.parent.destroy()
 		return self.text._on_key(event)
+
+	def _runcode(self, source):
+		subprocess.run(["python", "-c", source])
+		# os.system("python -c '" + source + "'")
