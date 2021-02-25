@@ -49,6 +49,7 @@ from importlib import reload
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from .util import vdict
+from .util.excluded import *
 from .widget import Treeview
 from .style import Color, getimage
 from .console.builtin_print import builtin_print
