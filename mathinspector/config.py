@@ -44,7 +44,7 @@ def open_editor(app, file):
         if "EDITOR" not in os.environ:         
             app.console.write("Could not open editor.  You must set the $EDITOR environment variable to use this feature.", tags="red")
             return
-        subprocess.run([os.environ["EDITOR"], file])
+        subprocess.Popen([os.environ["EDITOR"], file])
     elif SYSTEM == "Darwin":
         subprocess.run(["open", file])
 
