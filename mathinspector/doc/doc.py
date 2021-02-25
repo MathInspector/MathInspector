@@ -50,7 +50,7 @@ class Doc(tk.Frame):
 		self.has_sidebar = (has_sidebar or inspect.ismodule(obj) or inspect.isclass(obj))
 		self.run_code = run_code
 		if not run_code:
-			self.buffer = []
+			self._runcode = RunCode()
 
 		if self.has_sidebar:
 			self.notebook.add("tree", self.tree)
@@ -273,15 +273,13 @@ class Doc(tk.Frame):
 		elif tag == "code_sample":
 			match = re.findall(r"(>>>|\.\.\.) {0,2}(\t{0,}.*\n)", self.text.get(*self.text.hover_range))
 			if not match: return
-			self.buffer.clear()
-			for command in match:
-				if self.run_code:
-					self.run_code(command[1])
-				else:
-					self.buffer.append(command[1])
 
-			if self.buffer:
-				self._runcode("\n".join(self.buffer))
+			if self.run_code:
+				for command in match:
+					self.run_code(command[1])
+			else:
+				self._runcode(match)
+
 
 	def _click_nav(self, event, tag):
 		if tag == "root":
@@ -307,6 +305,10 @@ class Doc(tk.Frame):
 			return self.parent.destroy()
 		return self.text._on_key(event)
 
-	def _runcode(self, source):
-		subprocess.run(["python", "-c", source])
-		# os.system("python -c '" + source + "'")
+class RunCode:
+	def __init__(self):
+		self.buffer = []
+
+	def __call__(self, match):
+		self.buffer.clear()
+		subprocess.Popen(["python", "-c", "\n".join([i[1] for i in match])])
