@@ -38,7 +38,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import inspect
+import inspect, re
 from . import doc
 from .util import vdict, Color, argspec, classname, fontcolor
 from .config import open_editor, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT
@@ -104,15 +104,15 @@ class ObjectTree(vdict, Treeview):
 		Parameters
 		----------
 		name : string
-		    the name of the variable
+			the name of the variable
 		value : object
-		    the value to assign
+			the value to assign
 		create_new : bool
 			when set to True, this will generate a unique variable name if there is already
 			a key with the same name
 		coord : tuple(float, float)
-		    a tuple of floats which determines the coordinates of the newly created item in the
-		    node editor
+			a tuple of floats which determines the coordinates of the newly created item in the
+			node editor
 
 
 		Examples
@@ -196,13 +196,21 @@ class ObjectTree(vdict, Treeview):
 		self.app.node[key].destroy()
 
 	def unique_name(self, name):
-	    i = 2
-	    temp = name
-	    while True:
-	        if temp not in self:
-	            return temp
-	        temp = name + str(i)
-	        i += 1
+		if re.match(r"[0-9]", name[-1]):
+			match = re.match(r"([a-z]+)([0-9]+)", name, re.I)
+			if match:
+				items = match.groups()
+				i = int(items[-1]) + 1
+				name = "".join(items[:-1])
+		else:
+			i = 2
+
+		temp = name
+		while True:
+			if temp not in self:
+				return temp
+			temp = name + str(i)
+			i += 1
 
 	def _on_button_1(self, event):
 		key = self.identify_row(event.y)
