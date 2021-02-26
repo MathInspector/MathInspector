@@ -119,7 +119,7 @@ class MainMenu(Menu):
 			"separator": None
 		},{
 			"label": "Save Project",
-			"command": lambda event=None: app.project.save(app.project.cmd_history_file or app.project.mathfile or app.modules.rootfolder),
+			"command": lambda event=None: app.project.save(app.project.mathfile or app.modules.rootfolder),
 			"accelerator": CONTROL_KEY + "+s"
 		},{
 			"label": "Save Project As...",
