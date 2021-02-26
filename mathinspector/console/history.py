@@ -1,9 +1,7 @@
 """
-class that manages the command history feature, which can be accessed from the console by
-using the up and down arrow keys.
+Interpreter command history
 """
 """
-Math Inspector: a visual programming environment for scientific computing
 Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify
@@ -22,6 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from .builtin_print import builtin_print
 
 class History:
+	"""
+	class that manages the command history feature, which can be accessed from the console by
+	using the up and down arrow keys.
+	"""
 	def __init__(self, prompt):
 		self.cmds = []
 		self.prompt = prompt

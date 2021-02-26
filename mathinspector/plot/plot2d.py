@@ -17,10 +17,21 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pygame, os, platform
 import numpy as np
 import multiprocessing as mp
-from .config import *
-from .util import instanceof, is_iterable
+from ..config import SYSTEM, MULTIPROCESS_CONTEXT, ZOOM_MODIFIER
+from ..util import instanceof, hex_to_rgb
 from pygame.locals import *
 from pygame._sdl2.video import Window
+
+SPACING = 128
+FONT_SIZE = 12
+MARGIN = int(3 * FONT_SIZE + FONT_SIZE/2)
+BACKGROUND = pygame.Color(*hex_to_rgb("272822"))
+PALE_BLUE = pygame.Color(*hex_to_rgb("c7cbd1"))
+BLACK = pygame.Color(*hex_to_rgb("333333"))
+WHITE = pygame.Color(*hex_to_rgb("f8f8f2"))
+BLUE = pygame.Color(*hex_to_rgb("60d9f1"))
+VERY_DARK_GREY = pygame.Color(*hex_to_rgb("75715d"))
+RADIUS = 4
 
 OPTIONS = {
 	"title": "Math Inspector",
@@ -47,7 +58,7 @@ class SDLWindow:
 		self.scale = 1
 		self.args = []
 		self.spacing = 1 / OPTIONS["step"]
-		if platform.system() not in ("Windows", "Linux"):
+		if SYSTEM not in ("Windows", "Linux"):
 			self.ctx = mp.get_context(MULTIPROCESS_CONTEXT)
 			self.queue = self.ctx.Queue()
 
@@ -70,7 +81,7 @@ class SDLWindow:
 		pygame.display.flip()
 
 	def update_offscreen(self, res=1, size=3):
-		if self.is_processing or platform.system() in ("Windows", "Linux"): return
+		if self.is_processing or SYSTEM in ("Windows", "Linux"): return
 		self.is_processing = True
 		w,h = OPTIONS["size"]
 		self.coords.append([w/self.pan_res,h/self.pan_res,res])
@@ -203,7 +214,7 @@ class SDLWindow:
 				else:
 					animation_timer += delta_time
 
-			if platform.system() not in ("Windows", "Linux"):
+			if SYSTEM not in ("Windows", "Linux"):
 				if not self.queue.empty():
 					pixels = self.queue.get()
 
@@ -235,7 +246,7 @@ class SDLWindow:
 				timer = 0
 				OPTIONS["position"] = x0, y0
 				OPTIONS["step"] = step = self.scale / self.spacing
-				if OPTIONS["pixelmap"] is not None and platform.system() not in ("Windows", "Linux"):
+				if OPTIONS["pixelmap"] is not None and SYSTEM not in ("Windows", "Linux"):
 					self.screen.fill(BACKGROUND)
 					x1, y1, zoom2 = self.coords[0]
 					if len(self.coords) == 1 and not self.is_processing and (

@@ -1,5 +1,7 @@
 """
-Math Inspector: a visual programming environment for scientific computing
+Base class for individual items in the node editor
+"""
+"""
 Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify

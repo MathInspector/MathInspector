@@ -23,4 +23,6 @@ Hotkeys
 
 """
 from .interpreter import Interpreter
-from .builtin_print import builtin_print
+from .history import History
+from .autocomplete import AutoComplete
+from .codeparser import CodeParser

@@ -19,7 +19,7 @@ import keyword, platform
 from .history import History
 from .builtin_print import builtin_print
 from .autocomplete import AutoComplete
-from ..config import FONT
+from ..config import FONT, is_modifier_key_pressed
 from ..widget import Text
 from ..style import Color
 
@@ -99,30 +99,13 @@ class Prompt(Text):
 				self.insert(tag_ranges[0], "[" + content + "]")
 			return "break"
 
-		ctrl = (event.state & 0x4) != 0
-		meta = (event.state & 0x8) != 0
-		is_mod = (ctrl or meta) and platform.system() != "Windows"
-		if is_mod:
+		if is_modifier_key_pressed(event):
 			if event.char == "v":
 				return self._on_paste()
 
 			if event.char == "d":
 				self.tag_add("sel", "insert wordstart", "insert wordend")
 				return "break"
-
-		## TODO - reenable this, designed to emulate the ipython ? functionality
-		# if event.keysym == "question":
-		# 	try:
-		# 		obj = self.console.eval(self.get())
-		# 	except:
-		# 		builtin_print("\a")
-		# 		return "break"
-
-		# 	if help.getobj(obj):
-		# 		help(obj)
-		# 	else:
-		# 		builtin_print("\a")
-		# 	return "break"
 
 	def push(self, s):
 		if s or not self.console.buffer:
@@ -205,11 +188,12 @@ class Prompt(Text):
 		if tag_ranges:
 			self.delete(*tag_ranges)
 
-		self.console.write(">>>  " + content, syntax_highlight=True)
-		try:
-			self.console.exec(content)
-		except:
-			self.console.showtraceback()
+		lines = content.split("\n")
+		for l in lines:
+			try:
+				self.push(l)
+			except:
+				self.console.showtraceback()
 		return "break"
 
 	def on_focus_in(self, event):

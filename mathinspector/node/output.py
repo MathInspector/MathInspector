@@ -1,5 +1,8 @@
 """
-Math Inspector: a visual programming environment for scientific computing
+The output node in the right hand side of the node editor which connects
+to the plot and log functionality
+"""
+"""
 Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify

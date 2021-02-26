@@ -19,7 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import sys, os
 from tkinter import ttk
 from ttkthemes import themed_tk
-from .console import Interpreter
+from .console.interpreter import Interpreter, StdWrap
+from .console.builtin_print import builtin_print
 from .node import NodeEditor
 from .objects import ObjectTree
 from .modules import ModuleTree
@@ -112,7 +113,7 @@ help = Help()
 sys.modules[__name__] = mathinspector()
 
 class App(themed_tk.ThemedTk):
-	def __init__(self, *args):
+	def __init__(self, *args, debug=False):
 		themed_tk.ThemedTk.__init__(self)
 		self.set_theme("arc")
 		ttk.Style(self)
@@ -139,11 +140,15 @@ class App(themed_tk.ThemedTk):
 		self.menu = MainMenu(self)
 		self.config(menu=self.menu)
 
+		self.title("Math Inspector")
+		self.debug = debug
+
 		mathfile = AUTOSAVE_PATH
 		pyfiles = []
 		for i in args:
 			if not os.path.isfile(i):
-				raise ValueError(i + " is not a .math or a .py file")
+				builtin_print("mathinspector failed to launch: " + i + " is not a file\n")
+				exit()
 			
 			name, ext = name_ext(i)
 			if ext == ".math":
@@ -152,7 +157,8 @@ class App(themed_tk.ThemedTk):
 				mathfile = ""
 				pyfiles.append(os.path.abspath(i))
 			else:
-				raise ValueError(i + " is not a currently supported file type.")
+				builtin_print("mathinspector failed to launch: " + ext + " is not a currently supported file type.\n")
+				exit()
 		
 		self.project.load(mathfile, is_first_load=True, sashpos=240 if pyfiles else 0)
 		
@@ -175,6 +181,9 @@ def main(*args, **kwargs):
 	new: bool
 		When set to True, this will replace the current autosave file with a blank file and when the app launches it will be the same thing as if you selecte File > New from the main menu.
 
+	debug: bool
+		When set to True, this will print a range of log messages to the command line used to launch the app.  Useful for debugging issues or while working on the math inspector source code.
+
 
 	Examples
 	--------
@@ -188,6 +197,9 @@ def main(*args, **kwargs):
 	launch the app with the project stored in myproject.math open
 	>>> mathinspector.main(mathfile="myproject.math")
 	
+	launch the app in debug mode
+	>>> mathinspector.main(debug=True)
+	
 	"""
 	if "help" in kwargs:
 		return help(kwargs["help"])
@@ -197,5 +209,12 @@ def main(*args, **kwargs):
 			f.write("")
 			f.close()
 
-	app = App(*args)
+	params = {
+		"debug": kwargs["debug"] if "debug" in kwargs else False
+	}
+
+	app = App(*args, **params)
+	sys.stderr = StdWrap(sys.stderr, app.console.write) # overrides stderr after init app
 	app.mainloop()
+
+
