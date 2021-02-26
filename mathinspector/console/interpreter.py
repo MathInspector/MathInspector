@@ -34,6 +34,7 @@ from .codeparser import CodeParser
 from .prompt import Prompt, FONTSIZE
 
 RE_TRACEBACK = r"^()(Traceback \(most recent call last\))"
+RE_EXCEPTION = r"^()([A-Za-z]*Error:)"
 RE_FILEPATH = r"(File (\"(?!<).*\"))"
 RE_INPUT = r"(File \"(<.*>)\")"
 RE_LINE = r"((line [0-9]*))"
@@ -90,8 +91,7 @@ class Interpreter(Text, InteractiveInterpreter):
 			cursor="arrow",
 			insertbackground=Color.DARK_BLACK)
 
-		sys.stdout = StdOut(sys.stdin, self.write)
-		sys.stderr = StdOut(sys.stdin, self.write)
+		sys.stdout = StdWrap(sys.stdout, self.write) # stderr is overriden in __init__:main
 		sys.excepthook = self.showtraceback
 
 		__builtins__["help"] = Help(app)
@@ -203,7 +203,7 @@ class Interpreter(Text, InteractiveInterpreter):
 				self.delete(self.cursor_position, "end")
 				self.insert("end", "\n")
 
-			if re.match(RE_TRACEBACK, str(r)):
+			if re.match(RE_TRACEBACK, str(r)) or re.match(RE_EXCEPTION, str(r)):
 				tags = ("red", *tags)
 
 			if r is not None:
@@ -273,9 +273,9 @@ class Interpreter(Text, InteractiveInterpreter):
 			open_editor(self.app, os.path.abspath(content[1:-1]))
 
 
-class StdOut(TextIOWrapper):
+class StdWrap(TextIOWrapper):
     def __init__(self, buffer, write, **kwargs):
-        super(StdOut, self).__init__(buffer, **kwargs)
+        super(StdWrap, self).__init__(buffer, **kwargs)
         self.write = write
 
 class Copyright:

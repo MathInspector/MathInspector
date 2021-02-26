@@ -24,7 +24,7 @@ from ..style import Color, getimage
 from ..util.argspec import argspec
 from ..util.docscrape import FunctionDoc
 from ..util.common import classname, name_ext
-from ..config import open_editor, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, DOC_FONT
+from ..config import open_editor, is_modifier_key_pressed, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, DOC_FONT
 from ..util import EXCLUDED_MODULES, INSTALLED_PKGS, BUILTIN_PKGS
 from .show_functiondoc import show_functiondoc
 from .show_textfile import show_textfile
@@ -298,10 +298,7 @@ class Doc(tk.Frame):
 
 
 	def _on_key(self, event):
-		ctrl = (event.state & 0x4) != 0
-		meta = (event.state & 0x8) != 0
-		is_mod = ctrl or meta
-		if is_mod and event.char == "w":
+		if is_modifier_key_pressed(event) and event.char == "w":
 			return self.parent.destroy()
 		return self.text._on_key(event)
 

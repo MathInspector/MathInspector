@@ -24,7 +24,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import builtins, os
-from ..util import name_ext, INSTALLED_PKGS, BUILTIN_PKGS, BUILTIN_CLASS
+from ..util import name_ext, INSTALLED_PKGS
+from ..util.builtin_lists import *
 from ..console.builtin_print import builtin_print
 from .browser import Browser
 from . import manual
@@ -57,43 +58,50 @@ class Help:
 	def getobj(self, key):
 		if key is None: return manual
 
-		if isinstance(key, str):
-			if self.app:
-				if key in INSTALLED_PKGS + BUILTIN_PKGS:
-					try:
-						obj = __import__(key)
-						return obj
-					except:
-						pass
-				if key in self.app.objects:
-					if isinstance(self.app.objects[key], tuple([getattr(builtins,i) for i in BUILTIN_CLASS])):
-						return self.app.objects[key].__class__
-					return self.app.objects[key]
-				elif key in self.app.modules:
-					return self.app.modules[key]
-				elif os.path.isfile(key):
+		if not isinstance(key, str):
+			return key
+		
+		if key in INSTALLED_PKGS + BUILTIN_PKGS + list(BUILTIN_MODULES):
+			try:
+				return __import__(key)
+			except:
+				pass
+
+		if key in BUILTIN_FUNCTION:
+			return builtins[key]
+
+		try:
+			path, attr = key.rsplit('.', 1)
+			return getattr(__import__(path), attr)
+		except Exception as err:
+			if self.app.debug:
+				builtin_print ("help.getobj failed", err)
+
+		if self.app:
+			try:
+				obj, attr = key.split('.', 1)
+				return getattr(self.app.objects[obj], attr)
+			except:
+				pass
+
+			if key in self.app.objects:
+				if isinstance(self.app.objects[key], tuple([getattr(builtins,i) for i in BUILTIN_CLASS])):
+					return self.app.objects[key].__class__
+				return self.app.objects[key]
+			elif key in self.app.modules:
+				return self.app.modules[key]
+			elif isinstance(key, str): 
+				if os.path.isfile(key):
 					name, ext = name_ext(key)
 					if name in self.app.modules:
 						return self.app.modules[name]
 
 					if name in ("LICENSE") or ext in (".md", ".rst"):
 						return key
-				try:
-					module, attr = key.rsplit('.', 1)
-					return getattr(self.app.modules[module], attr)
-				except:
-					try:
-						obj, attr = key.split('.', 1)
-						return getattr(self.app.objects[obj], attr)
-					except:
-						pass
-			else:
-				try:
-					return eval(key)
-				except:
-					pass
-			return str
 		else:
-			if hasattr(key, "__class__"):
-				return key.__class__
-			return key
+			print("No documentation found for '" + key + "'")
+			return
+		
+		if hasattr(key, "__class__"):
+			return key.__class__
+		return key

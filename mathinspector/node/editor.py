@@ -486,7 +486,7 @@ class NodeEditor(vdict, tk.Canvas):
 				"font": "Nunito " + FONT_SIZE["extra-small"] + " bold",
 				"foreground": Color.DARK_ORANGE,
 				"state": "disabled"
-			}] + self.app.menu.object_menu)
+			}] + self.app.menu.object)
 		self.has_menu = False
 		self.pan_position = None
 
@@ -501,9 +501,7 @@ class NodeEditor(vdict, tk.Canvas):
 			}])
 			return
 
-		methods = []
-		graph = []
-		extras = []
+		graph, extras, methods = [], [], []
 		obj = self.app.objects[item.name]
 		value = item.value()
 		item_methods = [i for i in dir(obj) if i[:1] != "_" and callable(getattr(obj, i)) and isinstance(i, str)]
@@ -524,7 +522,7 @@ class NodeEditor(vdict, tk.Canvas):
 			})
 		elif not window:
 			extras.append({
-				"label": "Show Output",
+				"label": "Show output",
 				"command": lambda: self.output.connect(item)
 			})
 		else:
@@ -534,15 +532,16 @@ class NodeEditor(vdict, tk.Canvas):
 				"state": "normal" if (plot.active_window == window or not plot.is_active()) else "disabled"
 			})
 
-		extras.append({
-			"separator": None
-		})
 
 		if self.app.animate.can_animate(item):
 			extras.append({
 				"label": "Animate",
 				"command": lambda: self.app.animate(item.name)
 			})
+
+		extras.append({
+			"separator": None
+		})
 
 		if len(item.kwargs) > 0 and len(item.kwargs["connection"]) == 0:
 			extras.append({
@@ -552,7 +551,7 @@ class NodeEditor(vdict, tk.Canvas):
 
 		if help.getobj(item.obj) is not None:
 			extras.append({
-				"label": "View Doc",
+				"label": "View doc",
 				"command": lambda: help(item.obj)
 			})
 
@@ -563,24 +562,25 @@ class NodeEditor(vdict, tk.Canvas):
 
 		if file:
 			extras.append({
-				"label": "View Source Code",
+				"label": "View source code",
 				"command": lambda: open_editor(self.app, file)
 			})
 
-		extras.extend([{
-			"label": "Create Copy",
-			"command": lambda: self.app.objects.setobj(item.name, item.obj, create_new=True)
-		},{
-			"label": "Rename",
-			"command": lambda: self.rename(item.name)
-		}])
-
+		## TODO - get this working
 		# graph.append({
 		# 	"label": "Set color     " + item.opts["line_color"] if item.opts["line_color"] != Color.BLUE else "Set color",
 		# 	"command": lambda: Popup(self.app, item.name + ".set_color", obj=lambda color: item.option("line_color", color), canvas_item=item)
 		# })
 
 		self.menu.show(event, extras + methods + [{
+			"separator": None
+		},{
+			"label": "Create copy",
+			"command": lambda: self.app.objects.setobj(item.name, item.obj, create_new=True)
+		},{
+			"label": "Rename",
+			"command": lambda: self.rename(item.name)
+		},{
 			"separator": None
 		},{
 			"label": "Delete " + item.name,

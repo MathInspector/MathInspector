@@ -79,7 +79,7 @@ import pygame
 
 from .plot2d import SDLWindow, OPTIONS as OPTIONS_2D
 from .plot3d import OpenGLWindow, OPTIONS as OPTIONS_3D
-from .util import instanceof
+from ..util import instanceof
 
 class Plot:
 	def __init__(self):

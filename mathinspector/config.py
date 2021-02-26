@@ -21,12 +21,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import platform, sys, os, subprocess
 from pkg_resources import resource_filename
 
+SYSTEM = platform.system()
+
 def version():
     """
     version detector. Precedence: installed dist, git, 'UNKNOWN'.
     """
     try:
-        from ._dist_version import VERSION # version stored in `mathinspector/_dist_version.py`
+        from ._dist_version import VERSION
     except ImportError:
         try:
             from setuptools_scm import get_version
@@ -35,7 +37,14 @@ def version():
             VERSION = "UNKNOWN"
     return VERSION
 
-SYSTEM = platform.system()
+def is_modifier_key_pressed(event):
+    ctrl = (event.state & 0x4) != 0
+    meta = (event.state & 0x8) != 0
+    if SYSTEM == "Linux":
+        return (event.state & 0x4) != 0 # ctrl
+    elif SYSTEM == "Windows":
+        return False # This was disabled to hotfix a bug which prevented the v-key from working on windows
+    return (event.state & 0x8) != 0 # super-key
 
 def open_editor(app, file):
     if SYSTEM == "Windows":
@@ -52,17 +61,23 @@ BUTTON_RIGHT = '<Button-3>' if SYSTEM in ("Windows", "Linux") else '<Button-2>'
 BUTTON_RELEASE_RIGHT = '<ButtonRelease-3>' if SYSTEM in ("Windows", "Linux") else '<ButtonRelease-2>'
 BUTTON_RIGHT_MOTION = '<B3-Motion>' if SYSTEM in ("Windows", "Linux") else '<B2-Motion>'
 CONTROL_KEY = 'Control' if SYSTEM in ("Windows", "Linux") else 'Command'
+
 if hasattr(sys, "_MEIPASS"):
     BASEPATH = os.path.join(
         sys._MEIPASS,
         "assets" if SYSTEM in ("Windows", "Linux") else "../Resources/assets")
+    
     if SYSTEM == "Windows":
-        AUTOSAVE_PATH = os.path.join(os.path.join(os.getenv('LOCALAPPDATA'), "MathInspector"), "autosave.math")
+        localappdata = s.path.join(os.getenv('LOCALAPPDATA'), "MathInspector")
+        AUTOSAVE_PATH = os.path.join(localappdata, "autosave.math")
+        LOCAL_AUTOSAVE_PATH = os.path.join(localappdata, "local_autosave.math")
     else:
         AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
+        LOCAL_AUTOSAVE_PATH = os.path.join(BASEPATH, "local_autosave.math")
 else:
     BASEPATH = resource_filename("mathinspector", "assets")
     AUTOSAVE_PATH = os.path.join(BASEPATH, "autosave.math")
+    LOCAL_AUTOSAVE_PATH = os.path.join(BASEPATH, "local_autosave.math")
 
 if SYSTEM in ("Windows", "Linux"):
     FONT = "LucidaConsole 12"
@@ -82,6 +97,8 @@ if SYSTEM in ("Windows", "Linux"):
         "argname": "8",
         "argvalue": "10",
     }
+    MULTIPROCESS_CONTEXT = "spawn"
+    ZOOM_MODIFIER = 5    
 else:
     FONT = "Menlo 15"
     DOC_FONT = "Nunito-ExtraLight 16"
@@ -100,3 +117,5 @@ else:
         "argname": "8",
         "argvalue": "12",
     }
+    MULTIPROCESS_CONTEXT = "fork"
+    ZOOM_MODIFIER = 1

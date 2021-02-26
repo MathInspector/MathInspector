@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import tkinter as tk
 from tkinter import ttk
 from ..style import TAGS, Color
-from ..config import BUTTON_RIGHT
+from ..config import is_modifier_key_pressed, BUTTON_RIGHT
 from ..util import BUILTIN_FUNCTION, BUILTIN_CLASS
 from ..widget.menu import Menu
 from ..console.builtin_print import builtin_print
@@ -83,10 +83,11 @@ class Text(tk.Text):
 		self.menu = Menu(self)
 
 	def _on_key(self, event):
-		ctrl = (event.state & 0x4) != 0
-		meta = (event.state & 0x8) != 0
-		is_mod = ctrl or meta
-		return None if is_mod and event.char == "c" else False if is_mod else "break"
+		if not is_modifier_key_pressed(event):
+			return "break"
+		elif event.char == "c":
+			return None
+		return False
 
 	def insert(self, *args, syntax_highlight=False, **kwargs):
 		idx = self.index(self.index(args[0]) + "-1c")

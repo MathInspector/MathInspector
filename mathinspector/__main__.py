@@ -39,12 +39,18 @@ if __name__ == "__main__":
 
 Options and arguments:
 [files]...  : a list of files with either a .math or .py extension.  The .math
-                   file will be loaded, and all of the .py files will be added to
-                   the current project
+             file will be loaded, and all of the .py files will be added to
+             the current project
+
 --help obj  : view the documentation for obj as if you called help(obj) in
-                    mathinspector
+             mathinspector
+
 --new       : starts a new project and resets the state of the app.  This flag will
              overwrites the autosave file with a blank file
+
+--debug     : prints log messages to the command line used to launch the app.  Useful
+             for debugging issues when something isn't working properly, or while working
+             on the mathinspector source code
 		""")
 	else:
 		main(*args, **kwargs)

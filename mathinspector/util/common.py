@@ -70,3 +70,9 @@ def instanceof(value, classes):
 
 
     return isinstance(value, classes)
+
+def hex_to_rgb(h, as_dec=False):
+    result = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+    if as_dec:
+        return result[0]/255, result[1]/255, result[2]/255
+    return result
