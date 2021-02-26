@@ -59,7 +59,6 @@ class SaveData:
 	def __init__(self, app):
 		self.app = app
 		self.is_first_load = True
-		self.cmd_history_file = None # Used for File > Save
 		self.mathfile = None # Only used when project does not contain any files or folders
 		self.did_save = False # REFACTOR - use self.needs_to_save() instead (currently used to prevent double save dialogs on exit)
 		self.recents = [] # recent projects
@@ -109,6 +108,8 @@ class SaveData:
 		self.app.menu.restore_defaults()
 		self.app.console.do_greet()
 		self.newproj_savedata = self.savedata()
+		self.app.menu.savefile = None
+		self.app.menu.sync_recent_projects()
 
 	def save(self, file=None, quit_app=False): #, savedata=None):  # use savedata kwarg to avoid computing it twice
 		files = self.app.modules.files("file")
@@ -121,7 +122,6 @@ class SaveData:
 		if file is None or file not in (
 			AUTOSAVE_PATH, 
 			self.app.modules.rootfolder, 
-			self.cmd_history_file, 
 			self.mathfile
 		):
 			if len(files + folders) > 0:
@@ -333,8 +333,6 @@ class SaveData:
 			
 			if not file:
 				return
-		elif is_first_load and file != AUTOSAVE_PATH:
-			self.cmd_history_file = file
 
 		
 		#########################
@@ -589,34 +587,16 @@ class SaveData:
 		if self.did_save: return
 		
 		self.did_save = True
-		if self.cmd_history_file is None:
-			try:
-				self.save(AUTOSAVE_PATH, quit_app=True)
-			except Exception as err:
-				builtin_print ("error: attempt to write to " + os.path.basename(AUTOSAVE_PATH) + " failed\n", err)
-		else:
-			if messagebox.askyesno("MathInspector",
-				"Would you like to save your changes before exiting?"
-			):
-				try:
-					self.save(self.cmd_history_file)
-				except Exception as err:
-					builtin_print ("error: attempt to write to " + os.path.basename(self.cmd_history_file) + " failed\n", err)
+
+		try:
+			self.save(AUTOSAVE_PATH, quit_app=True)
+		except Exception as err:
+			builtin_print ("error: attempt to write to " + os.path.basename(AUTOSAVE_PATH) + " failed\n", err)
 			
-			plot.close()
-			self.app.quit()			
+		plot.close()
+		self.app.quit()			
 
 	def _on_close(self):
 		if self.did_save: return
 		self.did_save = True
-
-		if self.cmd_history_file is not None:
-			if messagebox.askyesno("MathInspector",
-				"Would you like to save your changes before exiting?"
-			):
-				try:
-					self.save(self.cmd_history_file or None)
-				except Exception as err:
-					builtin_print ("error: attempt to write to save file failed\n", err)
-		else:
-			self.save(AUTOSAVE_PATH)
+		self.save(AUTOSAVE_PATH)
