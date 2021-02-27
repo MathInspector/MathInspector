@@ -43,6 +43,8 @@ def classname(obj):
     elif inspect.isfunction(obj) and obj.__module__:
         return obj.__module__ + "." + obj.__name__
     elif obj.__class__.__module__ and hasattr(obj, "__name__"):
+        if obj.__class__.__module__ == "builtins":
+            return obj.__name__
         return obj.__class__.__module__ + "." + obj.__name__
     return obj.__class__.__name__
 

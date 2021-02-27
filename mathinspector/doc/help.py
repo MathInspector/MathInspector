@@ -23,7 +23,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import builtins, os
+import builtins, os, importlib
 from ..util import name_ext, INSTALLED_PKGS
 from ..util.builtin_lists import *
 from ..console.builtin_print import builtin_print
@@ -58,39 +58,14 @@ class Help:
 	def getobj(self, key):
 		if key is None: return manual
 
-		if not isinstance(key, str):
-			return key
-		
-		if key in INSTALLED_PKGS + BUILTIN_PKGS + list(BUILTIN_MODULES):
-			try:
-				return __import__(key)
-			except:
-				pass
-
-		if key in BUILTIN_FUNCTION:
-			return builtins[key]
-
-		try:
-			path, attr = key.rsplit('.', 1)
-			return getattr(__import__(path), attr)
-		except Exception as err:
-			if self.app.debug:
-				builtin_print ("help.getobj failed", err)
-
-		if self.app:
-			try:
-				obj, attr = key.split('.', 1)
-				return getattr(self.app.objects[obj], attr)
-			except:
-				pass
-
+		if self.app and isinstance(key, str):
 			if key in self.app.objects:
 				if isinstance(self.app.objects[key], tuple([getattr(builtins,i) for i in BUILTIN_CLASS])):
 					return self.app.objects[key].__class__
 				return self.app.objects[key]
 			elif key in self.app.modules:
 				return self.app.modules[key]
-			elif isinstance(key, str): 
+			else:
 				if os.path.isfile(key):
 					name, ext = name_ext(key)
 					if name in self.app.modules:
@@ -98,10 +73,49 @@ class Help:
 
 					if name in ("LICENSE") or ext in (".md", ".rst"):
 						return key
+
+				try:
+					obj, attr = key.split('.', 1)
+					return getattr(self.app.objects[obj], attr)
+				except:
+					pass
+
+		if not isinstance(key, str):
+			return key
+
+		if os.path.isfile(key):
+			name, ext = name_ext(key)
+			if ext == ".py":
+				spec = importlib.util.spec_from_file_location(name, key)
+				module = importlib.util.module_from_spec(spec)
+				try:
+					spec.loader.exec_module(module)
+				except Exception as err:
+					print ("Module failed to load", err)
+					return
+
+
+		if "." in key:
+			items = key.split(".")
+			module = __import__(items[0])
+			i = 1
+			try:
+				while i < len(items):
+					module = getattr(module, items[i])
+					i += 1
+				return module
+			except:
+				pass
 		else:
-			print("No documentation found for '" + key + "'")
-			return
+			try:
+				return __import__(key)
+			except:
+				pass
 		
-		if hasattr(key, "__class__"):
-			return key.__class__
-		return key
+		if key in BUILTIN_FUNCTION:
+			return builtins[key]
+
+		if not self.app:
+			print ("Could not find documentation for " + key)
+
+		return None

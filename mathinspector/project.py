@@ -75,7 +75,8 @@ class SaveData:
 					if messagebox.askyesno("MathInspector",
 						"You have unsaved changes.  Would you like to save before starting a new project?"
 					):
-						self.save(filepath)			
+						did_save = self.save(filepath)
+						if did_save is False: return
 			elif self.savedata() != self.newproj_savedata:
 				if not messagebox.askokcancel("MathInspector",
 					"Are you sure you want to start a new project?  Any unsaved data will be lost."):
@@ -138,7 +139,7 @@ class SaveData:
 				filetypes=filetypes,
 				title="Save Project",
 				message=msg)
-			if not file: return
+			if not file: return False
 
 
 		if file != AUTOSAVE_PATH:
@@ -319,9 +320,10 @@ class SaveData:
 			):
 				filepath = self.filepath()
 				if filepath == AUTOSAVE_PATH:
-					self.save()
+					did_save = self.save()
 				else:
-					self.save(filepath)
+					did_save = self.save(filepath)
+				if did_save is False: return
 
 		#########################
 		##     GET FILEPATH    ##
