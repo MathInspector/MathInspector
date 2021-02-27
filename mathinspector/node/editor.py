@@ -517,17 +517,17 @@ class NodeEditor(vdict, tk.Canvas):
 		window = plot.get_window(value)
 		if item in self.output.items:
 			extras.append({
-				"label": "Disconnect Output",
+				"label": "disconnect output",
 				"command": lambda: self.output.disconnect(item)
 			})
 		elif not window:
 			extras.append({
-				"label": "Show output",
+				"label": "show output",
 				"command": lambda: self.output.connect(item)
 			})
 		else:
 			extras.append({
-				"label": "Plot",
+				"label": "plot",
 				"command": lambda: self.output.connect(item),
 				"state": "normal" if (plot.active_window == window or not plot.is_active()) else "disabled"
 			})
@@ -535,7 +535,7 @@ class NodeEditor(vdict, tk.Canvas):
 
 		if self.app.animate.can_animate(item):
 			extras.append({
-				"label": "Animate",
+				"label": "animate",
 				"command": lambda: self.app.animate(item.name)
 			})
 
@@ -551,7 +551,7 @@ class NodeEditor(vdict, tk.Canvas):
 
 		if help.getobj(item.obj) is not None:
 			extras.append({
-				"label": "View doc",
+				"label": "view doc",
 				"command": lambda: help(item.obj)
 			})
 
@@ -562,7 +562,7 @@ class NodeEditor(vdict, tk.Canvas):
 
 		if file:
 			extras.append({
-				"label": "View source code",
+				"label": "view source code",
 				"command": lambda: open_editor(self.app, file)
 			})
 
@@ -575,15 +575,15 @@ class NodeEditor(vdict, tk.Canvas):
 		self.menu.show(event, extras + methods + [{
 			"separator": None
 		},{
-			"label": "Create copy",
+			"label": "copy",
 			"command": lambda: self.app.objects.setobj(item.name, item.obj, create_new=True)
 		},{
-			"label": "Rename",
+			"label": "rename",
 			"command": lambda: self.rename(item.name)
 		},{
 			"separator": None
 		},{
-			"label": "Delete " + item.name,
+			"label": "delete " + item.name,
 			"command": lambda: self._on_delete(item.name)
 		}])
 

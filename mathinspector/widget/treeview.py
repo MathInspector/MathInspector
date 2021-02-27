@@ -171,6 +171,7 @@ class Treeview(ttk.Treeview):
 
 	def _on_button_release_1(self, event):
 		self.drag = None
+		self.menu.unpost()
 
 
 class TreeEntry(Text):
