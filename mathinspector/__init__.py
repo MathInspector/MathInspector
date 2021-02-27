@@ -112,7 +112,7 @@ help = Help()
 sys.modules[__name__] = mathinspector()
 
 class App(themed_tk.ThemedTk):
-	def __init__(self, *args, debug=False):
+	def __init__(self, *args, debug=False, disable=[]):
 		themed_tk.ThemedTk.__init__(self)
 		self.set_theme("arc")
 		ttk.Style(self)
@@ -122,7 +122,7 @@ class App(themed_tk.ThemedTk):
 		self.side_view = Notebook(self, has_labels=True)
 
 		self.node = NodeEditor(self)
-		self.console = Interpreter(self)
+		self.console = Interpreter(self, disable=disable)
 		self.modules = ModuleTree(self)
 		self.objects = ObjectTree(self)
 
@@ -209,9 +209,17 @@ def main(*args, **kwargs):
 			f.close()
 
 	params = {
-		"debug": kwargs["debug"] if "debug" in kwargs else False
+		"debug": kwargs["debug"] if "debug" in kwargs else False,
+		"disable": kwargs["disable"].split(",") if "disable" in kwargs else [],
 	}
 
+	if params["disable"] is True:
+		params["disable"] = ["print", "traceback", "stderr"]
+
+	if "debug" in params:
+		print (params)
+
 	app = App(*args, **params)
-	sys.stderr = StdWrap(sys.stderr, app.console) # overrides stderr after init app
+	if "stderr" not in params["disable"]:
+		sys.stderr = StdWrap(sys.stderr, app.console) # overrides stderr after init app
 	app.mainloop()

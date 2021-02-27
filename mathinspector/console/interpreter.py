@@ -69,7 +69,7 @@ class Interpreter(Text, InteractiveInterpreter):
 	An excellent resource for learning about abstract syntax tree's is the
 	website https://greentreesnakes.readthedocs.io/
 	"""
-	def __init__(self, app):
+	def __init__(self, app, disable=()):
 		InteractiveInterpreter.__init__(self, vdict({
 			"__builtins__": __builtins__,
 			"app": app,
@@ -91,8 +91,12 @@ class Interpreter(Text, InteractiveInterpreter):
 			cursor="arrow",
 			insertbackground=Color.DARK_BLACK)
 
-		sys.stdout = StdWrap(sys.stdout, self.write) # stderr is overriden in __init__:main
-		sys.excepthook = self.showtraceback
+		if "print" not in disable:
+			sys.stdout = StdWrap(sys.stdout, self) # stderr is overriden in __init__:main
+
+		self.disable_traceback = "traceback" in disable
+		if not self.disable_traceback:
+			sys.excepthook = self.showtraceback
 
 		__builtins__["help"] = Help(app)
 		__builtins__["clear"] = Clear(self)
@@ -228,6 +232,13 @@ class Interpreter(Text, InteractiveInterpreter):
 		self.prompt.move()
 
 	def showtraceback(self, *args):
+		if self.disable_traceback:
+			ei = sys.exc_info()
+			self.write(ei[1], tags="red")
+			if self.app.debug:
+				builtin_print (traceback.format_exception(ei[0], ei[1], ei[2].tb_next))
+			return
+
 		sys.last_type, sys.last_value, last_tb = ei = sys.exc_info()
 		sys.last_traceback = last_tb
 
