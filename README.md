@@ -30,44 +30,66 @@ Overview
 
 Math inspector is a traditional python interpreter that has a number of quality of life improvements.  What really makes it different is that math inspector creates a visual representation of the memory of the running python program in the form of a block coding environment called the node editor.
 
+Block Coding
+---
 The block coding system in math inspector is capable of representing arbitrary python functions and objects of any kind; it has been designed to make it as easy as possible to experiment and interact with complex programs without the need to write any code.  It's the only block coding system which exists which is capable of mapping an entire programming language.  
 
+Interactive Plots
+---
+
+Math inspector's plotting library updates and modernizes the functionality available in matplotlib. It provides high performance interactive 2D and 3D plots. Capable of plotting parametric curves, algebraic varieties, fractals, curved surfaces, and much more.
+
+Animation
+---
+
+The animation system in math inspector been designed to render production quality animations for educational content creators. A lot of care has been put into optimizing the performance of animations to enable a smooth 60 frames per second while panning and zooming during animations.
 
 Doc Browser
 ---
-Most modules and classes in python come with a lot of documentation. The doc browser parses these docstrings to automatically produce a beautiful and well organized interface for exploring the documentation.  See a code sample you want to run?  Just click on it and it will be executed by the interpreter.
 
-The math inspector doc browser is an offline browser that uses advanced parsing and rendering systems to create a beautifully styled and highly interactive document.  It's capable of working with the entire python ecosystem of documentation.
-
-Using a web browser to view the python documentation creates a large number of limitations that result from being constrained to a browser instead of using an offline program that was written in python specifically for this purpose.  Because math inspector is written in python, it makes it possible to create a new kind of interactive documentation system that previously had been impossible.
-
+The math inspector doc browser is an offline browser that uses advanced parsing and rendering systems to create a beautifully styled and highly interactive document.  It's capable of working with the entire python ecosystem of documentation.  Using a web browser to view python documentation creates a number of limitations that result from being constrained to a browser.  Because math inspector is written in python specifically for the purpose of browsing the documentation, it makes it possible to create a new kind of interactive documentation system.
 
 ## Use mathinspector in your python source code files
 You can use the mathinspector plotting and documentation systems in your own projects without needing to launch the app.
 
+For example
 ```python
 import mathinspector
 mathinspector.plot(1,2,3)
 ```
+
+To view the documentation for mathinspector with the doc browser
+```python
+>>> mathinspector.help(mathinspector)
+``` 
 
 ## Use mathinspector as a command line tool
 ```
 usage: mathinspector [files] ... [options] ... 
 
 Options and arguments:
-[files]...  : a list of files with either a .math or .py extension.  The .math
-             file will be loaded, and all of the .py files will be added to
-             the current project
+[files]...       : a list of files with either a .math or .py extension.  The
+                  .math file will be loaded, and all of the .py files will be
+                  added to the current project
 
---help obj  : view the documentation for obj as if you called help(obj) in
-             mathinspector
+--help obj       : view the documentation for obj as if you called help(obj)
+                  in mathinspector
 
---new       : starts a new project and resets the state of the app.  This flag will
-             overwrites the autosave file with a blank file
+--new            : starts a new project and resets the state of the app.
+                  This flag will overwrites the autosave file with a blank
+                  file
 
---debug     : prints log messages to the command line used to launch the app.  Useful
-             for debugging issues when something isn't working properly, or while working
-             on the mathinspector source code
+--disable[=opts] : mathinspector overrides a lot of builtins (e.g. help(),
+                  print()) which may cause undesirable behaviour, this flag
+                  disables these features
+                    opts are 'print', 'traceback', 'stderr'
+                    e.g. mathinspector --disable=print,stderr
+
+--debug          : prints log messages to the command line used to launch the
+                  app.  Useful for debugging issues when something isn't
+                  working properly, or while working on the mathinspector
+                  source code
+
 ```
 
 ### Explore
