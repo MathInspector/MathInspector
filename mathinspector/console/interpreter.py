@@ -249,8 +249,8 @@ class Interpreter(Text, InteractiveInterpreter):
 		return result
 
 	def on_click_log(self, event):
-		 if not self.tag_ranges("sel"):
-		 	self.prompt.focus()
+		if not self.tag_ranges("sel"):
+			self.prompt.focus()
 
 	def _on_button_right(self, event):
 		option = []
@@ -274,12 +274,16 @@ class Interpreter(Text, InteractiveInterpreter):
 
 
 class StdWrap(TextIOWrapper):
-    def __init__(self, buffer, write, **kwargs):
-        super(StdWrap, self).__init__(
-            buffer.buffer,
-            encoding=buffer.encoding, errors=buffer.errors, line_buffering=sys.stderr.line_buffering,
-            **kwargs)
-        self.write = write
+	def __init__(self, buffer, interpreter, **kwargs):
+		super(StdWrap, self).__init__(
+			buffer.buffer,
+			encoding=buffer.encoding, errors=buffer.errors, line_buffering=sys.stderr.line_buffering,
+			**kwargs)
+		self.interpreter = interpreter
+
+	def write(self, s, **kwargs):
+		self.interpreter.write(s)
+		self.interpreter.app.update()
 
 class Copyright:
 	def __repr__(self):

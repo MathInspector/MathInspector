@@ -213,5 +213,5 @@ def main(*args, **kwargs):
 	}
 
 	app = App(*args, **params)
-	sys.stderr = StdWrap(sys.stderr, app.console.write) # overrides stderr after init app
+	sys.stderr = StdWrap(sys.stderr, app.console) # overrides stderr after init app
 	app.mainloop()
