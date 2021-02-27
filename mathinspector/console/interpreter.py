@@ -275,7 +275,10 @@ class Interpreter(Text, InteractiveInterpreter):
 
 class StdWrap(TextIOWrapper):
     def __init__(self, buffer, write, **kwargs):
-        super(StdWrap, self).__init__(buffer, **kwargs)
+        super(StdWrap, self).__init__(
+            buffer.buffer,
+            encoding=buffer.encoding, errors=buffer.errors, line_buffering=sys.stderr.line_buffering,
+            **kwargs)
         self.write = write
 
 class Copyright:
