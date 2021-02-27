@@ -79,6 +79,7 @@ class Text(tk.Text):
 		self._orig = self._w + "_orig"
 		self.tk.call("rename", self._w, self._orig)
 		self.tk.createcommand(self._w, self._proxy)
+		self.bind("<Button-1>", self._on_button_1)
 		self.bind(BUTTON_RIGHT, self._on_button_right)
 		self.menu = Menu(self)
 
@@ -182,6 +183,9 @@ class Text(tk.Text):
 			self.event_generate("<<MarkSet>>")
 
 		return result
+
+	def _on_button_1(self, event):
+		self.menu.unpost()
 
 	def _on_button_right(self, event):
 		tag_ranges = self.tag_ranges("sel")

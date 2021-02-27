@@ -213,6 +213,7 @@ class ObjectTree(vdict, Treeview):
 			i += 1
 
 	def _on_button_1(self, event):
+		self.menu.unpost()
 		key = self.identify_row(event.y)
 		if not key: return
 
@@ -244,16 +245,16 @@ class ObjectTree(vdict, Treeview):
 
 		items = []
 
-		if help.getobj(key):
+		if key and help.getobj(key):
 			items.append({
-				"label": "View Doc",
+				"label": "view doc",
 				"command": lambda: help(key)
 			})
 
 		try:
 			file = inspect.getsourcefile(self.app.objects[key])
 			items.append({
-				"label": "View Source Code",
+				"label": "view source",
 				"command": lambda: open_editor(self.app, file)
 			})
 		except:
@@ -261,14 +262,14 @@ class ObjectTree(vdict, Treeview):
 
 		if key in self.app.node and self.app.animate.can_animate(self.app.node[key]):
 			items.append({
-				"label": "Animate",
+				"label": "animate",
 				"command": lambda: self.app.animate(key)
 			})
 
 		if callable(obj) and "." in key:
 			name, fn = key.rsplit(".", 1)
 			items.append({
-				"label": "Run Method",
+				"label": "run method",
 				"command": lambda: self.app.node.run_method(fn, obj, self.app.node[name])
 			})
 
@@ -276,7 +277,7 @@ class ObjectTree(vdict, Treeview):
 			items.extend([{
 				"separator": None
 			},{
-				"label": "Delete " + key,
+				"label": "delete " + key,
 				"command": lambda: self.delete(key)
 			}])
 

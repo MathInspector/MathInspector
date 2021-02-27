@@ -59,17 +59,25 @@ from .config import *
 class ModuleTree(vdict, Treeview):
 	"""
 	In order to synchronize the available modules across views,
-	math inspector stores the aliases and values of all modules in a vdict called the Module Tree.
+	math inspector stores the aliases and values of all modules in a vdict
+	called the Module Tree.
 
 	When a file or folder is added to the Module Tree, the `watchdog` module
 	is used to monitor changes in those files and update
 	the values of variables across all views.
 
-	Execution of code from source code is done by calling self.app.console.exec(source).
+	Execution of code from source code is done by calling
+
+	>>> self.app.console.exec(source)
+
 	See the documentation for `app.console` for more information.
 	"""
 	def __init__(self, app):
-		vdict.__init__(self, getitem=self.getmodule, setitem=self.setmodule, delitem=self.delete)
+		vdict.__init__(self,
+			getitem=self.getmodule,
+			setitem=self.setmodule,
+			delitem=self.delete)
+
 		Treeview.__init__(self, app)
 
 		self.drag = None
@@ -78,14 +86,17 @@ class ModuleTree(vdict, Treeview):
 		self.observer = None
 		self.watchers = {}
 		self.locals = {}
-		self.bind(BUTTON_RIGHT, lambda event: self.selection_set(self.identify_row(event.y)))
+		self.bind(BUTTON_RIGHT,
+			lambda event: self.selection_set(self.identify_row(event.y)))
 		self.bind(BUTTON_RELEASE_RIGHT, self._on_button_release_right)
 		self.bind("<Double-Button-1>", self._on_double_button_1)
 
 	def getmodule(self, key):
 		if key not in self.store:
 			for i in self.store:
-				if self.store[i].__name__ == key or self.item(i)["values"][0] == key:
+				if (self.store[i].__name__ == key
+					or self.item(i)["values"][0] == key
+				):
 					return self.store[i]
 		return self.store[key]
 
@@ -123,7 +134,8 @@ class ModuleTree(vdict, Treeview):
 				elif callable(attr):
 					builtin_fn.append(fn)
 				elif inspect.ismodule(attr):
-					if attr.__name__ not in EXCLUDED_MODULES:# + BUILTIN_PKGS + INSTALLED_PKGS:
+					# + BUILTIN_PKGS + INSTALLED_PKGS:
+					if attr.__name__ not in EXCLUDED_MODULES:
 						submodules.append((fn, attr))
 				else:
 					constants.append(fn)
@@ -131,28 +143,41 @@ class ModuleTree(vdict, Treeview):
 		if builtin_fn:
 			folder = self.insert(parent, "end", text="builtins")
 			for i in builtin_fn:
-				self.insert(folder, "end", text=i, values=module.__name__ + "." + i)
+				self.insert(folder, "end",
+					text=i,
+					values=module.__name__ + "." + i)
 
 		if functions:
 			folder = self.insert(parent, "end", text="functions")
 			for i in functions:
-				self.insert(folder, "end", text=i, values=module.__name__ + "." + i)
+				self.insert(folder, "end",
+					text=i,
+					values=module.__name__ + "." + i)
 
 		if classes:
 			folder = self.insert(parent, "end", text="classes")
 			for j in classes:
-				self.insert(folder, "end", text=j, values=module.__name__ + "." + j)
+				self.insert(folder, "end",
+					text=j,
+					values=module.__name__ + "." + j)
 
 		if constants:
 			folder = self.insert(parent, "end", text="objects")
 			for k in constants:
 				if k[0] != "_":
-					self.insert(folder, "end", text=k, values=module.__name__ + "." + k)
+					self.insert(folder, "end",
+						text=k,
+						values=module.__name__ + "." + k)
 
 		if submodules and file is None:
 			for fn, attr in submodules:
 				if not self.exists(attr.__name__):
-					folder = self.insert(parent, "end", attr.__name__, text="      " + fn, values=attr.__name__, image=getimage(".py"))
+					folder = self.insert(parent,
+						"end", attr.__name__,
+						text="      " + fn,
+						values=attr.__name__,
+						image=getimage(".py"))
+
 					self.setmodule(attr.__name__, attr, folder)
 		return False
 
@@ -188,8 +213,7 @@ class ModuleTree(vdict, Treeview):
 		return False
 
 	def addfile(self, file=None, parent="", index="end", watch=True, is_open=True, exec_file=True):
-		file = file or filedialog.askopenfilename(
-			title="Add a File to the Project")
+		file = file or filedialog.askopenfilename(title="Add a File to the Project")
 		if not file: return
 
 		name, ext = name_ext(file)
@@ -215,8 +239,10 @@ class ModuleTree(vdict, Treeview):
 				self.observer = Observer()
 				self.observer.start()
 
-			self.watchers[name] = self.observer.schedule(FileHandler(self, file=file),
-				path=os.path.dirname(file), recursive=False)
+			self.watchers[name] = self.observer.schedule(
+				FileHandler(self, file=file),
+				path=os.path.dirname(file),
+				recursive=False)
 
 		expanded = self.expanded()
 		spec = importlib.util.spec_from_file_location(name, file)
@@ -358,20 +384,24 @@ class ModuleTree(vdict, Treeview):
 		if not value: return
 		value = value[0]
 
-		if key in self and os.path.isfile(value):
+		if self.has_tag(key, "module"):
+			obj = help.getobj(value)
+			if obj:
+				help(obj)
+				return "break"
+
+		if self.has_tag(key, "file") or self.has_tag(key, "disabled"):
+			sourcefile = value
+		elif key in self:
 			try:
 				sourcefile = inspect.getsourcefile(self[key])
 			except:
 				sourcefile = None
 
-			if sourcefile:
-				open_editor(self.app, sourcefile)
-				return "break"
-
-		obj = help.getobj(value)
-		if obj:
-			help(obj)
+		if sourcefile:
+			open_editor(self.app, sourcefile)
 			return "break"
+
 
 	def _on_button_release_right(self, event):
 		key = self.identify_row(event.y)
@@ -418,11 +448,17 @@ class ModuleTree(vdict, Treeview):
 		obj = help.getobj(value)
 		if obj is not None and not self.has_tag(key, "disabled"):
 			items.append({
-				"label": "View Doc",
+				"label": "view doc",
 				"command": lambda: help(value)
 			})
 
-		if self.has_tag(key, "file"):
+		if self.has_tag(key, "disabled"):
+			items.extend([{
+				"label": "import",
+				"command": lambda: self.addfile(value)
+			}])
+
+		if self.has_tag(key, "disabled") or self.has_tag(key, "file"):
 			file = value
 		else:
 			try:
@@ -432,15 +468,15 @@ class ModuleTree(vdict, Treeview):
 
 		if file:
 			items.append({
-				"label": "View Source Code",
-				"command": lambda: open_editor(self.app, inspect.getsourcefile(obj))
+				"label": "view source",
+				"command": lambda: open_editor(self.app, file)
 			})
 
 		if key in self.get_children() and value != self.rootfolder:
 			items.extend([{
 				"separator": None
 			}, {
-				"label": "Remove " + key,
+				"label": "remove " + key,
 				"command": lambda: self.delete(value)
 			}])
 
