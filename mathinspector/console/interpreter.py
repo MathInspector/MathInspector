@@ -27,7 +27,7 @@ from ..plot import plot
 from ..doc import Help
 from ..style import Color, TAGS
 from ..util import vdict
-from ..config import open_editor, BUTTON_RIGHT, BASEPATH, FONT, version
+from ..config import open_editor, BUTTON_RIGHT, BASEPATH, FONT, __version__
 from ..widget import Text, Menu
 from .builtin_print import builtin_print
 from .codeparser import CodeParser
@@ -125,7 +125,7 @@ class Interpreter(Text, InteractiveInterpreter):
 			self.bind("<Configure>", self.prompt.on_configure_log)
 
 	def do_greet(self):
-		self.write("Math Inspector " + version() + " (Beta)\nType \"help\", \"copyright\", \"credits\", \"license\" for more information")
+		self.write("Math Inspector " + __version__ + " (Beta)\nType \"help\", \"copyright\", \"credits\", \"license\" for more information")
 		self.prompt()
 
 	def setitem(self, key, value):
@@ -187,7 +187,7 @@ class Interpreter(Text, InteractiveInterpreter):
 
 	def write(self, *args, syntax_highlight=False, tags=(), **kwargs):
 		if self.prevent_module_import: return
-		
+
 		if len(args) == 1:
 			if isinstance(args[0], np.ndarray):
 				if not args[0].any():
@@ -227,7 +227,7 @@ class Interpreter(Text, InteractiveInterpreter):
 		self.see("end")
 		self.prompt.move()
 
-	def showtraceback(self, *args):		
+	def showtraceback(self, *args):
 		sys.last_type, sys.last_value, last_tb = ei = sys.exc_info()
 		sys.last_traceback = last_tb
 
@@ -284,8 +284,8 @@ class Copyright:
 
 class Credits:
 	def __repr__(self):
-		return """Created by Matt Calhoun.  Thanks to Casper da Costa-Luis for supporting 
-Math Inspector development, and to the contributors on GitHub.  
+		return """Created by Matt Calhoun.  Thanks to Casper da Costa-Luis for supporting
+Math Inspector development, and to the contributors on GitHub.
 See www.mathinspector.com for more information."""
 
 class License:
@@ -293,24 +293,7 @@ class License:
 		help(os.path.join(BASEPATH, "LICENSE"))
 
 	def __repr__(self):
-		return """
-Math Inspector: a visual programming environment for scientific computing
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-Type license() to see the full license text
-		"""
+		return __doc__ + "\n\nType license() to see the full license text"
 
 class Clear:
 	def __init__(self, console):

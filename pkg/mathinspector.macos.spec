@@ -2,10 +2,7 @@
 
 block_cipher = None
 
-try:
-    from mathinspector.version import VERSION
-except ImportError:
-    VERSION = "UNKNOWN"
+from mathinspector.config import __version__
 
 a = Analysis(['../mathinspector/__main__.py'],
              pathex=[os.path.abspath('..')],
@@ -47,7 +44,7 @@ app = BUNDLE(coll,
             bundle_identifier='com.math.inspector',
             info_plist={
               'CFBundleName': 'Math Inspector',
-              'CFBundleShortVersionString': VERSION,
+              'CFBundleShortVersionString': __version__,
               'NSPrincipleClass': 'NSApplication',
               'NSAppleScriptEnabled': False,
               'NSHighResolutionCapable': 'True',

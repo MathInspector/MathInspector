@@ -30,7 +30,7 @@ from .animation import Animation
 from .widget import Notebook
 
 from .util import vdict, name_ext
-from .config import version, AUTOSAVE_PATH
+from .config import __version__, AUTOSAVE_PATH
 from .plot import plot
 from .doc import Help
 
@@ -41,7 +41,7 @@ class mathinspector:
 
 	help
 	---
-	The mathinspector `help` function has been designed to override the builtin python `help` function.  This makes it easy to write code that displays documentation for your own projects with the mathinspector doc browser.  
+	The mathinspector `help` function has been designed to override the builtin python `help` function.  This makes it easy to write code that displays documentation for your own projects with the mathinspector doc browser.
 
 	These can be viewed using the help function.  For example, to view this documentation in the mathinspector doc browser, use the command
 
@@ -64,7 +64,7 @@ class mathinspector:
 	---
 	The mathinspector plotting library was designed to update and replace the functionality in matplotlib.
 
-	This will launch the mathinspector plotting window.  
+	This will launch the mathinspector plotting window.
 
 	>>> import mathinspector
 	>>> mathinspector.plot(1,2,3)
@@ -108,7 +108,6 @@ ALLOWED_NAMES = [
 	"help",
 ]
 
-__version__ = version()
 help = Help()
 sys.modules[__name__] = mathinspector()
 
@@ -149,7 +148,7 @@ class App(themed_tk.ThemedTk):
 			if not os.path.isfile(i):
 				builtin_print("mathinspector failed to launch: " + i + " is not a file\n")
 				exit()
-			
+
 			name, ext = name_ext(i)
 			if ext == ".math":
 				mathfile = os.path.abspath(i)
@@ -159,9 +158,9 @@ class App(themed_tk.ThemedTk):
 			else:
 				builtin_print("mathinspector failed to launch: " + ext + " is not a currently supported file type.\n")
 				exit()
-		
+
 		self.project.load(mathfile, is_first_load=True, sashpos=240 if pyfiles else 0)
-		
+
 		for i in pyfiles:
 			self.modules.addfile(i)
 
@@ -190,16 +189,16 @@ def main(*args, **kwargs):
 
 	launch the app with a brand new project
 	>>> mathinspector.main(new=True)
-	
+
 	launch the app and add test.py to the project
 	>>> mathinspector.main("~/Projects/test.py")
 
 	launch the app with the project stored in myproject.math open
 	>>> mathinspector.main(mathfile="myproject.math")
-	
+
 	launch the app in debug mode
 	>>> mathinspector.main(debug=True)
-	
+
 	"""
 	if "help" in kwargs:
 		return help(kwargs["help"])
@@ -216,5 +215,3 @@ def main(*args, **kwargs):
 	app = App(*args, **params)
 	sys.stderr = StdWrap(sys.stderr, app.console.write) # overrides stderr after init app
 	app.mainloop()
-
-

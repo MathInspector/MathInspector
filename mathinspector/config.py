@@ -23,19 +23,15 @@ from pkg_resources import resource_filename
 
 SYSTEM = platform.system()
 
-def version():
-    """
-    version detector. Precedence: installed dist, git, 'UNKNOWN'.
-    """
+# version detector. Precedence: installed dist, git, 'UNKNOWN'.
+try:
+    from ._dist_version import __version__
+except ImportError:
     try:
-        from ._dist_version import VERSION
-    except ImportError:
-        try:
-            from setuptools_scm import get_version
-            VERSION = get_version(root='..', relative_to=__file__)
-        except (ImportError, LookupError):
-            VERSION = "UNKNOWN"
-    return VERSION
+        from setuptools_scm import get_version
+        __version__ = get_version(root='..', relative_to=__file__)
+    except (ImportError, LookupError):
+        __version__ = "UNKNOWN"
 
 def is_modifier_key_pressed(event):
     ctrl = (event.state & 0x4) != 0
@@ -50,7 +46,7 @@ def open_editor(app, file):
     if SYSTEM == "Windows":
         subprocess.Popen(["start", file])
     elif SYSTEM == "Linux":
-        if "EDITOR" not in os.environ:         
+        if "EDITOR" not in os.environ:
             app.console.write("Could not open editor.  You must set the $EDITOR environment variable to use this feature.", tags="red")
             return
         subprocess.Popen([os.environ["EDITOR"], file])
@@ -66,7 +62,7 @@ if hasattr(sys, "_MEIPASS"):
     BASEPATH = os.path.join(
         sys._MEIPASS,
         "assets" if SYSTEM in ("Windows", "Linux") else "../Resources/assets")
-    
+
     if SYSTEM == "Windows":
         localappdata = s.path.join(os.getenv('LOCALAPPDATA'), "MathInspector")
         AUTOSAVE_PATH = os.path.join(localappdata, "autosave.math")
@@ -98,7 +94,7 @@ if SYSTEM in ("Windows", "Linux"):
         "argvalue": "10",
     }
     MULTIPROCESS_CONTEXT = "spawn"
-    ZOOM_MODIFIER = 5    
+    ZOOM_MODIFIER = 5
 else:
     FONT = "Menlo 15"
     DOC_FONT = "Nunito-ExtraLight 16"
