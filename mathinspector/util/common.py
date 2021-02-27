@@ -56,7 +56,7 @@ def instanceof(value, classes):
     if isinstance(value, tuple) and tuple in classes:
         return True
 
-    if np.dtype(value.__class__) == np.object_ and list in classes:
+    if np.dtype(value.__class__) == np.object_ and hasattr(value, "__len__") and list in classes:
         return True
 
     if np.dtype(value.__class__) == np.int64 and int in classes:
