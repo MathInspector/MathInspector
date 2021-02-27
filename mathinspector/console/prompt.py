@@ -56,6 +56,7 @@ class Prompt(Text):
 		self.move()
 		self.focus()
 		self.edit_reset() # NOTE: this resets the tkinter undo stack
+		self.config(insertbackground=Color.WHITE)
 
 	def get(self, start="1.5", end="end-1c"):
 		return super(Prompt, self).get(start, end)
@@ -113,6 +114,8 @@ class Prompt(Text):
 				self.console.insert("end", "\n")
 			self.console.insert("end", "...  " if self.console.buffer else ">>>  ", "console_prompt")
 			self.console.insert("end", s + "\n", syntax_highlight=True)
+		self.delete("1.0", "end")
+		self.config(insertbackground=Color.DARK_BLACK)
 		self.console.push(s)
 
 	def on_configure_log(self, event):
