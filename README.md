@@ -26,7 +26,7 @@ or
 
 ## Overview
 
-Math inspector is a traditional python interpreter that has a number of quality of life improvements.  What really makes it different is that math inspector creates a visual representation of the memory of the running python program in the form of a block coding environment called the node editor.
+Math inspector is a traditional python interpreter that has a number of quality of life improvements.  What really makes it different is that it creates a visual representation of the memory of the running python program in the form of a block coding environment called the node editor.
 
 ### Block Coding
 The block coding system is capable of representing arbitrary python functions and objects of any kind; it has been designed to make it as easy as possible to experiment and interact with complex programs without the need to write any code.  It's the only block coding system which exists which is capable of mapping an entire programming language.  
