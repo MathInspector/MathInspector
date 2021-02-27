@@ -14,14 +14,14 @@ These can be viewed using the help function.  For example, to view this document
 
 For more information about any of the items which follow, see the corresponding docstrings for that item.  If you are using the doc browser to view this documentation, the sidebar contains a list of everything this module contains, and you can click on those items to learn more.  All code examples can be clicked on, and they will be executed and the output printed to the command line.
 
-main
+run
 ---
 This will launch the mathinspector app
 
 >>> import mathinspector
->>> mathinspector.main()
+>>> mathinspector.run()
 
-See the documentation for the main function to understand the structure of the arguments it accepts
+See the documentation for the run function to understand the structure of the arguments it accepts
 
 plot
 ---
@@ -93,6 +93,7 @@ ALLOWED_NAMES = [
 	"__version__",
 	"animate",
 	"main",
+	"run",
 	"plot",
 	"vdict",
 	"help",
@@ -157,7 +158,58 @@ class App(themed_tk.ThemedTk):
 			self.modules.addfile(i)
 
 
-def main(*args, **kwargs):
+def main(argv=None):
+	if argv is None:
+		argv = sys.argv[1:]
+	args = []
+	kwargs = {}
+	i = 0
+
+	while i < len(argv):
+		arg = argv[i]
+		if arg[:2] != "--":
+			args.append(argv[i])
+		elif "=" in arg:
+			key, value = arg[2:].split("=")
+			kwargs[key] = value
+		elif i + 1 < len(argv) and argv[i+1] and argv[i+1][:2] != "--":
+			kwargs[arg[2:]] = argv[i+1]
+			i += 1
+		else:
+			kwargs[arg[2:]] = True
+		i += 1
+
+	if "help" in kwargs and kwargs["help"] is True:
+		print ("""usage: mathinspector [files] ... [options] ...
+
+Options and arguments:
+[files]...       : a list of files with either a .math or .py extension.  The
+                  .math file will be loaded, and all of the .py files will be
+                  added to the current project
+
+--help obj       : view the documentation for obj as if you called help(obj)
+                  in mathinspector
+
+--new            : starts a new project and resets the state of the app.
+                  This flag will overwrites the autosave file with a blank
+                  file
+
+--disable[=opts] : mathinspector overrides a lot of builtins (e.g. help(),
+                  print()) which may cause undesirable behaviour, this flag
+                  disables these features
+                    opts are 'print', 'traceback', 'stderr'
+                    e.g. mathinspector --disable=print,stderr
+
+--debug          : prints log messages to the command line used to launch the
+                  app.  Useful for debugging issues when something isn't
+                  working properly, or while working on the mathinspector
+                  source code
+""")
+	else:
+		run(*args, **kwargs)
+
+
+def run(*args, **kwargs):
 	"""
 	launches the mathinspector app
 
@@ -180,16 +232,16 @@ def main(*args, **kwargs):
 	--------
 
 	launch the app with a brand new project
-	>>> mathinspector.main(new=True)
+	>>> mathinspector.run(new=True)
 
 	launch the app and add test.py to the project
-	>>> mathinspector.main("~/Projects/test.py")
+	>>> mathinspector.run("~/Projects/test.py")
 
 	launch the app with the project stored in myproject.math open
-	>>> mathinspector.main(mathfile="myproject.math")
+	>>> mathinspector.run(mathfile="myproject.math")
 
 	launch the app in debug mode
-	>>> mathinspector.main(debug=True)
+	>>> mathinspector.run(debug=True)
 
 	"""
 	if "help" in kwargs:
