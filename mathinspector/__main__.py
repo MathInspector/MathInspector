@@ -27,6 +27,9 @@ if __name__ == "__main__":
 		arg = sys.argv[i]
 		if arg[:2] != "--":
 			args.append(sys.argv[i])
+		elif "=" in arg:
+			key, value = arg[2:].split("=")
+			kwargs[key] = value
 		elif i + 1 < len(sys.argv) and sys.argv[i+1] and sys.argv[i+1][:2] != "--":
 			kwargs[arg[2:]] = sys.argv[i+1]
 			i += 1
@@ -38,19 +41,27 @@ if __name__ == "__main__":
 		print ("""usage: mathinspector [files] ... [options] ... 
 
 Options and arguments:
-[files]...  : a list of files with either a .math or .py extension.  The .math
-             file will be loaded, and all of the .py files will be added to
-             the current project
+[files]...       : a list of files with either a .math or .py extension.  The
+                  .math file will be loaded, and all of the .py files will be
+                  added to the current project
 
---help obj  : view the documentation for obj as if you called help(obj) in
-             mathinspector
+--help obj       : view the documentation for obj as if you called help(obj)
+                  in mathinspector
 
---new       : starts a new project and resets the state of the app.  This flag will
-             overwrites the autosave file with a blank file
+--new            : starts a new project and resets the state of the app.
+                  This flag will overwrites the autosave file with a blank
+                  file
 
---debug     : prints log messages to the command line used to launch the app.  Useful
-             for debugging issues when something isn't working properly, or while working
-             on the mathinspector source code
+--disable[=opts] : mathinspector overrides a lot of builtins (e.g. help(),
+                  print()) which may cause undesirable behaviour, this flag
+                  disables these features
+                    opts are 'print', 'traceback', 'stderr'
+                    e.g. mathinspector --disable=print,stderr
+
+--debug          : prints log messages to the command line used to launch the
+                  app.  Useful for debugging issues when something isn't
+                  working properly, or while working on the mathinspector
+                  source code
 		""")
 	else:
 		main(*args, **kwargs)
