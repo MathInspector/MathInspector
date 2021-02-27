@@ -4,7 +4,7 @@ block_cipher = None
 
 from mathinspector.config import __version__
 
-a = Analysis(['../mathinspector/__main__.py'],
+a = Analysis(['./_app.py'],
              pathex=[os.path.abspath('..')],
              binaries=[],
              datas=[('../mathinspector/assets', 'assets')],
