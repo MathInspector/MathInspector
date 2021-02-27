@@ -39,7 +39,7 @@ def show_textfile(text, content):
     prev_tag = False
 
     for i in parse:
-        if has_newline is not -1 and i.tag in ("section_title", "h1", "h2"):
+        if has_newline != -1 and i.tag in ("section_title", "h1", "h2"):
             text.insert("end", "\n\n")
 
         if not has_newline and (
@@ -79,7 +79,7 @@ def show_textfile(text, content):
                 text.insert("end", "\n")
         else:
             text.insert("end", i.text.replace("\n", ""))
-    
+
         if i.tag in ("section_title", "h1", "h2"):
             text.insert("end", " \n")
             text.insert("end", " \n", "horizontal_rule")
@@ -149,7 +149,7 @@ class TextParser:
                                 self.index += len(text[:endline]) + 1
                             return TextNode(match[0].strip(), tag)
                         elif i in ("code", "link_url", "italic"):
-                            if i == "code": 
+                            if i == "code":
                                 endline = text.index("`")
                                 self.buffer.append((match[0], i, 1 + len(match[0])))
                                 self.index += 1 + endline
@@ -203,4 +203,4 @@ class TextNode:
         self.tag = tag
 
     def __repr__(self):
-        return f"{str(self.tag)}: {self.text}"        
+        return f"{str(self.tag)}: {self.text}"
