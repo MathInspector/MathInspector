@@ -405,6 +405,9 @@ class ModuleTree(vdict, Treeview):
 
 	def _on_button_release_right(self, event):
 		key = self.identify_row(event.y)
+		if self.app.debug:
+			builtin_print ("module tree key:", key)
+
 		if not key:
 			return self.menu.show(event, [{
 				"label": "New File",

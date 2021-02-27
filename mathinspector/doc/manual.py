@@ -143,7 +143,7 @@ from .. import console, plot, node, objects, modules, examples, animation, proje
 class GettingStarted:
 	"""To learn about the various features provided by math inspector, lets
 	create a simple program directly in the interpreter.  Click this code
-	block to create a variable `x` in memory with a value of `1`
+	block to create a variable `x` in memory with a value of 1
 
 	>>> x=1
 
@@ -159,7 +159,7 @@ class GettingStarted:
 	the cursor pans all the items, and the scroll wheel is used for zooming
 	in and out.
 
-	Let's define a function `f(x)` which returns `x + 1`
+	Let's define a function `f(x)` which returns `x` + 1
 
 	>>> def f(x):
 	... 	return x + 1
@@ -185,11 +185,9 @@ class GettingStarted:
 	---
 	A binary operator is an operator like `+`,`-`,`*`,`/` which acts on the
 	objects on it's left and right hand sides.  To illustrate this, lets
-	create two new variables `a`,`b` and set them both equal to `1`
+	create two new variables `a`,`b` and set them both equal to 1
 
 	>>> a = b = 1
-
-	>>> c = a + b
 
 	When using a binary operator in a function call, a new object will
 	appear in the node editor representing the operator, and the wires
