@@ -39,7 +39,7 @@ def show_textfile(text, content):
     prev_tag = False
 
     for i in parse:
-        if has_newline != -1 and i.tag in ("section_title", "h1", "h2"):
+        if has_newline is not -1 and i.tag in ("section_title", "h1", "h2"):
             text.insert("end", "\n\n")
 
         if not has_newline and (
