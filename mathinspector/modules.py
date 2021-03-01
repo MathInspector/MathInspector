@@ -212,8 +212,8 @@ class ModuleTree(vdict, Treeview):
 			del self.store[key]
 		return False
 
-	def addfile(self, file=None, parent="", index="end", watch=True, is_open=True, exec_file=True):
-		file = file or filedialog.askopenfilename(title="Add a File to the Project")
+	def addfile(self, file=None, parent="", index="end", watch=True, is_open=True, exec_file=True, defaultextension=".py"):
+		file = file or filedialog.askopenfilename(title="Add a File to the Project", defaultextension=defaultextension)
 		if not file: return
 
 		name, ext = name_ext(file)
@@ -413,16 +413,16 @@ class ModuleTree(vdict, Treeview):
 				"label": "New File",
 				"menu": [{
 					"label": "Python (.py)",
-					"command": lambda: self.app.menu.new_file(".py")
+					"command": lambda: self.new_file(ext=".py")
 				},{
 					"label": "Markdown (.md)",
-					"command": lambda: self.app.menu.new_file(".md")
+					"command": lambda: self.new_file(ext=".md")
 				},{
 					"label": "Rich Structured Text (.rst)",
-					"command": lambda: self.app.menu.new_file(".rst")
+					"command": lambda: self.new_file(ext=".rst")
 				},{
 					"label": "Other...",
-					"command": lambda: self.app.menu.new_file(None)
+					"command": lambda: self.new_file(None)
 				}]
 			},{
 				"label": "Add File...",
