@@ -21,7 +21,7 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GL import shaders
 from OpenGL.GLU import *
-from .util import is_iterable, instanceof
+from ..util import instanceof
 from .shader import Shader
 from pygame._sdl2.video import Window
 

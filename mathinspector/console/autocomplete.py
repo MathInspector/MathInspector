@@ -1,7 +1,5 @@
 """
-class which manages tab autocomplete and integrates with the rest of the app.
-"""
-"""
+Math Inspector: a visual programming environment for scientific computing
 Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify
@@ -25,6 +23,9 @@ from .builtin_print import builtin_print
 RE_WORD = re.compile(r"[() ]")
 
 class AutoComplete():
+	"""
+	class which manages tab autocomplete and integrates with the rest of the app.
+	"""
 	def __init__(self, prompt):
 		self.prompt = prompt
 		self.console = prompt.console

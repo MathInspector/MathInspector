@@ -38,9 +38,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import inspect
+import inspect, re
 from . import doc
-from .util import vdict, Color, argspec, classname, fontcolor, open_editor, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT
+from .util import vdict, Color, argspec, classname, fontcolor
+from .config import open_editor, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT
 from .style import TREE_TAGS
 from .widget import Treeview, TreeEntry
 
@@ -103,15 +104,15 @@ class ObjectTree(vdict, Treeview):
 		Parameters
 		----------
 		name : string
-		    the name of the variable
+			the name of the variable
 		value : object
-		    the value to assign
+			the value to assign
 		create_new : bool
 			when set to True, this will generate a unique variable name if there is already
 			a key with the same name
 		coord : tuple(float, float)
-		    a tuple of floats which determines the coordinates of the newly created item in the
-		    node editor
+			a tuple of floats which determines the coordinates of the newly created item in the
+			node editor
 
 
 		Examples
@@ -195,15 +196,24 @@ class ObjectTree(vdict, Treeview):
 		self.app.node[key].destroy()
 
 	def unique_name(self, name):
-	    i = 2
-	    temp = name
-	    while True:
-	        if temp not in self:
-	            return temp
-	        temp = name + "_" + str(i)
-	        i += 1
+		if re.match(r"[0-9]", name[-1]):
+			match = re.match(r"([a-z]+)([0-9]+)", name, re.I)
+			if match:
+				items = match.groups()
+				i = int(items[-1]) + 1
+				name = "".join(items[:-1])
+		else:
+			i = 2
+
+		temp = name
+		while True:
+			if temp not in self:
+				return temp
+			temp = name + str(i)
+			i += 1
 
 	def _on_button_1(self, event):
+		self.menu.unpost()
 		key = self.identify_row(event.y)
 		if not key: return
 
@@ -235,31 +245,31 @@ class ObjectTree(vdict, Treeview):
 
 		items = []
 
-		if help.getobj(key):
+		if key and help.getobj(key):
 			items.append({
-				"label": "View Doc",
+				"label": "view doc",
 				"command": lambda: help(key)
 			})
 
 		try:
 			file = inspect.getsourcefile(self.app.objects[key])
 			items.append({
-				"label": "View Source Code",
-				"command": lambda: open_editor(file)
+				"label": "view source",
+				"command": lambda: open_editor(self.app, file)
 			})
 		except:
 			pass
 
 		if key in self.app.node and self.app.animate.can_animate(self.app.node[key]):
 			items.append({
-				"label": "Animate",
+				"label": "animate",
 				"command": lambda: self.app.animate(key)
 			})
 
 		if callable(obj) and "." in key:
 			name, fn = key.rsplit(".", 1)
 			items.append({
-				"label": "Run Method",
+				"label": "run method",
 				"command": lambda: self.app.node.run_method(fn, obj, self.app.node[name])
 			})
 
@@ -267,7 +277,7 @@ class ObjectTree(vdict, Treeview):
 			items.extend([{
 				"separator": None
 			},{
-				"label": "Delete " + key,
+				"label": "delete " + key,
 				"command": lambda: self.delete(key)
 			}])
 

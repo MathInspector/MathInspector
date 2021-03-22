@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import numpy as np
 import inspect, os, platform
-from ..style import Color
+from ..style.color import Color
 
 def getrandom(min, max):
     N = 10
@@ -43,18 +43,13 @@ def classname(obj):
     elif inspect.isfunction(obj) and obj.__module__:
         return obj.__module__ + "." + obj.__name__
     elif obj.__class__.__module__ and hasattr(obj, "__name__"):
+        if obj.__class__.__module__ == "builtins":
+            return obj.__name__
         return obj.__class__.__module__ + "." + obj.__name__
     return obj.__class__.__name__
 
 def name_ext(file):
     return os.path.splitext(os.path.basename(file))
-
-def open_editor(file):
-    if platform.system() in ("Windows", "Linux"):
-        command = "start " + file
-    elif platform.system() == "Darwin":
-        command = "open " + file
-    os.system(command)
 
 def instanceof(value, classes):
     if not isinstance(classes, tuple):
@@ -63,7 +58,7 @@ def instanceof(value, classes):
     if isinstance(value, tuple) and tuple in classes:
         return True
 
-    if np.dtype(value.__class__) == np.object_ and list in classes:
+    if np.dtype(value.__class__) == np.object_ and hasattr(value, "__len__") and list in classes:
         return True
 
     if np.dtype(value.__class__) == np.int64 and int in classes:
@@ -77,3 +72,9 @@ def instanceof(value, classes):
 
 
     return isinstance(value, classes)
+
+def hex_to_rgb(h, as_dec=False):
+    result = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+    if as_dec:
+        return result[0]/255, result[1]/255, result[2]/255
+    return result

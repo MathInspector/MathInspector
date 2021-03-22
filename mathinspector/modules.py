@@ -44,30 +44,40 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 import re, os, inspect, uuid, importlib.util, sys, traceback
-from tkinter import filedialog
+from tkinter import messagebox, filedialog
 from importlib import reload
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
-from .util import vdict
-from .util import *
+from .util import vdict, name_ext
+from .util.excluded import *
 from .widget import Treeview
 from .style import Color, getimage
+from .project import FILETYPES
 from .console.builtin_print import builtin_print
+from .config import *
 
 class ModuleTree(vdict, Treeview):
 	"""
 	In order to synchronize the available modules across views,
-	math inspector stores the aliases and values of all modules in a vdict called the Module Tree.
+	math inspector stores the aliases and values of all modules in a vdict
+	called the Module Tree.
 
 	When a file or folder is added to the Module Tree, the `watchdog` module
 	is used to monitor changes in those files and update
 	the values of variables across all views.
 
-	Execution of code from source code is done by calling self.app.console.exec(source).
+	Execution of code from source code is done by calling
+
+	>>> self.app.console.exec(source)
+
 	See the documentation for `app.console` for more information.
 	"""
 	def __init__(self, app):
-		vdict.__init__(self, getitem=self.getmodule, setitem=self.setmodule, delitem=self.delete)
+		vdict.__init__(self,
+			getitem=self.getmodule,
+			setitem=self.setmodule,
+			delitem=self.delete)
+
 		Treeview.__init__(self, app)
 
 		self.drag = None
@@ -76,14 +86,17 @@ class ModuleTree(vdict, Treeview):
 		self.observer = None
 		self.watchers = {}
 		self.locals = {}
-		self.bind(BUTTON_RIGHT, lambda event: self.selection_set(self.identify_row(event.y)))
+		self.bind(BUTTON_RIGHT,
+			lambda event: self.selection_set(self.identify_row(event.y)))
 		self.bind(BUTTON_RELEASE_RIGHT, self._on_button_release_right)
 		self.bind("<Double-Button-1>", self._on_double_button_1)
 
 	def getmodule(self, key):
 		if key not in self.store:
 			for i in self.store:
-				if self.store[i].__name__ == key or self.item(i)["values"][0] == key:
+				if (self.store[i].__name__ == key
+					or self.item(i)["values"][0] == key
+				):
 					return self.store[i]
 		return self.store[key]
 
@@ -121,7 +134,8 @@ class ModuleTree(vdict, Treeview):
 				elif callable(attr):
 					builtin_fn.append(fn)
 				elif inspect.ismodule(attr):
-					if attr.__name__ not in EXCLUDED_MODULES:# + BUILTIN_PKGS + INSTALLED_PKGS:
+					# + BUILTIN_PKGS + INSTALLED_PKGS:
+					if attr.__name__ not in EXCLUDED_MODULES:
 						submodules.append((fn, attr))
 				else:
 					constants.append(fn)
@@ -129,28 +143,41 @@ class ModuleTree(vdict, Treeview):
 		if builtin_fn:
 			folder = self.insert(parent, "end", text="builtins")
 			for i in builtin_fn:
-				self.insert(folder, "end", text=i, values=module.__name__ + "." + i)
+				self.insert(folder, "end",
+					text=i,
+					values=module.__name__ + "." + i)
 
 		if functions:
 			folder = self.insert(parent, "end", text="functions")
 			for i in functions:
-				self.insert(folder, "end", text=i, values=module.__name__ + "." + i)
+				self.insert(folder, "end",
+					text=i,
+					values=module.__name__ + "." + i)
 
 		if classes:
 			folder = self.insert(parent, "end", text="classes")
 			for j in classes:
-				self.insert(folder, "end", text=j, values=module.__name__ + "." + j)
+				self.insert(folder, "end",
+					text=j,
+					values=module.__name__ + "." + j)
 
 		if constants:
 			folder = self.insert(parent, "end", text="objects")
 			for k in constants:
 				if k[0] != "_":
-					self.insert(folder, "end", text=k, values=module.__name__ + "." + k)
+					self.insert(folder, "end",
+						text=k,
+						values=module.__name__ + "." + k)
 
 		if submodules and file is None:
 			for fn, attr in submodules:
 				if not self.exists(attr.__name__):
-					folder = self.insert(parent, "end", attr.__name__, text="      " + fn, values=attr.__name__, image=getimage(".py"))
+					folder = self.insert(parent,
+						"end", attr.__name__,
+						text="      " + fn,
+						values=attr.__name__,
+						image=getimage(".py"))
+
 					self.setmodule(attr.__name__, attr, folder)
 		return False
 
@@ -185,8 +212,8 @@ class ModuleTree(vdict, Treeview):
 			del self.store[key]
 		return False
 
-	def addfile(self, file=None, parent="", index="end", watch=True, is_open=True, exec_file=True):
-		file = file or filedialog.askopenfilename()
+	def addfile(self, file=None, parent="", index="end", watch=True, is_open=True, exec_file=True, defaultextension=".py"):
+		file = file or filedialog.askopenfilename(title="Add a File to the Project", defaultextension=defaultextension)
 		if not file: return
 
 		name, ext = name_ext(file)
@@ -212,8 +239,10 @@ class ModuleTree(vdict, Treeview):
 				self.observer = Observer()
 				self.observer.start()
 
-			self.watchers[name] = self.observer.schedule(FileHandler(self, file=file),
-				path=os.path.dirname(file), recursive=False)
+			self.watchers[name] = self.observer.schedule(
+				FileHandler(self, file=file),
+				path=os.path.dirname(file),
+				recursive=False)
 
 		expanded = self.expanded()
 		spec = importlib.util.spec_from_file_location(name, file)
@@ -228,6 +257,10 @@ class ModuleTree(vdict, Treeview):
 		if exec_file:
 			for i in dir(module):
 				attr = getattr(module, i)
+	
+				if name not in self.locals:
+					self.locals[name] = {}
+
 				if not inspect.ismodule(attr) and i in self.app.objects and i not in self.locals[name]:
 					self.disable_file(parent)
 					print (Exception("ImportError: object with name " + i + " already exists.\n  File \"" + file + "\", line 1, in <module>"))
@@ -253,8 +286,8 @@ class ModuleTree(vdict, Treeview):
 
 			if name in self.locals:
 				self.locals[name].update({ k: new[k] for k in set(new) - set(prev) })
-			else:
-				self.locals[name] = { k: new[k] for k in set(new) - set(prev) }
+			# else:
+			# 	self.locals[name] = { k: new[k] for k in set(new) - set(prev) }
 
 			objects = [i for i in dir(module)]
 			keys = list(self.locals[name].keys())
@@ -310,7 +343,7 @@ class ModuleTree(vdict, Treeview):
 			self.observer.stop()
 			self.observer = None
 
-	def files(self, tag, recursive=False, key=""):
+	def files(self, tag, recursive=False, key="", as_keys=False):
 		children = self.get_children(key)
 		if recursive is True:
 			result = []
@@ -322,7 +355,19 @@ class ModuleTree(vdict, Treeview):
 			return result
 
 		keys = [j for j in children if self.has_tag(j, tag)]
+		if as_keys:
+			return keys
 		return [self.app.modules.item(i)["values"][0] for i in keys]
+
+	def clear(self, tag=None, with_dialog=False):
+		if with_dialog:
+			if not messagebox.askokcancel("MathInspector",
+				"Are you sure you want to remove all " + ((tag + "s") if tag else "modules, files, and folders") + " from the current project?"):
+				return
+
+		keys = self.get_children() if tag is None else self.files(tag, as_keys=1)
+		for i in keys:
+			del self[i]
 
 	def disable_file(self, key):
 		self.item(key, image=getimage("python-disabled"))
@@ -339,59 +384,116 @@ class ModuleTree(vdict, Treeview):
 		if not value: return
 		value = value[0]
 
-		if key in self and os.path.isfile(value):
+		if self.has_tag(key, "module"):
+			obj = help.getobj(value)
+			if obj:
+				help(obj)
+				return "break"
+
+		if self.has_tag(key, "file") or self.has_tag(key, "disabled"):
+			sourcefile = value
+		elif key in self:
 			try:
 				sourcefile = inspect.getsourcefile(self[key])
 			except:
 				sourcefile = None
 
-			if sourcefile:
-				open_editor(sourcefile)
-				return "break"
-
-		obj = help.getobj(value)
-		if obj:
-			help(obj)
+		if sourcefile:
+			open_editor(self.app, sourcefile)
 			return "break"
+
 
 	def _on_button_release_right(self, event):
 		key = self.identify_row(event.y)
+		if self.app.debug:
+			builtin_print ("module tree key:", key)
+
 		if not key:
-			self.menu.set_menu(self.app.menu.project_menu)
-			return self.menu.show(event)
+			return self.menu.show(event, [{
+				"label": "New File",
+				"menu": [{
+					"label": "Python (.py)",
+					"command": lambda: self.new_file(ext=".py")
+				},{
+					"label": "Markdown (.md)",
+					"command": lambda: self.new_file(ext=".md")
+				},{
+					"label": "Rich Structured Text (.rst)",
+					"command": lambda: self.new_file(ext=".rst")
+				},{
+					"label": "Other...",
+					"command": lambda: self.new_file(None)
+				}]
+			},{
+				"label": "Add File...",
+				"command": self.addfile
+			},{
+				"label": "Add Folder...",
+				"command": self.addfolder
+			},{
+				"label": "Import Module...",
+				"command": self.app.menu.import_module
+			},{
+				"separator": None
+			},{
+				"label": "Remove all Modules",
+				"command": lambda: self.clear("module", with_dialog=1)
+			},{
+				"label": "Remove all Folders",
+				"command": lambda: self.clear("folder", with_dialog=1)
+			},{
+				"label": "Remove all Files",
+				"command": lambda: self.clear("file", with_dialog=1)
+			}])
 
 		value = self.item(key)["values"][0]
 		items = []
 		obj = help.getobj(value)
-		if obj is not None:
+		if obj is not None and not self.has_tag(key, "disabled"):
 			items.append({
-				"label": "View Doc",
+				"label": "view doc",
 				"command": lambda: help(value)
 			})
 
-		try:
-			file = inspect.getsourcefile(obj)
-		except:
-			file = None
+		if self.has_tag(key, "disabled"):
+			items.extend([{
+				"label": "import",
+				"command": lambda: self.addfile(value)
+			}])
+
+		if self.has_tag(key, "disabled") or self.has_tag(key, "file"):
+			file = value
+		else:
+			try:
+				file = inspect.getsourcefile(obj)
+			except:
+				file = None
 
 		if file:
 			items.append({
-				"label": "View Source Code",
-				"command": lambda: open_editor(inspect.getsourcefile(obj))
+				"label": "view source",
+				"command": lambda: open_editor(self.app, file)
 			})
 
-		# print ('v', value)
 		if key in self.get_children() and value != self.rootfolder:
 			items.extend([{
 				"separator": None
 			}, {
-				"label": "Remove " + key,
+				"label": "remove " + key,
 				"command": lambda: self.delete(value)
 			}])
 
 		self.menu.set_menu(items)
 		self.menu.show(event)
 
+	def new_file(self, ext):
+		file = filedialog.asksaveasfilename(defaultextension=ext)
+		if not file: return
+		f = open(file, "a")
+		f.write("")
+		f.close()
+		self.app.modules.addfile(file)
+		open_editor(self.app, file)
 
 class FileHandler(FileSystemEventHandler):
 	def __init__(self, modules, file=None, dirpath=None):

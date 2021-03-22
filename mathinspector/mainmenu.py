@@ -20,39 +20,46 @@ import scipy, math, builtins, os, sys
 from functools import partial
 from tkinter import filedialog
 
-from . import plot, doc, examples
-from .util import binop
+from . import doc, examples
+from .plot import plot
+from .util import binop, name_ext
 from .widget import Popup, Menu
 from .style import Color
-from .util import BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
-from .util.common import open_editor
-from .util.config import CONTROL_KEY, BASEPATH, BUILTIN_FUNCTION, BUILTIN_CLASS, BUILTIN_CONSTANT
-from .console import builtin_print
+from .project import FILETYPES
+from .util.builtin_lists import *
+from .config import open_editor, CONTROL_KEY, BASEPATH
 
-TRIG_FUNCTIONS = [i for i in ("acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "cos", "cosh", "degrees", "sin", "sinh", "tan", "tanh")]
-MATH_FUNCTIONS = [i for i in dir(math) if callable(getattr(math, i)) and i not in TRIG_FUNCTIONS + ["pow"] and i[:1] != "_"]
-MATH_FUNCTIONS.append("power")
-MATH_FUNCTIONS.sort()
-MATH_CONSTANTS = [i for i in dir(math) if i not in MATH_FUNCTIONS + TRIG_FUNCTIONS and i[:1] != "_"]
 SASHPOS_MIN = 20
 
 class MainMenu(Menu):
 	def __init__(self, app):
-		self.project_menu = [{
-			"label": "New File",
-			"command": self.new_file
+		self.savefile = ""
+
+		self.file = [{
+			"label": "New                    ",
+			"command": app.project.new,
+			"accelerator": CONTROL_KEY + "+n",
 		},{
-			"label": "Add File...",
-			"command": app.modules.addfile
+			"label": "Open...            ",
+			"command": lambda event=None: app.modules.addfile(),
+			"accelerator": CONTROL_KEY + "+o"
 		},{
-			"label": "Add Folder...",
-			"command": app.modules.addfolder
+			"label": "Save           ",
+			"command": lambda event=None: self.save_console_history(self.savefile),
 		},{
-			"label": "Import Module...",
-			"command": lambda event=None: help.import_module(self.import_module)
+			"label": "Save As...            ",
+			"command": lambda event=None: self.save_console_history(),
 		}]
 
-		self.object_menu = [{
+		self.plot = [{
+			"label": "Show Grid Lines                      ✓",
+			"command": partial(self.plotconfig, "show_grid"),
+		},{
+			"label": "Show Range                             ",
+			"command": lambda: self.plotconfig("show_range")
+		}]
+
+		self.object = [{
 			"label": "Operator",
 			"menu": [{
 				"label": i,
@@ -100,90 +107,113 @@ class MainMenu(Menu):
 			} for i in dir(examples) if i[:1] != "_" and not i[:1].isupper() and i != "np"]
 		}]
 
+		self.project = [{
+			"label": "Open Project",
+			"command": app.project.load		
+		},{
+			"label": "Open Recent",
+			"menu": [{
+				"separator": None
+			}]
+		},{
+			"separator": None
+		},{
+			"label": "Save Project",
+			"command": lambda event=None: app.project.save(app.project.mathfile or app.modules.rootfolder),
+			"accelerator": CONTROL_KEY + "+s"
+		},{
+			"label": "Save Project As...",
+			"command": lambda event=None: app.project.save(),
+			"accelerator": CONTROL_KEY + "+Shift+s"
+		},{
+			"separator": None
+		},{
+				"label": "Add a New File...",
+				"menu": [{
+					"label": "Python (.py)",
+					"command": lambda: self.modules.new_file(ext=".py")
+				},{
+					"label": "Markdown (.md)",
+					"command": lambda: self.modules.new_file(ext=".md")
+				},{
+					"label": "Rich Structured Text (.rst)",
+					"command": lambda: self.modules.new_file(ext=".rst")
+				},{
+					"label": "Other...",
+					"command": lambda: self.modules.addfile(None)
+				}]
+		},{
+			"label": "Add File to Project...",
+			"command": app.modules.addfile
+		},{
+			"label": "Add Folder to Project...",
+			"command": app.modules.addfolder
+		},{
+			"label": "Import Module...",
+			"command": lambda event=None: help.import_module(self.import_module)
+		},{
+			"separator": None
+		},{
+			"label": "Remove all Files",
+			"command": lambda: self.app.modules.clear("file", with_dialog=1)
+		},{
+			"label": "Remove all Folders",
+			"command": lambda: self.app.modules.clear("folder", with_dialog=1)
+		},{
+			"label": "Remove all Modules",
+			"command": lambda: self.app.modules.clear("module", with_dialog=1)
+		}]		
+
+		self.view = [{
+			"label": "Show Sidebar",
+			"command": lambda: self.setview("sidebar")
+		},{
+			"label": "Show Node Editor",
+			"command": lambda: self.setview("node_editor")
+		},{
+			"label": "Hide Console",
+			"command": lambda: self.setview("console")
+		}]
+
+		self.help = [{
+			"label": "Getting Started",
+			"command": lambda: help(doc.manual.GettingStarted)
+		},{
+			"label": "User Manual",
+			"command": lambda: help()
+		},{
+			"label": "Examples",
+			"command": lambda: help(examples)
+		},{
+			"separator": None
+		},{
+			"label": "Browse Modules...",
+			"command": lambda: help.browse()
+		}]
+		# 	"TODO": "Numpy Doc",
+		# 	"TODO": "Scipy Tutorial",
+		# 	"TODO": "Builtin Functions",
+		
+
 		Menu.__init__(self, app, [{
 			"label": "File",
-			"menu": [{
-					"label": "New                    ",
-					"command": app.project.new,
-					"accelerator": CONTROL_KEY + "+n",
-				},
-				{
-					"label": "Open...            ",
-					"command": lambda event=None: app.project.load(None),
-					"accelerator": CONTROL_KEY + "+o"
-				},
-				{
-					"label": "Save            ",
-					"command": lambda event=None: app.project.save(app.modules.rootfolder),
-					"accelerator": CONTROL_KEY + "+s"
-				},
-				{
-					"label": "Save As...            ",
-					"command": lambda event=None: app.project.save(None),
-					"accelerator": CONTROL_KEY + "+Shift+s"
-				}]
-			},{
-				"label": "Project",
-				"menu": self.project_menu
-			},{
-				"label": "Object",
-				"menu": self.object_menu
-			},{
-				"label": "Plot",
-				"menu": [{
-					"label": "Show Grid Lines                      ✓",
-					"command": partial(self.plotconfig, "show_grid"),
-				},{
-					"label": "Show Range                             ",
-					"command": lambda: self.plotconfig("show_range")
-				}],
-			},
-			{
-				"label": "View",
-				"menu": [{
-					"label": "Show Sidebar",
-					"command": lambda: self.setview("sidebar")
-				},{
-					"label": "Show Node Editor",
-					"command": lambda: self.setview("node_editor")
-				},{
-					"label": "Hide Console",
-					"command": lambda: self.setview("console")
-				}]
-			},
-			{
-				"label": "Help",
-				"menu": [{
-					"label": "Getting Started",
-					"command": lambda: help(doc.manual.GettingStarted)
-				},{
-					"label": "User Manual",
-					"command": lambda: help(doc.manual)
-				},{
-					"label": "Examples",
-					"command": lambda: help(examples)
-				},
-				# {
-				##### for some reason this is failing in pyinstaller, can include this with .rst files maybe
-				# 	"label": "Numpy Doc",
-				# 	"command": lambda: help(np.doc)
-				# },
-				{
-					"separator": None
-				},{
-					"label": "Browse Modules...",
-					"command": lambda: help.browse()
-				}
-				# ,{
-				# 	"label": "Scipy Tutorial",
-				# 	"command": lambda: help(scipy)
-				# }
-				# ,{
-				# 	"label": "Builtin Functions",
-				# 	"command": lambda: help(builtins)
-				# }
-				]
-			}])
+			"menu": self.file
+		},{
+			"label": "Plot",
+			"menu": self.plot,
+		},{
+			"label": "Object",
+			"menu": self.object
+		},{
+			"label": "Project",
+			"menu": self.project
+		},{
+			"label": "View",
+			"menu": self.view
+		},{
+			"label": "Help",
+			"menu": self.help
+		}])
 
 		self.app = app
 		self.is_sidebar_visible = False
@@ -194,6 +224,39 @@ class MainMenu(Menu):
 
 		app.side_view.bind("<Configure>", self.on_config_sidebar)
 		app.node.output.bind("<Configure>", self.on_config_vertical_panel)
+		self.sync_recent_projects()
+
+	def sync_recent_projects(self):
+		recents = [{
+			"label":  name_ext(i)[0],
+			"command": lambda key=i: self.app.project.load(key)
+		} for i in self.app.project.recents]
+		
+		if recents:
+			recents.append({ "separator": None })
+		
+		self._["Project"].entryconfig(1, menu=Menu(self, recents + [{
+			"label": "Clear Items",
+			"command": self.clear_recents
+		}]))
+
+	def clear_recents(self):
+		self.app.project.recents.clear()
+		self.sync_recent_projects()
+
+	def save_console_history(self, savefile=None):
+		if not savefile or savefile != self.savefile:
+			self.savefile = filedialog.asksaveasfilename(
+				filetypes=FILETYPES,
+				title="Save Command History",
+				message="Choose a default location for the command history be saved")
+			if not self.savefile: return
+		
+		with open(self.savefile, "w") as output:
+			output.write("\n".join(self.app.console.prompt.history.cmds))
+			output.close()
+
+		print ("Command history saved to " + self.savefile)
 
 	def on_config_sidebar(self, event):
 		sashpos = self.app.horizontal_panel.sashpos(0)
@@ -263,14 +326,10 @@ class MainMenu(Menu):
 			# else:
 			# 	self.app.vertical_panel.sashpos(0, 0)
 
-	def new_file(self):
-		file = filedialog.asksaveasfilename(defaultextension=".py")
-		if not file: return
-		f = open(file, "a")
-		f.write("")
-		f.close()
-		self.app.modules.addfile(file)
-		open_editor(file)
+	def restore_defaults(self):
+		self._["View"].entryconfig(0, label="Show Sidebar")
+		self._["View"].entryconfig(1, label="Show Node Editor")
+		self._["View"].entryconfig(2, label="Hide Console")	
 
 	def import_module(self, module, alias="", open_folders=False):
 		self.app.modules[alias or module] = __import__(module)

@@ -19,13 +19,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import tkinter as tk
 import numpy as np
 import inspect, platform
-from .. import plot
-from ..util import fontcolor, instanceof, classname, argspec, numargs, open_editor, vdict, instanceof
-from ..util.config import BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, BUTTON_RIGHT_MOTION, HITBOX, ZOOM_IN, ZOOM_OUT, FONTSIZE, FONT_SIZE
+from ..plot import plot
+from ..util import fontcolor, instanceof, classname, argspec, numargs, vdict, instanceof
+from ..config import open_editor, BUTTON_RIGHT, BUTTON_RELEASE_RIGHT, BUTTON_RIGHT_MOTION, FONT_SIZE
 from ..style import Color, getimage
 from .output import Output
 from .item import Item
 from ..widget import Popup, Menu, Text
+
+ZOOM_IN = 1.1
+ZOOM_OUT = 0.9
+HITBOX = 32 # used for detecting when to trigger wire connections in the node editor while dragging wires
+FONTSIZE = "12" # TODO - refactor how FONTSIZE and PROMPT_FONTSIZE works
 
 class NodeEditor(vdict, tk.Canvas):
 	def __init__(self, app):
@@ -64,11 +69,14 @@ class NodeEditor(vdict, tk.Canvas):
 		self.bind("<Button-1>", self._on_button_1)
 		self.bind("<B1-Motion>", self._on_multiselect)
 		self.bind("<ButtonRelease-1>", self._on_button_release_1)
+		self.bind("<Escape>", lambda event: self.menu.unpost())
 
-		self.bind("<MouseWheel>", self._on_mouse_wheel)
 		if platform.system() == "Linux":
 			self.bind("<Button-4>", lambda event: self._on_mouse_wheel(event, 1))
 			self.bind("<Button-5>", lambda event: self._on_mouse_wheel(event, -1))
+		else:
+			self.bind("<MouseWheel>", self._on_mouse_wheel)
+		
 		self.bind(BUTTON_RELEASE_RIGHT, self._on_button_release_2)
 		self.bind(BUTTON_RIGHT_MOTION, self._on_b2_motion)
 
@@ -100,7 +108,6 @@ class NodeEditor(vdict, tk.Canvas):
 		self.output.node.bind("<B1-Motion>", self._on_output_b1_motion)
 		self.output.node.bind("<ButtonRelease-1>", self._on_output_button_release_1)
 
-
 	def setitem(self, name, update_value=False, coord=None, is_output_item=False):
 		if name not in self:
 			self[name] = Item(self, name, coord=coord or self.get_pointer(random=True))
@@ -119,6 +126,7 @@ class NodeEditor(vdict, tk.Canvas):
 		self[name].destroy()
 		if not coord:
 			coord = self.get_pointer(random=True)
+		
 		self[name] = Item(self, name,
 			coord=coord,
 			args=item.args,
@@ -447,6 +455,8 @@ class NodeEditor(vdict, tk.Canvas):
 		self.dragposition = (0,0)
 
 	def _on_button_1(self, event):
+		self.menu.unpost() # fix for menu not closing properly on linux
+		
 		if self.edit_item:
 			self.edit_item.entry.finish()
 
@@ -476,7 +486,7 @@ class NodeEditor(vdict, tk.Canvas):
 				"font": "Nunito " + FONT_SIZE["extra-small"] + " bold",
 				"foreground": Color.DARK_ORANGE,
 				"state": "disabled"
-			}] + self.app.menu.object_menu)
+			}] + self.app.menu.object)
 		self.has_menu = False
 		self.pan_position = None
 
@@ -491,9 +501,7 @@ class NodeEditor(vdict, tk.Canvas):
 			}])
 			return
 
-		methods = []
-		graph = []
-		extras = []
+		graph, extras, methods = [], [], []
 		obj = self.app.objects[item.name]
 		value = item.value()
 		item_methods = [i for i in dir(obj) if i[:1] != "_" and callable(getattr(obj, i)) and isinstance(i, str)]
@@ -509,30 +517,31 @@ class NodeEditor(vdict, tk.Canvas):
 		window = plot.get_window(value)
 		if item in self.output.items:
 			extras.append({
-				"label": "Disconnect Output",
+				"label": "disconnect output",
 				"command": lambda: self.output.disconnect(item)
 			})
 		elif not window:
 			extras.append({
-				"label": "Show Output",
+				"label": "show output",
 				"command": lambda: self.output.connect(item)
 			})
 		else:
 			extras.append({
-				"label": "Plot",
+				"label": "plot",
 				"command": lambda: self.output.connect(item),
 				"state": "normal" if (plot.active_window == window or not plot.is_active()) else "disabled"
+			})
+
+
+		if self.app.animate.can_animate(item):
+			extras.append({
+				"label": "animate",
+				"command": lambda: self.app.animate(item.name)
 			})
 
 		extras.append({
 			"separator": None
 		})
-
-		if self.app.animate.can_animate(item):
-			extras.append({
-				"label": "Animate",
-				"command": lambda: self.app.animate(item.name)
-			})
 
 		if len(item.kwargs) > 0 and len(item.kwargs["connection"]) == 0:
 			extras.append({
@@ -542,7 +551,7 @@ class NodeEditor(vdict, tk.Canvas):
 
 		if help.getobj(item.obj) is not None:
 			extras.append({
-				"label": "View Doc",
+				"label": "view doc",
 				"command": lambda: help(item.obj)
 			})
 
@@ -553,10 +562,11 @@ class NodeEditor(vdict, tk.Canvas):
 
 		if file:
 			extras.append({
-				"label": "View Source Code",
-				"command": lambda: open_editor(file)
+				"label": "view source code",
+				"command": lambda: open_editor(self.app, file)
 			})
 
+		## TODO - get this working
 		# graph.append({
 		# 	"label": "Set color     " + item.opts["line_color"] if item.opts["line_color"] != Color.BLUE else "Set color",
 		# 	"command": lambda: Popup(self.app, item.name + ".set_color", obj=lambda color: item.option("line_color", color), canvas_item=item)
@@ -565,7 +575,15 @@ class NodeEditor(vdict, tk.Canvas):
 		self.menu.show(event, extras + methods + [{
 			"separator": None
 		},{
-			"label": "Delete " + item.name,
+			"label": "copy",
+			"command": lambda: self.app.objects.setobj(item.name, item.obj, create_new=True)
+		},{
+			"label": "rename",
+			"command": lambda: self.rename(item.name)
+		},{
+			"separator": None
+		},{
+			"label": "delete " + item.name,
 			"command": lambda: self._on_delete(item.name)
 		}])
 
@@ -584,6 +602,21 @@ class NodeEditor(vdict, tk.Canvas):
 			header=name)
 		else:
 			self._method_result(name, attr, item)
+
+	# def _copy_item(self, name):
+	# 	self.setitem(name, self[name], create_new=True)
+
+	def rename(self, name):
+		Popup(self.app, [{
+			"label": "new name",
+			"value": name
+		}],
+		lambda params: self._rename_item(name, params["new name"]),
+		title="Rename Item",
+		header=name)
+
+	def _rename_item(self, old, new):
+		self.app.objects[new] = self.app.objects.pop(old)
 
 	def _method_result(self, name, attr, item, params={}):
 		if params:

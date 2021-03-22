@@ -21,18 +21,20 @@ import numpy as np
 import tkinter as tk
 from code import InteractiveInterpreter
 from types import CodeType
+from io import TextIOWrapper
 
-from .. import plot
+from ..plot import plot
 from ..doc import Help
 from ..style import Color, TAGS
-from ..util import vdict, open_editor, BUTTON_RIGHT, BASEPATH, FONT
+from ..util import vdict
+from ..config import open_editor, BUTTON_RIGHT, BASEPATH, FONT, __version__
 from ..widget import Text, Menu
 from .builtin_print import builtin_print
 from .codeparser import CodeParser
 from .prompt import Prompt, FONTSIZE
-from ..version import VERSION
 
 RE_TRACEBACK = r"^()(Traceback \(most recent call last\))"
+RE_EXCEPTION = r"^()([A-Za-z]*Error:)"
 RE_FILEPATH = r"(File (\"(?!<).*\"))"
 RE_INPUT = r"(File \"(<.*>)\")"
 RE_LINE = r"((line [0-9]*))"
@@ -47,7 +49,7 @@ class Interpreter(Text, InteractiveInterpreter):
 	is stored in a vdict called `self.locals`.  A vdict is key-value pair, just like a regular
 	dictionary, except it also has callbacks for events such as setting and deleting items.
 
-	When running commands, `self.locals` is passed to the builtin `exec` function as the third parameter.
+	When running commands, `self.locals` is passed to the builtin `exec` function as the second parameter.
 	This parameter determines the local namespace exec runs in.  You can display the current
 	contents of the local namespace by running the command
 
@@ -67,10 +69,11 @@ class Interpreter(Text, InteractiveInterpreter):
 	An excellent resource for learning about abstract syntax tree's is the
 	website https://greentreesnakes.readthedocs.io/
 	"""
-	def __init__(self, app):
+	def __init__(self, app, disable=()):
 		InteractiveInterpreter.__init__(self, vdict({
+			"__builtins__": __builtins__,
 			"app": app,
-			"plot": plot.plot
+			"plot": plot
 		}, setitem=self.setitem, delitem=self.delitem))
 
 		self.frame = tk.Frame(app,
@@ -88,20 +91,25 @@ class Interpreter(Text, InteractiveInterpreter):
 			cursor="arrow",
 			insertbackground=Color.DARK_BLACK)
 
-		sys.displayhook = self.write
-		sys.excepthook = self.showtraceback
-		__builtins__["print"] = self.write
+		if "print" not in disable:
+			sys.stdout = StdWrap(sys.stdout, self) # stderr is overriden in __init__:main
+
+		self.disable_traceback = "traceback" in disable
+		if not self.disable_traceback:
+			sys.excepthook = self.showtraceback
+
 		__builtins__["help"] = Help(app)
 		__builtins__["clear"] = Clear(self)
-		__builtins__["copyright"] = "Copyright (c) 2018-2021 Matt Calhoun.\nAll Rights Reserved."
-		__builtins__["credits"] = "Created by Matt Calhoun.\nSee https://mathinspector.com for more information."
 		__builtins__["license"] = License()
+		__builtins__["copyright"] = Copyright()
+		__builtins__["credits"] = Credits()
 
 		self.app = app
 		self.prompt = Prompt(self, self.frame)
 		self.parse = CodeParser(app)
 		self.buffer = []
 		self.prevent_module_import = False
+		self.cursor_position = self.index("end")
 
 		self.bind("<Key>", self._on_key_log)
 		self.bind("<Configure>", self.prompt.on_configure_log)
@@ -121,7 +129,7 @@ class Interpreter(Text, InteractiveInterpreter):
 			self.bind("<Configure>", self.prompt.on_configure_log)
 
 	def do_greet(self):
-		self.write("Math Inspector " + VERSION + " (Beta)\nType \"help\", \"copyright\", \"credits\", \"license\" for more information")
+		self.write("Math Inspector " + __version__ + " (Beta)\nType \"help\", \"copyright\", \"credits\", \"license\" for more information")
 		self.prompt()
 
 	def setitem(self, key, value):
@@ -158,10 +166,17 @@ class Interpreter(Text, InteractiveInterpreter):
 		self.prevent_module_import = False
 
 	def push(self, s, filename="<input>", log=True, symbol="single"):
+		self.cursor_position = self.index("end-1l linestart")
+
 		self.synclocals()
 		source = "".join(self.buffer + [s])
 		self.parse.preprocess(source)
-		if source[:4] == "plot":
+		if source[:3] == "del" and source[4:] in self.app.objects:
+			# NOTE - there is a strange issue with exec where it can't delete things from self.locals
+			del self.app.objects[source[4:]]
+			self.prompt()
+			return
+		elif source[:4] == "plot":
 			self.prompt()
 		did_compile = self.runsource(source, filename, symbol)
 
@@ -175,14 +190,28 @@ class Interpreter(Text, InteractiveInterpreter):
 		self.prompt()
 
 	def write(self, *args, syntax_highlight=False, tags=(), **kwargs):
+		if self.prevent_module_import: return
+
+		if len(args) == 1:
+			if isinstance(args[0], np.ndarray):
+				if not args[0].any():
+					return
+			elif args[0] in ("\a", "\n", " ", "", None):
+				return
+
+
 		idx = self.index("insert")
 		for r in args:
-			if re.match(RE_TRACEBACK, str(r)):
+			if isinstance(r, str) and "\r" in r:
+				r = r.rsplit("\r", 1)[1]
+				self.delete(self.cursor_position, "end")
+				self.insert("end", "\n")
+
+			if re.match(RE_TRACEBACK, str(r)) or re.match(RE_EXCEPTION, str(r)):
 				tags = ("red", *tags)
 
 			if r is not None:
 				if isinstance(r, Exception):
-					builtin_print("\a")
 					tags = tuple(list(tags) + ["red"])
 				self.insert("end", str(r), tags, syntax_highlight=syntax_highlight)
 				if len(args) > 1:
@@ -198,17 +227,24 @@ class Interpreter(Text, InteractiveInterpreter):
 
 		if self.get("1.0", "end").strip():
 			self.insert("end", "\n")
+
 		self.see("end")
 		self.prompt.move()
 
 	def showtraceback(self, *args):
+		if self.disable_traceback:
+			ei = sys.exc_info()
+			self.write(ei[1], tags="red")
+			if self.app.debug:
+				builtin_print (traceback.format_exception(ei[0], ei[1], ei[2].tb_next))
+			return
+
 		sys.last_type, sys.last_value, last_tb = ei = sys.exc_info()
 		sys.last_traceback = last_tb
 
 		try:
 			lines = traceback.format_exception(ei[0], ei[1], last_tb.tb_next)
 			self.write(''.join(lines).rstrip(), tags="red")
-			builtin_print ("\a")
 			self.app.menu.setview("console", True)
 		finally:
 			last_tb = ei = None
@@ -224,8 +260,8 @@ class Interpreter(Text, InteractiveInterpreter):
 		return result
 
 	def on_click_log(self, event):
-		 if not self.tag_ranges("sel"):
-		 	self.prompt.focus()
+		if not self.tag_ranges("sel"):
+			self.prompt.focus()
 
 	def _on_button_right(self, event):
 		option = []
@@ -233,7 +269,7 @@ class Interpreter(Text, InteractiveInterpreter):
 		if tag_ranges:
 			option.extend([{
 				"label": "Copy",
-				"command": lambda: self.clipboard_append(self.get(*tag_ranges))
+				"command": lambda: self.copy_to_clipboard(self.get(*tag_ranges))
 			}])
 
 		self.menu.show(event, option + [{
@@ -241,36 +277,41 @@ class Interpreter(Text, InteractiveInterpreter):
 			"command": clear
 		}])
 
-
 	def _click(self, event, tag):
 		if not self.hover_range: return
 		content = self.get(*self.hover_range)
 		if tag == "error_file":
-			open_editor(os.path.abspath(content[1:-1]))
+			open_editor(self.app, os.path.abspath(content[1:-1]))
+
+
+class StdWrap(TextIOWrapper):
+	def __init__(self, buffer, interpreter, **kwargs):
+		super(StdWrap, self).__init__(
+			buffer.buffer,
+			encoding=buffer.encoding, errors=buffer.errors, line_buffering=sys.stderr.line_buffering,
+			**kwargs)
+		self.interpreter = interpreter
+
+	def write(self, s, **kwargs):
+		self.interpreter.write(s)
+		self.interpreter.app.update()
+
+class Copyright:
+	def __repr__(self):
+		return "Copyright (c) 2018-2021 Matt Calhoun.\nAll Rights Reserved."
+
+class Credits:
+	def __repr__(self):
+		return """Created by Matt Calhoun.  Thanks to Casper da Costa-Luis for supporting
+Math Inspector development, and to the contributors on GitHub.
+See www.mathinspector.com for more information."""
 
 class License:
 	def __call__(self):
 		help(os.path.join(BASEPATH, "LICENSE"))
 
 	def __repr__(self):
-		return """
-Math Inspector: a visual programming environment for scientific computing
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-Type license() to see the full license text
-		"""
+		return __doc__ + "\n\nType license() to see the full license text"
 
 class Clear:
 	def __init__(self, console):

@@ -1,9 +1,8 @@
 """
-Used for preprocessing and post-processing commands strings in order to perform any updates to the
-various views throughout the app which are not captured by other methods.
+Tools for pre/post processing code, connecting wires, and synchronizing 
+the node editor with the most recent command.
 """
 """
-Math Inspector: a visual programming environment for scientific computing
 Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify
@@ -23,6 +22,10 @@ import ast
 from ..util import binop
 
 class CodeParser(ast.NodeVisitor):
+	"""
+	Used for preprocessing and post-processing commands strings in order to perform any updates to the
+	various views throughout the app which are not captured by other methods.
+	"""
 	def __init__(self, app):
 		ast.NodeVisitor.__init__(self)
 		self.app = app
@@ -47,7 +50,7 @@ class CodeParser(ast.NodeVisitor):
 		## NOTE: the reason for removing the assign visitor is to ensure the math inspector interpreter
 		##			always exec's all sequences of command strings, and produces the same output,
 		##			exactly as would occur when using the python command line interpreter
-		# self.assign_visitor.visit(tree)  ## TODO - add this as a toggle option in the main menu, default is turned off
+		# self.assign_visitor.visit(tree)  ## TODO - add this as a toggle option in the main menu (maybe?), default is turned off
 		return tree
 
 class CallVisitor(ast.NodeVisitor):

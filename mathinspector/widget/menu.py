@@ -16,13 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import tkinter as tk
-from ..util import vdict
+import platform
 from ..console.builtin_print import builtin_print
-
 
 class Menu(tk.Menu):
 	def __init__(self, parent, items=[], **kwargs):
-		tk.Menu.__init__(self, parent, tearoff=False)
+		tk.Menu.__init__(self, parent, tearoff=False, **kwargs)
 		self._ = {}
 		self.parent = parent
 		self.set_menu(items)
@@ -33,10 +32,9 @@ class Menu(tk.Menu):
 			prev = self
 
 		for j in items:
-			# builtin_print(j)
 			if "menu" in j:
 				if len(j["menu"]) > 0:
-					menu = Menu(self.parent)
+					menu = Menu(self)
 					self._[j["label"]] = menu
 					self.set_menu(j["menu"], menu)
 					kwargs = j.copy()

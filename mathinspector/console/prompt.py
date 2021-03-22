@@ -19,9 +19,11 @@ import keyword, platform
 from .history import History
 from .builtin_print import builtin_print
 from .autocomplete import AutoComplete
-from ..util.config import FONT, PROMPT_FONTSIZE as FONTSIZE
+from ..config import FONT, is_modifier_key_pressed
 from ..widget import Text
 from ..style import Color
+
+FONTSIZE = 18.5
 
 class Prompt(Text):
 	def __init__(self, console, frame):
@@ -54,6 +56,7 @@ class Prompt(Text):
 		self.move()
 		self.focus()
 		self.edit_reset() # NOTE: this resets the tkinter undo stack
+		self.config(insertbackground=Color.WHITE)
 
 	def get(self, start="1.5", end="end-1c"):
 		return super(Prompt, self).get(start, end)
@@ -97,10 +100,7 @@ class Prompt(Text):
 				self.insert(tag_ranges[0], "[" + content + "]")
 			return "break"
 
-		ctrl = (event.state & 0x4) != 0
-		meta = (event.state & 0x8) != 0
-		is_mod = (ctrl or meta) and platform.system() != "Windows"
-		if is_mod:
+		if is_modifier_key_pressed(event):
 			if event.char == "v":
 				return self._on_paste()
 
@@ -108,26 +108,14 @@ class Prompt(Text):
 				self.tag_add("sel", "insert wordstart", "insert wordend")
 				return "break"
 
-		## TODO - reenable this, designed to emulate the ipython ? functionality
-		# if event.keysym == "question":
-		# 	try:
-		# 		obj = self.console.eval(self.get())
-		# 	except:
-		# 		builtin_print("\a")
-		# 		return "break"
-
-		# 	if help.getobj(obj):
-		# 		help(obj)
-		# 	else:
-		# 		builtin_print("\a")
-		# 	return "break"
-
 	def push(self, s):
 		if s or not self.console.buffer:
 			if self.console.get("1.0", "end").strip() and not self.console.buffer:
 				self.console.insert("end", "\n")
 			self.console.insert("end", "...  " if self.console.buffer else ">>>  ", "console_prompt")
 			self.console.insert("end", s + "\n", syntax_highlight=True)
+		self.delete("1.0", "end")
+		self.config(insertbackground=Color.DARK_BLACK)
 		self.console.push(s)
 
 	def on_configure_log(self, event):
@@ -203,11 +191,12 @@ class Prompt(Text):
 		if tag_ranges:
 			self.delete(*tag_ranges)
 
-		self.console.write(">>>  " + content, syntax_highlight=True)
-		try:
-			self.console.exec(content)
-		except:
-			self.console.showtraceback()
+		lines = content.split("\n")
+		for l in lines:
+			try:
+				self.push(l)
+			except:
+				self.console.showtraceback()
 		return "break"
 
 	def on_focus_in(self, event):
@@ -219,7 +208,7 @@ class Prompt(Text):
 		if tag_ranges:
 			items.extend([{
 				"label": "Copy",
-				"command": lambda: self.clipboard_append(self.get(*tag_ranges))
+				"command": lambda: self.copy_to_clipboard(self.get(*tag_ranges))
 			}, {
 				"label": "Paste",
 				"command": self._on_paste

@@ -17,7 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import sys
 from os import path
-from ..util.config import BASEPATH
+from ..config import BASEPATH
 from OpenGL.GL import GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, glGetUniformLocation
 from OpenGL.GL import shaders
 

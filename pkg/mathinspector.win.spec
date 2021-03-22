@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(["..\\mathinspector\\_run.py"],
+a = Analysis([".\\_app.py"],
              pathex=[os.path.abspath("..")],
              binaries=[],
              datas=[("..\\mathinspector\\assets", ".\\assets\\")],

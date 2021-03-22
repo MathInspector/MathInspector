@@ -31,6 +31,16 @@ class vdict(dict): # need to extend dict so it can be passed as an argument to e
 		self.keys = self.store.keys
 		self.values = self.store.values
 
+	def pop(self, key):
+		result = self[key]
+		del self[key]
+		return result
+
+	def clear(self):
+		keys = list(self.store.keys())
+		for i in keys:
+			del self[i]
+
 	def __getitem__(self, key):
 		if self._get:
 			return self._get(key)
@@ -60,4 +70,4 @@ class vdict(dict): # need to extend dict so it can be passed as an argument to e
 		return len(self.store)
 
 	def __repr__(self):
-		return repr(self.store)
+		return repr(list(self.store))

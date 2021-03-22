@@ -23,27 +23,28 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import builtins
-from ..util.config import INSTALLED_PKGS, BUILTIN_PKGS, BUILTIN_CLASS
-from ..util.common import name_ext
-from os import path
+import builtins, os, importlib
+from ..util import name_ext, INSTALLED_PKGS
+from ..util.builtin_lists import *
 from ..console.builtin_print import builtin_print
 from .browser import Browser
 from . import manual
 
 class Help:
-	def __init__(self, app):
+	def __init__(self, app=None):
 		self.app = app
 		self.geometry = None
 		self.browser = None
 
 	def __call__(self, key=None, title=None):
-		if not key:
+		if key is None:
 			self.browser = Browser(self.app, manual, "mathinspector", geometry=self.geometry)
 			return
 		obj = self.getobj(key)
-		if not obj: return
-		self.browser = Browser(self.app, obj, title=title, geometry=self.geometry)
+		if obj is None: return
+		browser = self.browser = Browser(self.app, obj, title=title, geometry=self.geometry)
+		if not self.app:
+			browser.mainloop()
 
 	def __repr__(self):
 		return "Type help() for interactive help, help(object) for help about object, or help.browse() to view all available documentation."
@@ -57,35 +58,64 @@ class Help:
 	def getobj(self, key):
 		if key is None: return manual
 
+		if self.app and isinstance(key, str):
+			if key in self.app.objects:
+				if isinstance(self.app.objects[key], tuple([getattr(builtins,i) for i in BUILTIN_CLASS])):
+					return self.app.objects[key].__class__
+				return self.app.objects[key]
+			elif key in self.app.modules:
+				return self.app.modules[key]
+			else:
+				if os.path.isfile(key):
+					name, ext = name_ext(key)
+					if name in self.app.modules:
+						return self.app.modules[name]
+
+					if name in ("LICENSE") or ext in (".md", ".rst"):
+						return key
+
+				try:
+					obj, attr = key.split('.', 1)
+					return getattr(self.app.objects[obj], attr)
+				except:
+					pass
+
 		if not isinstance(key, str):
 			return key
 
-		if key in INSTALLED_PKGS + BUILTIN_PKGS:
+		if os.path.isfile(key):
+			name, ext = name_ext(key)
+			if ext == ".py":
+				spec = importlib.util.spec_from_file_location(name, key)
+				module = importlib.util.module_from_spec(spec)
+				try:
+					spec.loader.exec_module(module)
+				except Exception as err:
+					print ("Module failed to load", err)
+					return
+
+
+		if "." in key:
+			items = key.split(".")
+			module = __import__(items[0])
+			i = 1
 			try:
-				obj = __import__(key)
-				return obj
+				while i < len(items):
+					module = getattr(module, items[i])
+					i += 1
+				return module
 			except:
 				pass
-
-		if key in self.app.objects:
-			if isinstance(self.app.objects[key], tuple([getattr(builtins,i) for i in BUILTIN_CLASS])):
-				return self.app.objects[key].__class__
-			return self.app.objects[key]
-		if key in self.app.modules:
-			return self.app.modules[key]
-		if path.isfile(key):
-			name, ext = name_ext(key)
-			if name in self.app.modules:
-				return self.app.modules[name]
-
-			if name in ("LICENSE") or ext in (".md", ".rst"):
-				return key
-		try:
-			module, attr = key.rsplit('.', 1)
-			return getattr(self.app.modules[module], attr)
-		except:
+		else:
 			try:
-				obj, attr = key.split('.', 1)
-				return getattr(self.app.objects[obj], attr)
+				return __import__(key)
 			except:
-				return None
+				pass
+		
+		if key in BUILTIN_FUNCTION:
+			return builtins[key]
+
+		if not self.app:
+			print ("Could not find documentation for " + key)
+
+		return None

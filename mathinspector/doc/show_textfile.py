@@ -22,30 +22,74 @@ import re
 RE_DEFAULT = {
     # "list_number": r"^[0-9]*\.",
     "italic": r"(?<!\*)\*(?!\*)(.*?)\*",
-    "code_sample": r"^( |\t){0,}(>>>|\.\.\.).*",
+    "code_sample": r"^( |\t){0,}((>>>|\.\.\.).*)",
     "h1": r"^(?<!#)#(?!#)([^\n]*) {0,}$",
     "h2": r"^(?<!#)##(?!#)(.*)$",
     "section_title": r"(---|===)",
     "code": r"(?<!\`)\`(?!\`)(.*?)\`",
     "code_block": r"\`\`\`",
     "link_url": r"(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+~]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)",
+    "np_table": r"        (.*)"
 }
 
 def show_textfile(text, content):
     parse = TextParser(content.strip() if content else "")
     is_title = True
+    has_newline = -1
+    prev_tag = False
 
     for i in parse:
+        if has_newline is not -1 and i.tag in ("section_title", "h1", "h2"):
+            text.insert("end", "\n\n")
+
+        if not has_newline and (
+            i.tag == "code_sample" and prev_tag != "code_sample"
+        ):
+            text.insert("end", "\n\n")
+
+        if i.text != "\n" or has_newline == -1:
+            has_newline = False
+
+        if prev_tag == "code_sample" and i.tag != "code_sample":
+            output, i.text = i.text.split("\n", 1)
+            if output:
+                text.insert("end", output + "\n", "code_sample")
+            text.insert("end", "\n")
+
         if i.tag == "code_block" and i.text[3:].strip():
+            text.insert("end", "\n\n")
             text.insert("end", i.text[3:] + "\n", i.tag)
-        else:
+        elif i.tag == "code_sample":
+            if "\n" in i.text:
+                lines = []
+                for l in i.text.split("\n"):
+                    if ">>>" in l:
+                        lines.append(l[l.index(">>>"):])
+                    elif "..." in l:
+                        lines.append(l[l.index("..."):])
+                content = "\n".join(lines) + "\n"
+            else:
+                content = i.text
+            text.insert("end", content, i.tag)
+        elif i.tag:
             text.insert("end", i.text, i.tag)
-    
-        if i.tag in ("", "section_title", "h1", "h2"):
+        elif i.text == "\n":
+            if not has_newline:
+                has_newline = True
+                text.insert("end", "\n")
+        else:
+            text.insert("end", i.text.replace("\n", ""))
+
+        if i.tag in ("section_title", "h1", "h2"):
             text.insert("end", " \n")
-            if i.tag:
-                text.insert("end", " \n", "horizontal_rule")
-                # text.insert("end", " \n")
+            text.insert("end", " \n", "horizontal_rule")
+            text.insert("end", " \n")
+            has_newline = True
+        elif not has_newline and i.tag == "" and not prev_tag:
+            text.insert("end", " \n\n")
+            has_newline = True
+
+        prev_tag = i.tag
 
 
     ranges = text.tag_ranges("code_sample")
@@ -105,7 +149,7 @@ class TextParser:
                                 self.index += len(text[:endline]) + 1
                             return TextNode(match[0].strip(), tag)
                         elif i in ("code", "link_url", "italic"):
-                            if i == "code": 
+                            if i == "code":
                                 endline = text.index("`")
                                 self.buffer.append((match[0], i, 1 + len(match[0])))
                                 self.index += 1 + endline
@@ -125,13 +169,13 @@ class TextParser:
                         is_running = False
                         self.index += 1 + endline
                     else:
-                        self.buffer.append((result, "section_title", 1 + endline))
-                        return TextNode("\n")
+                        self.index += 1 + endline
+                        return TextNode(result, "section_title")
                 elif endline == 0:
                     self.index += 1
                     result = result.rstrip()
+                    # if tag is None and self.content[self.index:self.index+1] == "\n\n":
                     if text[:1] == "\n":
-                        # print ("hi")
                         is_running = False
                 elif endline == -1:
                     result += text
@@ -159,4 +203,4 @@ class TextNode:
         self.tag = tag
 
     def __repr__(self):
-        return f"{str(self.tag)}: {self.text}"        
+        return f"{str(self.tag)}: {self.text}"

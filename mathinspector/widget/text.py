@@ -19,7 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import tkinter as tk
 from tkinter import ttk
 from ..style import TAGS, Color
-from ..util.config import BUTTON_RIGHT, BUILTIN_FUNCTION, BUILTIN_CLASS
+from ..config import is_modifier_key_pressed, BUTTON_RIGHT
+from ..util import BUILTIN_FUNCTION, BUILTIN_CLASS
 from ..widget.menu import Menu
 from ..console.builtin_print import builtin_print
 import io, re, tokenize, keyword, builtins, inspect
@@ -78,14 +79,16 @@ class Text(tk.Text):
 		self._orig = self._w + "_orig"
 		self.tk.call("rename", self._w, self._orig)
 		self.tk.createcommand(self._w, self._proxy)
+		self.bind("<Button-1>", self._on_button_1)
 		self.bind(BUTTON_RIGHT, self._on_button_right)
 		self.menu = Menu(self)
 
 	def _on_key(self, event):
-		ctrl = (event.state & 0x4) != 0
-		meta = (event.state & 0x8) != 0
-		is_mod = ctrl or meta
-		return None if is_mod and event.char == "c" else False if is_mod else "break"
+		if not is_modifier_key_pressed(event):
+			return "break"
+		elif event.char == "c":
+			return None
+		return False
 
 	def insert(self, *args, syntax_highlight=False, **kwargs):
 		idx = self.index(self.index(args[0]) + "-1c")
@@ -181,20 +184,23 @@ class Text(tk.Text):
 
 		return result
 
+	def _on_button_1(self, event):
+		self.menu.unpost()
+
 	def _on_button_right(self, event):
 		tag_ranges = self.tag_ranges("sel")
 		if self.readonly:
 			if tag_ranges:
 				self.menu.show(event, [{
 					"label": "Copy",
-					"command": lambda: self.clipboard_append(self.get(*tag_ranges))
+					"command": lambda: self.copy_to_clipboard(self.get(*tag_ranges))
 				}])
 			return
 
 		if tag_ranges:
 			self.menu.show(event, [{
 				"label": "Copy",
-				"command": lambda: self.clipboard_append(self.get(*tag_ranges))
+				"command": lambda: self.copy_to_clipboard(self.get(*tag_ranges))
 			}, {
 				"label": "Paste",
 				"command": lambda: self._on_paste(tag_ranges)
@@ -223,6 +229,10 @@ class Text(tk.Text):
 		self.config(cursor="")
 		if self.hover_range:
 			self.tag_remove(tag + "_hover", *self.hover_range)
+
+	def copy_to_clipboard(self, content):
+		self.clipboard_clear()
+		self.clipboard_append(content)
 
 	def get_tags(self, start, end):
 	    index = start

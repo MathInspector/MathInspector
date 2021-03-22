@@ -1,5 +1,8 @@
 """
-Math Inspector: a visual programming environment for scientific computing
+The output node in the right hand side of the node editor which connects
+to the plot and log functionality
+"""
+"""
 Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify
@@ -19,10 +22,12 @@ import numpy as np
 import tkinter as tk
 import pygame
 from ..widget import Text
-from ..util import argspec, instanceof, MESSAGE_TIMEOUT
+from ..util import argspec, instanceof
 from ..console.builtin_print import builtin_print
 from ..style import Color, getimage
-from .. import plot
+from ..plot import plot
+
+MESSAGE_TIMEOUT = 4000
 
 class Output(tk.Frame):
 	def __init__(self, canvas):
@@ -99,13 +104,13 @@ class Output(tk.Frame):
 			if plot.is_active():
 				plot.config(pixelmap=pixelmap_fn)
 			else:
-				plot.plot(pixelmap=pixelmap_fn, title=name)
+				plot(pixelmap=pixelmap_fn, title=name)
 		elif window:
 			self.values[item.name] = value
 			if plot.is_active():
 				plot.update(*list(self.values.values()))
 			else:
-				plot.plot(value, title=name)
+				plot(value, title=name)
 		else:
 			if self.log_item:
 				self.disconnect(self.log_item)

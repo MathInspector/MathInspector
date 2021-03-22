@@ -1,5 +1,7 @@
 """
-Math Inspector: a visual programming environment for scientific computing
+Base class for individual items in the node editor
+"""
+"""
 Copyright (C) 2021 Matt Calhoun
 
 This program is free software: you can redistribute it and/or modify
@@ -18,11 +20,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import numpy as np
 import inspect, traceback
-from .. import plot
+from ..plot import plot
 from ..style import Color
 from ..util import vdict
 from ..util import classname, fontcolor, argspec
-from ..util.config import ITEM_FONTSIZE as FONTSIZE
+from ..config import ITEM_FONTSIZE as FONTSIZE
 from .entry import Entry
 from textwrap import fill
 from pprint import pformat
@@ -251,7 +253,7 @@ class Item:
         if isinstance(value, Item):
             if value == self: return False
 
-            if key == "<value>":
+            if key == "<value>" and not isinstance(self.obj, np.ndarray):
                 try:
                     result = self.obj.__class__(value.value())
                 except Exception as err:
