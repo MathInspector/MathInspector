@@ -91,10 +91,10 @@ class Interpreter(Text, InteractiveInterpreter):
 			cursor="arrow",
 			insertbackground=Color.DARK_BLACK)
 
-		if "print" not in disable:
+		if "print" not in disable or disable["print"] is not True:
 			sys.stdout = StdWrap(sys.stdout, self) # stderr is overriden in __init__:main
 
-		self.disable_traceback = "traceback" in disable
+		self.disable_traceback = "traceback" in disable and disable["traceback"]
 		if not self.disable_traceback:
 			sys.excepthook = self.showtraceback
 

@@ -513,6 +513,30 @@ Examples
 
 	return result if as_wireframe else result[1]
 
+def cone(pos=(0,0,0),radius=1,num=25, as_wireframe=False, transform=None, min_angle=-np.pi, max_angle=np.pi):
+	"""
+	TODO - docstring
+    """
+	T = np.linspace(min_angle,max_angle, num=num)
+
+	if transform:
+		T = transform(T)
+
+	result = wireframe(
+		radius * np.linspace(0, 10, num=num),
+		T,
+		lambda r,t: (r*np.cos(t), r, r*np.sin(t))
+	)
+
+	return result if as_wireframe else result[1]
+
+def torus(num=25, height=0):
+	T = np.linspace(-np.pi,np.pi, num=num)
+	P = np.linspace(-np.pi,np.pi, num=num)
+	return wireframe(T,P,
+		lambda t,p: (np.cos(t), height + np.sin(t)*np.cos(p) - np.sin(p), np.sin(t)*np.sin(p) + np.cos(p))
+	)
+
 def sphere(pos=(0,0,0),radius=1,num=12, as_wireframe=False):
 	"""
 draws a sphere at a given position with a given radius and number of subdivisions
