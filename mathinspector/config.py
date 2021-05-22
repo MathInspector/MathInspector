@@ -64,7 +64,7 @@ if hasattr(sys, "_MEIPASS"):
         "assets" if SYSTEM in ("Windows", "Linux") else "../Resources/assets")
 
     if SYSTEM == "Windows":
-        localappdata = s.path.join(os.getenv('LOCALAPPDATA'), "MathInspector")
+        localappdata = os.path.join(os.getenv('LOCALAPPDATA'), "MathInspector")
         AUTOSAVE_PATH = os.path.join(localappdata, "autosave.math")
         LOCAL_AUTOSAVE_PATH = os.path.join(localappdata, "local_autosave.math")
     else:

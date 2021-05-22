@@ -2,7 +2,7 @@
 
 block_cipher = None
 
-from mathinspector.config import __version__
+__version__ = "0.9.4"
 
 a = Analysis(['./_app.py'],
              pathex=[os.path.abspath('..')],
