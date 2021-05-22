@@ -131,16 +131,16 @@ class MainMenu(Menu):
 				"label": "Add a New File...",
 				"menu": [{
 					"label": "Python (.py)",
-					"command": lambda: self.modules.new_file(ext=".py")
+					"command": lambda: self.app.modules.new_file(ext=".py")
 				},{
 					"label": "Markdown (.md)",
-					"command": lambda: self.modules.new_file(ext=".md")
+					"command": lambda: self.app.modules.new_file(ext=".md")
 				},{
 					"label": "Rich Structured Text (.rst)",
-					"command": lambda: self.modules.new_file(ext=".rst")
+					"command": lambda: self.app.modules.new_file(ext=".rst")
 				},{
 					"label": "Other...",
-					"command": lambda: self.modules.addfile(None)
+					"command": lambda: self.app.modules.addfile(None)
 				}]
 		},{
 			"label": "Add File to Project...",
